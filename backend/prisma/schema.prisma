@@ -1,0 +1,583 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// -----------------------------------------------------------------------------
+// DOMAINE MULTI-TENANT
+// -----------------------------------------------------------------------------
+
+model tenants {
+  id                      String    @id @default(uuid()) @db.Uuid
+  nom                     String    @db.VarChar
+  sous_domaine            String    @unique @db.VarChar
+  plan_abonnement         String    @db.VarChar // gratuit | standard | premium
+  statut                  String    @db.VarChar // actif | suspendu | expire
+  pays                    String    @db.VarChar(2)
+  fuseau_horaire          String    @db.VarChar
+  devise                  String    @default("XAF") @db.VarChar(3)
+  langue_defaut           String    @default("fr") @db.VarChar(5)
+  date_expiration         DateTime? @db.Date
+  config_personnalisation Json?     @db.JsonB
+  created_at              DateTime  @default(now()) @db.Timestamp(6)
+
+  ecoles         ecoles[]
+  utilisateurs   utilisateurs[]
+  paiements      paiements[]
+  messages       messages[]
+  notifications  notifications[]
+  logs_activites logs_activites[]
+}
+
+model ecoles {
+  id               String   @id @default(uuid()) @db.Uuid
+  tenant_id        String   @db.Uuid
+  nom              String   @db.VarChar
+  code             String   @unique @db.VarChar
+  adresse          String?  @db.Text
+  ville            String?  @db.VarChar
+  region           String?  @db.VarChar
+  telephone        String?  @db.VarChar
+  logo_url         String?  @db.VarChar
+  annee_active_id  String?  @unique @db.Uuid
+  systeme_notation String   @db.VarChar // sur_20 | sur_10
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+
+  tenant           tenants            @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  annees_scolaires annees_scolaires[] @relation("EcoleAnnees")
+  annee_active     annees_scolaires?  @relation("EcoleAnneeActive", fields: [annee_active_id], references: [id])
+
+  classes             classes[]             @relation("EcoleClasses")
+  groupes_matieres    groupes_matieres[]
+  matieres            matieres[]
+  types_evaluation    types_evaluation[]
+  salles              salles[]
+  calendrier_scolaire calendrier_scolaire[]
+  periodes_evaluation periodes_evaluation[] @relation("EcolePeriodes")
+  paiements           paiements[]
+  tranches_paiement   tranches_paiement[]
+  profils_enseignants profils_enseignants[]
+  profils_eleves      profils_eleves[]
+}
+
+model annees_scolaires {
+  id         String   @id @default(uuid()) @db.Uuid
+  ecole_id   String   @db.Uuid
+  libelle    String   @db.VarChar
+  date_debut DateTime @db.Date
+  date_fin   DateTime @db.Date
+  est_active Boolean
+  created_at DateTime @default(now()) @db.Timestamp(6)
+
+  ecole             ecoles  @relation("EcoleAnnees", fields: [ecole_id], references: [id], onDelete: Cascade)
+  ecole_active_pour ecoles? @relation("EcoleAnneeActive")
+
+  classes       classes[]
+  inscriptions  inscriptions[]
+  affectations  affectations_matieres[]
+  calendrier    calendrier_scolaire[]
+  emplois_temps emplois_du_temps[]
+  periodes      periodes_evaluation[]
+  tranches      tranches_paiement[]
+}
+
+// -----------------------------------------------------------------------------
+// DOMAINE UTILISATEURS & ROLES
+// -----------------------------------------------------------------------------
+
+model utilisateurs {
+  id                 String    @id @default(uuid()) @db.Uuid
+  tenant_id          String    @db.Uuid
+  email              String    @db.VarChar
+  role               String    @db.VarChar // super_admin | admin_ecole | enseignant | parent | eleve
+  mot_de_passe       String?   @db.VarChar
+  otp_code           String?   @db.VarChar
+  otp_expires_at     DateTime? @db.Timestamp(6)
+  est_actif          Boolean   @default(true)
+  langue_preference  String    @default("fr") @db.VarChar(5)
+  derniere_connexion DateTime? @db.Timestamp(6)
+  created_at         DateTime  @default(now()) @db.Timestamp(6)
+
+  tenant            tenants              @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  profil_enseignant profils_enseignants?
+  profil_parent     profils_parents?
+  profil_eleve      profils_eleves?
+
+  messages_envoyes messages[]       @relation("MessageExpediteur")
+  messages_recus   messages[]       @relation("MessageDestinataire")
+  notifications    notifications[]
+  logs             logs_activites[] // For utilisateur_id
+
+  bulletins_generes   bulletins[]               @relation("BulletinGenerateur")
+  paiements_encaisses paiements[]               @relation("PaiementEncaisseur")
+  absences_validees   justifications_absences[] @relation("JustificationValideur")
+
+  @@unique([tenant_id, email])
+}
+
+model profils_enseignants {
+  id                 String    @id @default(uuid()) @db.Uuid
+  utilisateur_id     String    @unique @db.Uuid
+  ecole_id           String    @db.Uuid
+  matricule          String    @db.VarChar
+  nom                String    @db.VarChar
+  prenom             String    @db.VarChar
+  specialite         String?   @db.VarChar
+  telephone          String?   @db.VarChar
+  date_prise_service DateTime? @db.Date
+  photo_url          String?   @db.VarChar
+
+  utilisateur utilisateurs @relation(fields: [utilisateur_id], references: [id], onDelete: Cascade)
+  ecole       ecoles       @relation(fields: [ecole_id], references: [id], onDelete: Cascade)
+
+  classes_titulaires classes[]
+  affectations       affectations_matieres[]
+  notes_saisies      notes[]
+  presences_saisies  presences[]
+  emplois_temps      emplois_du_temps[]
+}
+
+model profils_eleves {
+  id             String   @id @default(uuid()) @db.Uuid
+  utilisateur_id String?  @unique @db.Uuid
+  ecole_id       String   @db.Uuid
+  matricule      String   @db.VarChar
+  nom            String   @db.VarChar
+  prenom         String   @db.VarChar
+  date_naissance DateTime @db.Date
+  lieu_naissance String   @db.VarChar
+  sexe           String?  @db.VarChar
+  nationalite    String?  @db.VarChar
+  photo_url      String?  @db.VarChar
+  statut         String   @default("actif") @db.VarChar // actif | diplome | exclu | transfere
+
+  utilisateur  utilisateurs?  @relation(fields: [utilisateur_id], references: [id], onDelete: SetNull)
+  ecole        ecoles         @relation(fields: [ecole_id], references: [id], onDelete: Cascade)
+  parents      eleve_parent[]
+  inscriptions inscriptions[]
+  notes        notes[]
+  bulletins    bulletins[]
+  presences    presences[]
+}
+
+model profils_parents {
+  id                     String  @id @default(uuid()) @db.Uuid
+  utilisateur_id         String  @unique @db.Uuid
+  nom                    String  @db.VarChar
+  prenom                 String  @db.VarChar
+  telephone              String  @db.VarChar
+  telephone_mobile_money String? @db.VarChar
+  operateur_mobile_money String? @db.VarChar
+  profession             String? @db.VarChar
+  adresse                String? @db.Text
+
+  utilisateur    utilisateurs              @relation(fields: [utilisateur_id], references: [id], onDelete: Cascade)
+  enfants        eleve_parent[]
+  paiements      paiements[]
+  justifications justifications_absences[]
+}
+
+model eleve_parent {
+  eleve_id          String  @db.Uuid
+  parent_id         String  @db.Uuid
+  lien_parente      String  @db.VarChar // pere | mere | tuteur | autre
+  contact_principal Boolean @default(false)
+  peut_payer        Boolean @default(true)
+  peut_voir_notes   Boolean @default(true)
+
+  eleve  profils_eleves  @relation(fields: [eleve_id], references: [id], onDelete: Cascade)
+  parent profils_parents @relation(fields: [parent_id], references: [id], onDelete: Cascade)
+
+  @@id([eleve_id, parent_id])
+}
+
+// -----------------------------------------------------------------------------
+// DOMAINE STRUCTURE ACADEMIQUE
+// -----------------------------------------------------------------------------
+
+model classes {
+  id                      String   @id @default(uuid()) @db.Uuid
+  ecole_id                String   @db.Uuid
+  annee_id                String   @db.Uuid
+  nom                     String   @db.VarChar
+  niveau                  String   @db.VarChar
+  serie                   String?  @db.VarChar
+  capacite_max            Int?
+  enseignant_principal_id String?  @db.Uuid
+  frais_scolarite_xaf     Decimal? @db.Decimal(12, 0)
+
+  ecole                ecoles               @relation("EcoleClasses", fields: [ecole_id], references: [id])
+  annee                annees_scolaires     @relation(fields: [annee_id], references: [id])
+  enseignant_principal profils_enseignants? @relation(fields: [enseignant_principal_id], references: [id])
+
+  inscriptions      inscriptions[]
+  affectations      affectations_matieres[]
+  emplois_temps     emplois_du_temps[]
+  notes             notes[]
+  bulletins         bulletins[]
+  presences         presences[]
+  tranches_paiement tranches_paiement[]
+}
+
+model groupes_matieres {
+  id              String  @id @default(uuid()) @db.Uuid
+  ecole_id        String  @db.Uuid
+  nom             String  @db.VarChar
+  description     String? @db.Text
+  ordre_affichage Int?
+
+  ecole            ecoles             @relation(fields: [ecole_id], references: [id])
+  matieres         matieres[]
+  details_bulletin details_bulletin[]
+}
+
+model matieres {
+  id                String  @id @default(uuid()) @db.Uuid
+  ecole_id          String  @db.Uuid
+  groupe_matiere_id String? @db.Uuid
+  nom               String  @db.VarChar
+  code              String  @db.VarChar
+  description       String? @db.Text
+  coefficient       Int
+  niveau            String? @db.VarChar
+  est_optionnelle   Boolean
+
+  ecole  ecoles            @relation(fields: [ecole_id], references: [id])
+  groupe groupes_matieres? @relation(fields: [groupe_matiere_id], references: [id])
+
+  affectations     affectations_matieres[]
+  emplois_temps    emplois_du_temps[]
+  notes            notes[]
+  details_bulletin details_bulletin[]
+  presences        presences[]
+}
+
+model types_evaluation {
+  id          String  @id @default(uuid()) @db.Uuid
+  ecole_id    String  @db.Uuid
+  nom         String  @db.VarChar
+  code        String  @db.VarChar
+  ponderation Decimal @db.Decimal(4, 2)
+  description String? @db.Text
+
+  ecole ecoles  @relation(fields: [ecole_id], references: [id])
+  notes notes[]
+}
+
+model inscriptions {
+  id                    String   @id @default(uuid()) @db.Uuid
+  eleve_id              String   @db.Uuid
+  classe_id             String   @db.Uuid
+  annee_id              String   @db.Uuid
+  date_inscription      DateTime @db.Date
+  statut                String   @db.VarChar // actif | retire | transfere
+  montant_scolarite_xaf Decimal? @db.Decimal(12, 0)
+  numero_recu           String?  @db.VarChar
+
+  eleve  profils_eleves   @relation(fields: [eleve_id], references: [id])
+  classe classes          @relation(fields: [classe_id], references: [id])
+  annee  annees_scolaires @relation(fields: [annee_id], references: [id])
+
+  paiements paiements[]
+
+  @@unique([eleve_id, classe_id, annee_id])
+}
+
+model affectations_matieres {
+  id             String  @id @default(uuid()) @db.Uuid
+  classe_id      String  @db.Uuid
+  matiere_id     String  @db.Uuid
+  enseignant_id  String  @db.Uuid
+  annee_id       String  @db.Uuid
+  volume_horaire Int?
+  coefficient    Int?
+  est_actif      Boolean
+
+  classe     classes             @relation(fields: [classe_id], references: [id])
+  matiere    matieres            @relation(fields: [matiere_id], references: [id])
+  enseignant profils_enseignants @relation(fields: [enseignant_id], references: [id])
+  annee      annees_scolaires    @relation(fields: [annee_id], references: [id])
+}
+
+model salles {
+  id             String  @id @default(uuid()) @db.Uuid
+  ecole_id       String  @db.Uuid
+  nom            String  @db.VarChar
+  capacite       Int
+  type           String  @db.VarChar // classe | laboratoire | salle_info | amphi
+  est_disponible Boolean
+
+  ecole         ecoles             @relation(fields: [ecole_id], references: [id])
+  emplois_temps emplois_du_temps[]
+}
+
+model calendrier_scolaire {
+  id                String    @id @default(uuid()) @db.Uuid
+  ecole_id          String    @db.Uuid
+  annee_id          String    @db.Uuid
+  date_debut        DateTime  @db.Date
+  date_fin          DateTime? @db.Date
+  type              String    @db.VarChar // ferie | vacances | examen | evenement
+  libelle           String    @db.VarChar
+  affecte_presences Boolean
+
+  ecole ecoles           @relation(fields: [ecole_id], references: [id])
+  annee annees_scolaires @relation(fields: [annee_id], references: [id])
+}
+
+model emplois_du_temps {
+  id               String   @id @default(uuid()) @db.Uuid
+  classe_id        String   @db.Uuid
+  matiere_id       String   @db.Uuid
+  enseignant_id    String   @db.Uuid
+  salle_id         String?  @db.Uuid
+  annee_id         String   @db.Uuid
+  jour_semaine     Int
+  heure_debut      DateTime @db.Time
+  heure_fin        DateTime @db.Time
+  est_actif        Boolean
+  motif_annulation String?  @db.Text
+
+  classe     classes             @relation(fields: [classe_id], references: [id])
+  matiere    matieres            @relation(fields: [matiere_id], references: [id])
+  enseignant profils_enseignants @relation(fields: [enseignant_id], references: [id])
+  salle      salles?             @relation(fields: [salle_id], references: [id])
+  annee      annees_scolaires    @relation(fields: [annee_id], references: [id])
+
+  presences presences[]
+}
+
+// -----------------------------------------------------------------------------
+// DOMAINE EVALUATION & BULLETINS
+// -----------------------------------------------------------------------------
+
+model periodes_evaluation {
+  id                String   @id @default(uuid()) @db.Uuid
+  ecole_id          String   @db.Uuid
+  annee_id          String   @db.Uuid
+  nom               String   @db.VarChar
+  type              String   @db.VarChar // trimestre | semestre | examen_blanc
+  ordre             Int
+  date_debut        DateTime @db.Date
+  date_fin          DateTime @db.Date
+  notes_cloturees   Boolean
+  bulletins_publies Boolean
+
+  ecole     ecoles           @relation("EcolePeriodes", fields: [ecole_id], references: [id])
+  annee     annees_scolaires @relation(fields: [annee_id], references: [id])
+  notes     notes[]
+  bulletins bulletins[]
+}
+
+model notes {
+  id                 String    @id @default(uuid()) @db.Uuid
+  eleve_id           String    @db.Uuid
+  matiere_id         String    @db.Uuid
+  classe_id          String    @db.Uuid
+  periode_id         String    @db.Uuid
+  type_evaluation_id String    @db.Uuid
+  enseignant_id      String    @db.Uuid
+  valeur             Decimal   @db.Decimal(5, 2)
+  note_max           Decimal   @db.Decimal(5, 2)
+  appreciation       String?   @db.Text
+  est_absent         Boolean
+  created_at         DateTime  @default(now()) @db.Timestamp(6)
+  updated_at         DateTime? @db.Timestamp(6)
+
+  eleve           profils_eleves      @relation(fields: [eleve_id], references: [id])
+  matiere         matieres            @relation(fields: [matiere_id], references: [id])
+  classe          classes             @relation(fields: [classe_id], references: [id])
+  periode         periodes_evaluation @relation(fields: [periode_id], references: [id])
+  type_evaluation types_evaluation    @relation(fields: [type_evaluation_id], references: [id])
+  enseignant      profils_enseignants @relation(fields: [enseignant_id], references: [id])
+
+  @@unique([eleve_id, matiere_id, type_evaluation_id, periode_id])
+}
+
+model bulletins {
+  id                    String    @id @default(uuid()) @db.Uuid
+  eleve_id              String    @db.Uuid
+  classe_id             String    @db.Uuid
+  periode_id            String    @db.Uuid
+  moyenne_generale      Decimal?  @db.Decimal(5, 2)
+  rang                  Int?
+  effectif_classe       Int?
+  appreciation_generale String?   @db.Text
+  decision_conseil      String?   @db.VarChar // Admis | Redouble | A surveiller
+  version               Int
+  statut_generation     String    @db.VarChar // en_attente | genere | publie
+  url_pdf               String?   @db.VarChar
+  genere_par            String?   @db.Uuid
+  generated_at          DateTime? @db.Timestamp(6)
+
+  eleve            profils_eleves      @relation(fields: [eleve_id], references: [id])
+  classe           classes             @relation(fields: [classe_id], references: [id])
+  periode          periodes_evaluation @relation(fields: [periode_id], references: [id])
+  admin_generateur utilisateurs?       @relation("BulletinGenerateur", fields: [genere_par], references: [id])
+
+  details details_bulletin[]
+
+  @@unique([eleve_id, periode_id])
+}
+
+model details_bulletin {
+  id                   String   @id @default(uuid()) @db.Uuid
+  bulletin_id          String   @db.Uuid
+  matiere_id           String   @db.Uuid
+  groupe_matiere_id    String?  @db.Uuid
+  moyenne_matiere      Decimal? @db.Decimal(5, 2)
+  rang_matiere         Int?
+  appreciation_matiere String?  @db.Text
+
+  bulletin bulletins         @relation(fields: [bulletin_id], references: [id], onDelete: Cascade)
+  matiere  matieres          @relation(fields: [matiere_id], references: [id])
+  groupe   groupes_matieres? @relation(fields: [groupe_matiere_id], references: [id])
+}
+
+// -----------------------------------------------------------------------------
+// DOMAINE PAIEMENTS XAF
+// -----------------------------------------------------------------------------
+
+model paiements {
+  id                    String   @id @default(uuid()) @db.Uuid
+  tenant_id             String   @db.Uuid
+  ecole_id              String   @db.Uuid
+  inscription_id        String   @db.Uuid
+  parent_id             String?  @db.Uuid
+  montant_xaf           Decimal  @db.Decimal(12, 0)
+  montant_total_xaf     Decimal  @db.Decimal(12, 0)
+  solde_restant_xaf     Decimal  @db.Decimal(12, 0)
+  methode_paiement      String   @db.VarChar // especes | virement | mtn_mobile_money ...
+  reference_transaction String?  @db.VarChar
+  statut                String   @db.VarChar // en_attente | confirme | echec | rembourse
+  date_paiement         DateTime @db.Date
+  numero_recu           String   @unique @db.VarChar
+  url_recu_pdf          String?  @db.VarChar
+  encaisse_par          String?  @db.Uuid
+  notes_interne         String?  @db.Text
+  created_at            DateTime @default(now()) @db.Timestamp(6)
+
+  tenant           tenants          @relation(fields: [tenant_id], references: [id])
+  ecole            ecoles           @relation(fields: [ecole_id], references: [id])
+  inscription      inscriptions     @relation(fields: [inscription_id], references: [id])
+  parent           profils_parents? @relation(fields: [parent_id], references: [id])
+  admin_encaisseur utilisateurs?    @relation("PaiementEncaisseur", fields: [encaisse_par], references: [id])
+}
+
+model tranches_paiement {
+  id              String   @id @default(uuid()) @db.Uuid
+  ecole_id        String   @db.Uuid
+  annee_id        String   @db.Uuid
+  classe_id       String?  @db.Uuid
+  nom             String   @db.VarChar
+  montant_xaf     Decimal  @db.Decimal(12, 0)
+  date_echeance   DateTime @db.Date
+  ordre           Int
+  est_obligatoire Boolean
+
+  ecole  ecoles           @relation(fields: [ecole_id], references: [id])
+  annee  annees_scolaires @relation(fields: [annee_id], references: [id])
+  classe classes?         @relation(fields: [classe_id], references: [id])
+}
+
+// -----------------------------------------------------------------------------
+// DOMAINE PRESENCES & JUSTIFICATIONS
+// -----------------------------------------------------------------------------
+
+model presences {
+  id              String   @id @default(uuid()) @db.Uuid
+  eleve_id        String   @db.Uuid
+  classe_id       String   @db.Uuid
+  matiere_id      String   @db.Uuid
+  enseignant_id   String   @db.Uuid
+  emploi_temps_id String?  @db.Uuid
+  date_seance     DateTime @db.Date
+  heure_debut     DateTime @db.Time
+  heure_fin       DateTime @db.Time
+  statut          String   @db.VarChar // present | absent | retard | exclu
+  justifiee       Boolean
+  created_at      DateTime @default(now()) @db.Timestamp(6)
+
+  eleve        profils_eleves      @relation(fields: [eleve_id], references: [id])
+  classe       classes             @relation(fields: [classe_id], references: [id])
+  matiere      matieres            @relation(fields: [matiere_id], references: [id])
+  enseignant   profils_enseignants @relation(fields: [enseignant_id], references: [id])
+  emploi_temps emplois_du_temps?   @relation(fields: [emploi_temps_id], references: [id])
+
+  justifications justifications_absences[]
+}
+
+model justifications_absences {
+  id                String    @id @default(uuid()) @db.Uuid
+  presence_id       String    @db.Uuid
+  parent_id         String    @db.Uuid
+  motif             String    @db.Text
+  document_url      String?   @db.VarChar
+  statut            String    @db.VarChar // en_attente | acceptee | refusee
+  valide_par        String?   @db.Uuid
+  commentaire_admin String?   @db.Text
+  created_at        DateTime  @default(now()) @db.Timestamp(6)
+  traite_at         DateTime? @db.Timestamp(6)
+
+  presence       presences       @relation(fields: [presence_id], references: [id])
+  parent         profils_parents @relation(fields: [parent_id], references: [id])
+  admin_valideur utilisateurs?   @relation("JustificationValideur", fields: [valide_par], references: [id])
+}
+
+// -----------------------------------------------------------------------------
+// DOMAINE COMMUNICATION & LOGS
+// -----------------------------------------------------------------------------
+
+model messages {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenant_id         String    @db.Uuid
+  expediteur_id     String    @db.Uuid
+  destinataire_id   String    @db.Uuid
+  sujet             String    @db.VarChar
+  corps             String    @db.Text
+  piece_jointe_url  String?   @db.VarChar
+  est_lu            Boolean   @default(false)
+  lu_at             DateTime? @db.Timestamp(6)
+  message_parent_id String?   @db.Uuid
+  created_at        DateTime  @default(now()) @db.Timestamp(6)
+
+  tenant         tenants      @relation(fields: [tenant_id], references: [id])
+  expediteur     utilisateurs @relation("MessageExpediteur", fields: [expediteur_id], references: [id])
+  destinataire   utilisateurs @relation("MessageDestinataire", fields: [destinataire_id], references: [id])
+  message_parent messages?    @relation("FilDiscussion", fields: [message_parent_id], references: [id])
+  reponses       messages[]   @relation("FilDiscussion")
+}
+
+model notifications {
+  id              String    @id @default(uuid()) @db.Uuid
+  tenant_id       String    @db.Uuid
+  destinataire_id String    @db.Uuid
+  type            String    @db.VarChar // bulletin_publie | absence | note ...
+  canal           String    @db.VarChar // in_app | email | sms
+  titre           String    @db.VarChar
+  contenu         String    @db.Text
+  est_lue         Boolean   @default(false)
+  created_at      DateTime  @default(now()) @db.Timestamp(6)
+  lue_at          DateTime? @db.Timestamp(6)
+
+  tenant       tenants      @relation(fields: [tenant_id], references: [id])
+  destinataire utilisateurs @relation(fields: [destinataire_id], references: [id])
+}
+
+model logs_activites {
+  id             String   @id @default(uuid()) @db.Uuid
+  utilisateur_id String   @db.Uuid
+  tenant_id      String   @db.Uuid
+  action         String   @db.VarChar // CREATE | UPDATE | etc.
+  entite         String   @db.VarChar
+  entite_id      String?  @db.Uuid
+  details        Json?    @db.JsonB
+  ip_adresse     String?  @db.VarChar
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+
+  utilisateur utilisateurs @relation(fields: [utilisateur_id], references: [id])
+  tenant      tenants      @relation(fields: [tenant_id], references: [id])
+}
