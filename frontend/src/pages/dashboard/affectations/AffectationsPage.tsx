@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
+import { useI18n } from '../../../i18n/i18n';
 
 interface Year       { id: string; libelle: string; est_active: boolean; }
 interface Class      { id: string; nom: string; niveau: string; }
@@ -21,6 +22,7 @@ interface Affectation {
 
 export default function AffectationsPage() {
     const { user } = useAuth();
+    const { t } = useI18n();
 
     const [years,        setYears]        = useState<Year[]>([]);
     const [classes,      setClasses]      = useState<Class[]>([]);
@@ -99,7 +101,7 @@ export default function AffectationsPage() {
 
     const handleSave = async () => {
         if (!form.matiere_id || !form.enseignant_id) {
-            setErr('Matière et enseignant requis.'); return;
+            setErr(t('Matière et enseignant requis.')); return;
         }
         setSaving(true); setErr(''); setOk('');
         try {
@@ -110,7 +112,7 @@ export default function AffectationsPage() {
                     coefficient:    form.coefficient    || undefined,
                 });
                 setAffectations(prev => prev.map(a => a.id === editId ? { ...a, ...r.data } : a));
-                setOk('Affectation mise à jour.');
+                setOk(t('Affectation mise à jour.'));
             } else {
                 const r = await api.post('/api/affectations', {
                     classe_id:      selClass,
@@ -121,16 +123,16 @@ export default function AffectationsPage() {
                     coefficient:    form.coefficient    || undefined,
                 });
                 setAffectations(prev => [...prev, r.data]);
-                setOk('Affectation créée.');
+                setOk(t('Affectation créée.'));
             }
             setShowModal(false);
         } catch (e: any) {
-            setErr(e?.response?.data?.error ?? 'Erreur.');
+            setErr(e?.response?.data?.error ?? t('Erreur.'));
         } finally { setSaving(false); }
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Supprimer cette affectation ?')) return;
+        if (!confirm(t('Supprimer cette affectation ?'))) return;
         try {
             await api.delete(`/api/affectations/${id}`);
             setAffectations(prev => prev.filter(a => a.id !== id));
@@ -144,23 +146,23 @@ export default function AffectationsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800">Affectations enseignants</h1>
-                    <p className="text-slate-500 text-sm mt-1">Assigner les enseignants aux matières — coefficient par classe</p>
+                    <h1 className="text-2xl font-bold text-slate-800">{t('Affectations enseignants')}</h1>
+                    <p className="text-slate-500 text-sm mt-1">{t('Assigner les enseignants aux matières — coefficient par classe')}</p>
                 </div>
                 <button onClick={openCreate} disabled={!selClass}
                     className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50">
-                    <Plus size={15} /> Ajouter une affectation
+                    <Plus size={15} /> {t('Ajouter une affectation')}
                 </button>
             </div>
 
             {/* Sélecteurs */}
             <div className="flex flex-wrap gap-3">
-                <SelField label="Année scolaire" value={selYear} onChange={setSelYear}>
-                    <option value="">-- Année --</option>
+                <SelField label={t('Année scolaire')} value={selYear} onChange={setSelYear}>
+                    <option value="">{t('-- Année --')}</option>
                     {years.map(y => <option key={y.id} value={y.id}>{y.libelle}{y.est_active ? ' ★' : ''}</option>)}
                 </SelField>
-                <SelField label="Classe" value={selClass} onChange={setSelClass} className="min-w-[200px]">
-                    <option value="">-- Classe --</option>
+                <SelField label={t('Classe')} value={selClass} onChange={setSelClass} className="min-w-[200px]">
+                    <option value="">{t('-- Classe --')}</option>
                     {classes.map(c => <option key={c.id} value={c.id}>{c.nom} · {c.niveau}</option>)}
                 </SelField>
             </div>
@@ -175,7 +177,7 @@ export default function AffectationsPage() {
             {!selClass ? (
                 <div className="flex flex-col items-center justify-center py-20 text-slate-400 gap-2">
                     <UserCog size={40} className="text-slate-200" />
-                    <p className="text-sm">Sélectionnez une classe pour voir ses affectations.</p>
+                    <p className="text-sm">{t('Sélectionnez une classe pour voir ses affectations.')}</p>
                 </div>
             ) : loading ? (
                 <div className="flex justify-center py-12">
@@ -189,7 +191,7 @@ export default function AffectationsPage() {
                             <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs font-semibold">{selectedClass.niveau}</span>
                             {unaffectedMatieres.length > 0 && (
                                 <span className="ml-auto text-xs text-amber-600 font-medium">
-                                    {unaffectedMatieres.length} matière(s) sans enseignant
+                                    {unaffectedMatieres.length} {t('matière(s) sans enseignant')}
                                 </span>
                             )}
                         </div>
@@ -198,7 +200,7 @@ export default function AffectationsPage() {
                         <thead>
                             <tr className="bg-slate-50 border-b border-slate-100">
                                 {['Matière','Code','Coeff. classe','Enseignant','Vol./sem.',''].map(h => (
-                                    <th key={h} className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide text-left">{h}</th>
+                                    <th key={h} className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide text-left">{t(h)}</th>
                                 ))}
                             </tr>
                         </thead>
@@ -207,7 +209,7 @@ export default function AffectationsPage() {
                                 <tr>
                                     <td colSpan={6} className="py-16 text-center text-slate-400 text-sm">
                                         <BookOpen size={32} className="mx-auto mb-3 text-slate-200" />
-                                        Aucune affectation pour cette classe.
+                                        {t('Aucune affectation pour cette classe.')}
                                     </td>
                                 </tr>
                             ) : affectations.map((a, i) => (
@@ -221,7 +223,7 @@ export default function AffectationsPage() {
                                         {a.coefficient != null ? (
                                             <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-xs">{a.coefficient}</span>
                                         ) : (
-                                            <span className="text-slate-400 text-xs">{a.matiere.coefficient} <span className="text-slate-300">(défaut)</span></span>
+                                            <span className="text-slate-400 text-xs">{a.matiere.coefficient} <span className="text-slate-300">({t('défaut')})</span></span>
                                         )}
                                     </td>
                                     <td className="px-4 py-3">
@@ -263,7 +265,7 @@ export default function AffectationsPage() {
                             className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-base font-bold text-slate-800">
-                                    {editId ? 'Modifier l\'affectation' : 'Nouvelle affectation'}
+                                    {editId ? t('Modifier l\'affectation') : t('Nouvelle affectation')}
                                 </h2>
                                 <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={16} /></button>
                             </div>
@@ -277,22 +279,22 @@ export default function AffectationsPage() {
                             <div className="space-y-3">
                                 {editId ? (
                                     <div className="px-3 py-2 bg-slate-50 rounded-lg border border-slate-100">
-                                        <p className="text-xs text-slate-500">Matière : <span className="font-semibold text-slate-700">
+                                        <p className="text-xs text-slate-500">{t('Matière')} : <span className="font-semibold text-slate-700">
                                             {affectations.find(a => a.id === editId)?.matiere.nom}
                                         </span></p>
                                     </div>
                                 ) : (
-                                    <ModalSelect label="Matière *" value={form.matiere_id} onChange={v => setForm(f => ({ ...f, matiere_id: v }))}>
-                                        <option value="">-- Choisir --</option>
+                                    <ModalSelect label={t('Matière *')} value={form.matiere_id} onChange={v => setForm(f => ({ ...f, matiere_id: v }))}>
+                                        <option value="">{t('-- Choisir --')}</option>
                                         {unaffectedMatieres.map(m => (
-                                            <option key={m.id} value={m.id}>{m.nom} — coeff. défaut: {m.coefficient}</option>
+                                            <option key={m.id} value={m.id}>{m.nom} — {t('coeff. défaut:')} {m.coefficient}</option>
                                         ))}
-                                        {unaffectedMatieres.length === 0 && <option disabled>Toutes les matières sont affectées</option>}
+                                        {unaffectedMatieres.length === 0 && <option disabled>{t('Toutes les matières sont affectées')}</option>}
                                     </ModalSelect>
                                 )}
 
-                                <ModalSelect label="Enseignant *" value={form.enseignant_id} onChange={v => setForm(f => ({ ...f, enseignant_id: v }))}>
-                                    <option value="">-- Choisir --</option>
+                                <ModalSelect label={t('Enseignant *')} value={form.enseignant_id} onChange={v => setForm(f => ({ ...f, enseignant_id: v }))}>
+                                    <option value="">{t('-- Choisir --')}</option>
                                     {enseignants.map(e => (
                                         <option key={e.id} value={e.id}>
                                             {e.prenom} {e.nom}{e.specialite ? ` (${e.specialite})` : ''}
@@ -302,15 +304,15 @@ export default function AffectationsPage() {
 
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-xs font-medium text-slate-500 mb-1 block">Coefficient (ce niveau)</label>
+                                        <label className="text-xs font-medium text-slate-500 mb-1 block">{t('Coefficient (ce niveau)')}</label>
                                         <input type="number" value={form.coefficient}
                                             onChange={e => setForm(f => ({ ...f, coefficient: e.target.value }))}
                                             min="1" max="20" placeholder="Ex: 4"
                                             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
-                                        <p className="text-[10px] text-slate-400 mt-0.5">Vide = coeff. de la matière</p>
+                                        <p className="text-[10px] text-slate-400 mt-0.5">{t('Vide = coeff. de la matière')}</p>
                                     </div>
                                     <div>
-                                        <label className="text-xs font-medium text-slate-500 mb-1 block">Vol. horaire (h/sem)</label>
+                                        <label className="text-xs font-medium text-slate-500 mb-1 block">{t('Vol. horaire (h/sem)')}</label>
                                         <input type="number" value={form.volume_horaire}
                                             onChange={e => setForm(f => ({ ...f, volume_horaire: e.target.value }))}
                                             min="1" max="40" placeholder="Ex: 4"
@@ -322,12 +324,12 @@ export default function AffectationsPage() {
                             <div className="flex gap-3 pt-1">
                                 <button onClick={() => setShowModal(false)}
                                     className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50">
-                                    Annuler
+                                    {t('Annuler')}
                                 </button>
                                 <button onClick={handleSave} disabled={saving}
                                     className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60 flex items-center justify-center gap-2">
                                     {saving && <Loader2 size={13} className="animate-spin" />}
-                                    {editId ? 'Mettre à jour' : 'Affecter'}
+                                    {editId ? t('Mettre à jour') : t('Affecter')}
                                 </button>
                             </div>
                         </motion.div>

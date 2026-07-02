@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
+import { useI18n } from '../../../i18n/i18n';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -68,6 +69,7 @@ const STATUT_COLORS: Record<string, string> = {
 
 export default function AttendancePage() {
     const { user } = useAuth();
+    const { t } = useI18n();
     const [tab, setTab] = useState<Tab>('saisie');
 
     // Sélecteurs
@@ -227,7 +229,7 @@ export default function AttendancePage() {
 
     const handleSaveSession = async () => {
         if (!selectedClass || !selectedMatiere || !dateSeance) {
-            alert('Sélectionnez une classe, une matière et une date.');
+            alert(t('Sélectionnez une classe, une matière et une date.'));
             return;
         }
         setSaving(true);
@@ -241,10 +243,10 @@ export default function AttendancePage() {
                 entries: inscriptions.map(i => ({ eleve_id: i.eleve_id, statut: entries[i.eleve_id] ?? 'present' })),
             };
             const r = await api.post('/api/attendance/session', payload);
-            setSavedMsg(r.data.message ?? 'Séance enregistrée.');
+            setSavedMsg(r.data.message ?? t('Séance enregistrée.'));
             setTimeout(() => setSavedMsg(''), 3500);
         } catch (err: any) {
-            alert(err?.response?.data?.error ?? 'Erreur lors de la sauvegarde.');
+            alert(err?.response?.data?.error ?? t('Erreur lors de la sauvegarde.'));
         } finally {
             setSaving(false);
         }
@@ -256,7 +258,7 @@ export default function AttendancePage() {
             await api.put(`/api/attendance/justifications/${id}`, { statut });
             loadJustifications();
         } catch (err: any) {
-            alert(err?.response?.data?.error ?? 'Erreur.');
+            alert(err?.response?.data?.error ?? t('Erreur.'));
         } finally {
             setProcessingJustif(null);
         }
@@ -284,26 +286,26 @@ export default function AttendancePage() {
         <div className="p-6 space-y-6">
             {/* En-tête */}
             <div>
-                <h1 className="text-2xl font-bold text-slate-800">Présences & Absences</h1>
-                <p className="text-slate-500 text-sm mt-1">Saisie des présences et suivi des absences par classe</p>
+                <h1 className="text-2xl font-bold text-slate-800">{t('Présences & Absences')}</h1>
+                <p className="text-slate-500 text-sm mt-1">{t('Saisie des présences et suivi des absences par classe')}</p>
             </div>
 
             {/* Sélecteurs globaux */}
             <div className="flex flex-wrap gap-3 items-end">
-                <Select value={selectedYear}    onChange={e => setSelectedYear(e.target.value)}    label="Année scolaire">
-                    <option value="">-- Année --</option>
+                <Select value={selectedYear}    onChange={e => setSelectedYear(e.target.value)}    label={t('Année scolaire')}>
+                    <option value="">{t('-- Année --')}</option>
                     {years.map(y => <option key={y.id} value={y.id}>{y.libelle}</option>)}
                 </Select>
-                <Select value={selectedClass}   onChange={e => setSelectedClass(e.target.value)}   label="Classe" className="min-w-[160px]">
-                    <option value="">-- Classe --</option>
+                <Select value={selectedClass}   onChange={e => setSelectedClass(e.target.value)}   label={t('Classe')} className="min-w-[160px]">
+                    <option value="">{t('-- Classe --')}</option>
                     {classes.map(c => <option key={c.id} value={c.id}>{c.nom} ({c.niveau})</option>)}
                 </Select>
-                <Select value={selectedMatiere} onChange={e => setSelectedMatiere(e.target.value)} label="Matière" className="min-w-[180px]">
-                    <option value="">-- Toutes matières --</option>
+                <Select value={selectedMatiere} onChange={e => setSelectedMatiere(e.target.value)} label={t('Matière')} className="min-w-[180px]">
+                    <option value="">{t('-- Toutes matières --')}</option>
                     {matieres.map(m => <option key={m.id} value={m.id}>{m.nom}</option>)}
                 </Select>
                 <div className="flex flex-col gap-1">
-                    <label className="text-xs text-slate-500 font-medium">Date</label>
+                    <label className="text-xs text-slate-500 font-medium">{t('Date')}</label>
                     <input type="date" value={dateSeance} onChange={e => setDateSeance(e.target.value)}
                         className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:ring-2 focus:ring-emerald-500 outline-none bg-white" />
                 </div>
@@ -311,14 +313,14 @@ export default function AttendancePage() {
 
             {/* Onglets */}
             <div className="flex gap-1 border-b border-slate-200">
-                {tabs.map(t => (
-                    <button key={t.id} onClick={() => setTab(t.id)}
+                {tabs.map(tb => (
+                    <button key={tb.id} onClick={() => setTab(tb.id)}
                         className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${
-                            tab === t.id
+                            tab === tb.id
                                 ? 'bg-white text-emerald-600 border-b-2 border-emerald-500'
                                 : 'text-slate-500 hover:text-slate-700'
                         }`}>
-                        {t.icon}{t.label}
+                        {tb.icon}{t(tb.label)}
                     </button>
                 ))}
             </div>
@@ -331,12 +333,12 @@ export default function AttendancePage() {
                         {/* Barre horaire */}
                         <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap items-end gap-4">
                             <div className="flex flex-col gap-1">
-                                <label className="text-xs text-slate-500 font-medium">Heure début</label>
+                                <label className="text-xs text-slate-500 font-medium">{t('Heure début')}</label>
                                 <input type="time" value={heureDebut} onChange={e => setHeureDebut(e.target.value)}
                                     className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
                             </div>
                             <div className="flex flex-col gap-1">
-                                <label className="text-xs text-slate-500 font-medium">Heure fin</label>
+                                <label className="text-xs text-slate-500 font-medium">{t('Heure fin')}</label>
                                 <input type="time" value={heureFin} onChange={e => setHeureFin(e.target.value)}
                                     className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
                             </div>
@@ -344,38 +346,38 @@ export default function AttendancePage() {
                             <div className="flex gap-2">
                                 <button onClick={() => handleSetAll('present')}
                                     className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-sm hover:bg-emerald-100 font-medium">
-                                    <UserCheck size={14} /> Tous présents
+                                    <UserCheck size={14} /> {t('Tous présents')}
                                 </button>
                                 <button onClick={() => handleSetAll('absent')}
                                     className="flex items-center gap-1.5 px-3 py-2 bg-red-50 text-red-700 rounded-lg text-sm hover:bg-red-100 font-medium">
-                                    <UserX size={14} /> Tous absents
+                                    <UserX size={14} /> {t('Tous absents')}
                                 </button>
                             </div>
                             {inscriptions.length > 0 && (
                                 <div className="flex gap-4 text-sm ml-2">
-                                    <span className="text-emerald-600 font-semibold">{countByStatut('present')} présents</span>
-                                    <span className="text-red-600    font-semibold">{countByStatut('absent')} absents</span>
-                                    <span className="text-amber-600  font-semibold">{countByStatut('retard')} retards</span>
+                                    <span className="text-emerald-600 font-semibold">{countByStatut('present')} {t('présents')}</span>
+                                    <span className="text-red-600    font-semibold">{countByStatut('absent')} {t('absents')}</span>
+                                    <span className="text-amber-600  font-semibold">{countByStatut('retard')} {t('retards')}</span>
                                 </div>
                             )}
                         </div>
 
                         {/* Tableau élèves */}
                         {!selectedClass ? (
-                            <EmptyState icon={<Users size={40} />} message="Sélectionnez une classe pour saisir les présences." />
+                            <EmptyState icon={<Users size={40} />} message={t('Sélectionnez une classe pour saisir les présences.')} />
                         ) : loadingInsc ? (
                             <LoadingState />
                         ) : inscriptions.length === 0 ? (
-                            <EmptyState icon={<Users size={40} />} message="Aucun élève inscrit dans cette classe." />
+                            <EmptyState icon={<Users size={40} />} message={t('Aucun élève inscrit dans cette classe.')} />
                         ) : (
                             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                                 <table className="w-full text-sm">
                                     <thead className="bg-slate-50 border-b border-slate-200">
                                         <tr>
                                             <th className="text-left px-4 py-3 text-slate-500 font-medium w-8">#</th>
-                                            <th className="text-left px-4 py-3 text-slate-500 font-medium">Matricule</th>
-                                            <th className="text-left px-4 py-3 text-slate-500 font-medium">Nom & Prénom</th>
-                                            <th className="text-center px-4 py-3 text-slate-500 font-medium">Statut</th>
+                                            <th className="text-left px-4 py-3 text-slate-500 font-medium">{t('Matricule')}</th>
+                                            <th className="text-left px-4 py-3 text-slate-500 font-medium">{t('Nom & Prénom')}</th>
+                                            <th className="text-center px-4 py-3 text-slate-500 font-medium">{t('Statut')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
@@ -398,7 +400,7 @@ export default function AttendancePage() {
                                                                             : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
                                                                     }`}>
                                                                     {s === 'present' ? <UserCheck size={11} /> : s === 'absent' ? <UserX size={11} /> : s === 'retard' ? <Clock size={11} /> : <AlertTriangle size={11} />}
-                                                                    {s}
+                                                                    {t(s)}
                                                                 </button>
                                                             ))}
                                                         </div>
@@ -422,7 +424,7 @@ export default function AttendancePage() {
                                 <button onClick={handleSaveSession} disabled={saving}
                                     className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-medium disabled:opacity-50 transition-colors">
                                     {saving ? <Loader2 size={16} className="animate-spin" /> : <UserCheck size={16} />}
-                                    Enregistrer la séance
+                                    {t('Enregistrer la séance')}
                                 </button>
                             </div>
                         )}
@@ -442,22 +444,22 @@ export default function AttendancePage() {
                         </div>
 
                         {!selectedClass ? (
-                            <EmptyState icon={<Calendar size={40} />} message="Sélectionnez une classe pour voir l'historique." />
+                            <EmptyState icon={<Calendar size={40} />} message={t("Sélectionnez une classe pour voir l'historique.")} />
                         ) : loadingHist ? (
                             <LoadingState />
                         ) : filteredPresences.length === 0 ? (
-                            <EmptyState icon={<Calendar size={40} />} message="Aucune séance enregistrée." />
+                            <EmptyState icon={<Calendar size={40} />} message={t('Aucune séance enregistrée.')} />
                         ) : (
                             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                                 <table className="w-full text-sm">
                                     <thead className="bg-slate-50 border-b border-slate-200">
                                         <tr>
-                                            <th className="text-left px-4 py-3 font-medium text-slate-500">Date</th>
-                                            <th className="text-left px-4 py-3 font-medium text-slate-500">Horaire</th>
-                                            <th className="text-left px-4 py-3 font-medium text-slate-500">Élève</th>
-                                            <th className="text-left px-4 py-3 font-medium text-slate-500">Matière</th>
-                                            <th className="text-center px-4 py-3 font-medium text-slate-500">Statut</th>
-                                            <th className="text-center px-4 py-3 font-medium text-slate-500">Justif.</th>
+                                            <th className="text-left px-4 py-3 font-medium text-slate-500">{t('Date')}</th>
+                                            <th className="text-left px-4 py-3 font-medium text-slate-500">{t('Horaire')}</th>
+                                            <th className="text-left px-4 py-3 font-medium text-slate-500">{t('Élève')}</th>
+                                            <th className="text-left px-4 py-3 font-medium text-slate-500">{t('Matière')}</th>
+                                            <th className="text-center px-4 py-3 font-medium text-slate-500">{t('Statut')}</th>
+                                            <th className="text-center px-4 py-3 font-medium text-slate-500">{t('Justif.')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
@@ -484,7 +486,7 @@ export default function AttendancePage() {
                                                 <td className="px-4 py-2.5 text-center text-xs">
                                                     {p.statut !== 'present'
                                                         ? <span className={p.justifiee ? 'text-emerald-600 font-medium' : 'text-slate-400'}>
-                                                            {p.justifiee ? '✓ Oui' : '–'}
+                                                            {p.justifiee ? t('✓ Oui') : '–'}
                                                           </span>
                                                         : null}
                                                 </td>
@@ -501,30 +503,30 @@ export default function AttendancePage() {
                 {tab === 'stats' && (
                     <motion.div key="stats" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                         {!selectedClass ? (
-                            <EmptyState icon={<BarChart3 size={40} />} message="Sélectionnez une classe pour voir les statistiques." />
+                            <EmptyState icon={<BarChart3 size={40} />} message={t('Sélectionnez une classe pour voir les statistiques.')} />
                         ) : loadingStats ? (
                             <LoadingState />
                         ) : statRows.length === 0 ? (
-                            <EmptyState icon={<BarChart3 size={40} />} message="Aucune donnée de présence pour cette classe." />
+                            <EmptyState icon={<BarChart3 size={40} />} message={t('Aucune donnée de présence pour cette classe.')} />
                         ) : (
                             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                                 <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                                    <h3 className="font-semibold text-slate-700 text-sm">Bilan des absences — {statRows.length} élève(s)</h3>
+                                    <h3 className="font-semibold text-slate-700 text-sm">{t('Bilan des absences')} — {statRows.length} {t('élève(s)')}</h3>
                                     <span className="text-xs font-semibold text-red-600 bg-red-50 px-2.5 py-1 rounded-full">
-                                        Total : {totalHeuresAbs} h d'absence
+                                        {t('Total :')} {totalHeuresAbs} {t("h d'absence")}
                                     </span>
                                 </div>
                                 <table className="w-full text-sm">
                                     <thead className="bg-slate-50/60 border-b border-slate-100">
                                         <tr>
-                                            <th className="text-left px-4 py-3 font-medium text-slate-500">Élève</th>
-                                            <th className="text-center px-3 py-3 font-medium text-emerald-600">Présent</th>
-                                            <th className="text-center px-3 py-3 font-medium text-red-600">Absent</th>
-                                            <th className="text-center px-3 py-3 font-medium text-amber-600">Retard</th>
-                                            <th className="text-center px-3 py-3 font-medium text-slate-500">Exclu</th>
-                                            <th className="text-center px-3 py-3 font-medium text-slate-500">Justifiées</th>
-                                            <th className="text-center px-3 py-3 font-medium text-red-600">Heures d'abs.</th>
-                                            <th className="px-4 py-3 font-medium text-slate-500">Taux présence</th>
+                                            <th className="text-left px-4 py-3 font-medium text-slate-500">{t('Élève')}</th>
+                                            <th className="text-center px-3 py-3 font-medium text-emerald-600">{t('Présent')}</th>
+                                            <th className="text-center px-3 py-3 font-medium text-red-600">{t('Absent')}</th>
+                                            <th className="text-center px-3 py-3 font-medium text-amber-600">{t('Retard')}</th>
+                                            <th className="text-center px-3 py-3 font-medium text-slate-500">{t('Exclu')}</th>
+                                            <th className="text-center px-3 py-3 font-medium text-slate-500">{t('Justifiées')}</th>
+                                            <th className="text-center px-3 py-3 font-medium text-red-600">{t("Heures d'abs.")}</th>
+                                            <th className="px-4 py-3 font-medium text-slate-500">{t('Taux présence')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
@@ -548,7 +550,7 @@ export default function AttendancePage() {
                                                         {row.stats.heures_absence > 0 ? `${row.stats.heures_absence} h` : '–'}
                                                         {row.stats.heures_absence_just > 0 && (
                                                             <span className="block text-[10px] font-normal text-emerald-600">
-                                                                dont {row.stats.heures_absence_just} h just.
+                                                                {t('dont')} {row.stats.heures_absence_just} {t('h just.')}
                                                             </span>
                                                         )}
                                                     </td>
@@ -578,14 +580,14 @@ export default function AttendancePage() {
                                 <button key={val} onClick={() => setJustifFilter(val as any)}
                                     className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
                                         justifFilter === val ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                    }`}>{label}</button>
+                                    }`}>{t(label)}</button>
                             ))}
                         </div>
 
                         {loadingJustif ? (
                             <LoadingState />
                         ) : justifications.length === 0 ? (
-                            <EmptyState icon={<FileText size={40} />} message="Aucune justification pour les filtres sélectionnés." />
+                            <EmptyState icon={<FileText size={40} />} message={t('Aucune justification pour les filtres sélectionnés.')} />
                         ) : (
                             <div className="space-y-3">
                                 {justifications.map(j => (
@@ -601,9 +603,9 @@ export default function AttendancePage() {
                                                 }`}>{j.statut.replace('_', ' ')}</span>
                                             </div>
                                             <div className="text-sm text-slate-500 space-y-0.5">
-                                                <p><span className="font-medium text-slate-600">Matière :</span> {j.presence.matiere.nom}</p>
-                                                <p><span className="font-medium text-slate-600">Date :</span> {new Date(j.presence.date_seance).toLocaleDateString('fr-FR')} — <span className="capitalize">{j.presence.statut}</span></p>
-                                                <p><span className="font-medium text-slate-600">Motif :</span> {j.motif}</p>
+                                                <p><span className="font-medium text-slate-600">{t('Matière')} :</span> {j.presence.matiere.nom}</p>
+                                                <p><span className="font-medium text-slate-600">{t('Date')} :</span> {new Date(j.presence.date_seance).toLocaleDateString('fr-FR')} — <span className="capitalize">{t(j.presence.statut)}</span></p>
+                                                <p><span className="font-medium text-slate-600">{t('Motif :')}</span> {j.motif}</p>
                                             </div>
                                         </div>
                                         {j.statut === 'en_attente' && (
@@ -611,11 +613,11 @@ export default function AttendancePage() {
                                                 <button onClick={() => handleJustifAction(j.id, 'acceptee')} disabled={processingJustif === j.id}
                                                     className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700 disabled:opacity-50">
                                                     {processingJustif === j.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
-                                                    Accepter
+                                                    {t('Accepter')}
                                                 </button>
                                                 <button onClick={() => handleJustifAction(j.id, 'refusee')} disabled={processingJustif === j.id}
                                                     className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs font-medium hover:bg-red-100 disabled:opacity-50">
-                                                    <X size={12} /> Refuser
+                                                    <X size={12} /> {t('Refuser')}
                                                 </button>
                                             </div>
                                         )}

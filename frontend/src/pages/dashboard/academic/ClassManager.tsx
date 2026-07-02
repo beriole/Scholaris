@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, Plus, Users, Wallet, Loader2, X } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
+import { useI18n } from '../../../i18n/i18n';
 
 const ClassManager = () => {
     const { user } = useAuth();
+    const { t } = useI18n();
     const [classes, setClasses] = useState<any[]>([]);
     const [years, setYears] = useState<any[]>([]);
     const [selectedYear, setSelectedYear] = useState('');
@@ -58,7 +60,7 @@ const ClassManager = () => {
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedYear) return alert('Veuillez sélectionner une année');
+        if (!selectedYear) return alert(t('Veuillez sélectionner une année'));
 
         try {
             await api.post('/api/academic/classes', {
@@ -69,7 +71,7 @@ const ClassManager = () => {
             setIsModalOpen(false);
             handleYearChange(selectedYear);
         } catch (err) {
-            alert('Erreur creation');
+            alert(t('Erreur lors de la création'));
         }
     };
 
@@ -77,8 +79,8 @@ const ClassManager = () => {
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h2 className="text-xl font-black text-slate-900">Gestion des Classes</h2>
-                    <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">Configuration des niveaux et frais</p>
+                    <h2 className="text-xl font-black text-slate-900">{t('Gestion des Classes')}</h2>
+                    <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">{t('Configuration des niveaux et frais')}</p>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -88,14 +90,14 @@ const ClassManager = () => {
                         className="px-4 py-3 bg-white border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:border-emerald-500 shadow-sm"
                     >
                         {years.map(y => (
-                            <option key={y.id} value={y.id}>{y.libelle} {y.est_active ? '(Active)' : ''}</option>
+                            <option key={y.id} value={y.id}>{y.libelle} {y.est_active ? `(${t('Active')})` : ''}</option>
                         ))}
                     </select>
                     <button
                         onClick={() => setIsModalOpen(true)}
                         className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-600/20"
                     >
-                        <Plus size={18} /> Nouvelle Classe
+                        <Plus size={18} /> {t('Nouvelle Classe')}
                     </button>
                 </div>
             </div>
@@ -122,15 +124,15 @@ const ClassManager = () => {
                                 </span>
                             </div>
                             <h3 className="text-2xl font-black text-slate-900 mb-1">{cls.nom}</h3>
-                            <p className="text-sm font-bold text-slate-400 mb-6">{cls.serie || 'Tronc commun'}</p>
+                            <p className="text-sm font-bold text-slate-400 mb-6">{cls.serie || t('Tronc commun')}</p>
 
                             <div className="space-y-3 pt-6 border-t border-slate-50">
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-slate-400 font-medium">Capacité</span>
+                                    <span className="text-slate-400 font-medium">{t('Capacité')}</span>
                                     <span className="font-bold text-slate-700 flex items-center gap-1"><Users size={14} /> {cls.capacite_max}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-slate-400 font-medium">Frais Scolaires</span>
+                                    <span className="text-slate-400 font-medium">{t('Frais Scolaires')}</span>
                                     <span className="font-bold text-emerald-600 flex items-center gap-1"><Wallet size={14} /> {cls.frais_scolarite_xaf?.toLocaleString()} XAF</span>
                                 </div>
                             </div>
@@ -140,7 +142,7 @@ const ClassManager = () => {
                     {classes.length === 0 && !loading && (
                         <div className="col-span-full py-20 flex flex-col items-center justify-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
                             <Layers size={48} className="text-slate-200 mb-4" />
-                            <p className="text-slate-400 font-bold">Aucune classe pour cette année.</p>
+                            <p className="text-slate-400 font-bold">{t('Aucune classe pour cette année.')}</p>
                         </div>
                     )}
                 </div>
@@ -156,13 +158,13 @@ const ClassManager = () => {
                             className="bg-white p-10 rounded-[3rem] w-full max-w-lg shadow-2xl overflow-hidden"
                         >
                             <div className="flex justify-between items-center mb-8">
-                                <h2 className="text-2xl font-black text-slate-900 leading-tight">Ajouter une classe</h2>
+                                <h2 className="text-2xl font-black text-slate-900 leading-tight">{t('Ajouter une classe')}</h2>
                                 <button type="button" onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X /></button>
                             </div>
 
                             <div className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase text-slate-400 ml-1">Nom de la classe</label>
+                                    <label className="text-xs font-black uppercase text-slate-400 ml-1">{t('Nom de la classe')}</label>
                                     <input
                                         required
                                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-emerald-500 font-bold"
@@ -174,20 +176,20 @@ const ClassManager = () => {
 
                                 <div className="grid grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-black uppercase text-slate-400 ml-1">Niveau</label>
+                                        <label className="text-xs font-black uppercase text-slate-400 ml-1">{t('Niveau')}</label>
                                         <select
                                             className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-emerald-500 font-bold"
                                             value={formData.niveau}
                                             onChange={(e) => setFormData({ ...formData, niveau: e.target.value })}
                                         >
-                                            <option>Maternelle</option>
-                                            <option>Primaire</option>
-                                            <option>Collège</option>
-                                            <option>Lycée</option>
+                                            <option value="Maternelle">{t('Maternelle')}</option>
+                                            <option value="Primaire">{t('Primaire')}</option>
+                                            <option value="Collège">{t('Collège')}</option>
+                                            <option value="Lycée">{t('Lycée')}</option>
                                         </select>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-black uppercase text-slate-400 ml-1">Série / Spéc.</label>
+                                        <label className="text-xs font-black uppercase text-slate-400 ml-1">{t('Série / Spéc.')}</label>
                                         <input
                                             className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-emerald-500 font-bold"
                                             placeholder="Ex: TI, C, D"
@@ -199,7 +201,7 @@ const ClassManager = () => {
 
                                 <div className="grid grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-black uppercase text-slate-400 ml-1">Capacité</label>
+                                        <label className="text-xs font-black uppercase text-slate-400 ml-1">{t('Capacité')}</label>
                                         <input
                                             type="number"
                                             className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-emerald-500 font-bold"
@@ -208,7 +210,7 @@ const ClassManager = () => {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-black uppercase text-slate-400 ml-1">Scolarité (XAF)</label>
+                                        <label className="text-xs font-black uppercase text-slate-400 ml-1">{t('Scolarité (XAF)')}</label>
                                         <input
                                             type="number"
                                             className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-emerald-500 font-bold"
@@ -220,7 +222,7 @@ const ClassManager = () => {
                             </div>
 
                             <button type="submit" className="w-full py-5 bg-emerald-600 text-white font-black rounded-2xl mt-10 shadow-xl shadow-emerald-600/20 active:scale-95 transition-all">
-                                Créer la classe
+                                {t('Créer la classe')}
                             </button>
                         </motion.form>
                     </div>

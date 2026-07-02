@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
+import { useI18n } from '../i18n/i18n';
 
 const SetupSuperAdmin = () => {
     const navigate = useNavigate();
+    const { t } = useI18n();
     const [formData, setFormData] = useState({
         nom_tenant: '',
         sous_domaine: '',
@@ -22,7 +24,7 @@ const SetupSuperAdmin = () => {
         setSuccess('');
 
         if (formData.mot_de_passe !== formData.confirm_password) {
-            setError('Les mots de passe ne correspondent pas.');
+            setError(t('Les mots de passe ne correspondent pas.'));
             return;
         }
 
@@ -37,12 +39,12 @@ const SetupSuperAdmin = () => {
                 mot_de_passe: formData.mot_de_passe
             });
 
-            setSuccess('Compte Super Admin créé avec succès ! Redirection vers la connexion...');
+            setSuccess(t('Compte Super Admin créé avec succès ! Redirection vers la connexion...'));
             setTimeout(() => {
                 navigate('/login');
             }, 3000);
         } catch (err: any) {
-            setError(err.response?.data?.error || err.message || 'Une erreur inattendue s\'est produite.');
+            setError(err.response?.data?.error || err.message || t('Une erreur inattendue s\'est produite.'));
         } finally {
             setLoading(false);
         }
@@ -66,10 +68,10 @@ const SetupSuperAdmin = () => {
                     </div>
                 </div>
                 <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                    Configuration Initiale
+                    {t('Configuration Initiale')}
                 </h2>
                 <p className="mt-2 text-center text-sm text-gray-600">
-                    Création du premier compte Super Admin
+                    {t('Création du premier compte Super Admin')}
                 </p>
             </div>
 
@@ -98,11 +100,11 @@ const SetupSuperAdmin = () => {
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
                             <div className="sm:col-span-2">
-                                <h3 className="text-lg font-medium leading-6 text-gray-900 border-b pb-2">Informations de l'Organisation</h3>
+                                <h3 className="text-lg font-medium leading-6 text-gray-900 border-b pb-2">{t("Informations de l'Organisation")}</h3>
                             </div>
 
                             <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700">Nom du Tenant (Organisation / Marque)</label>
+                                <label className="block text-sm font-medium text-gray-700">{t('Nom du Tenant (Organisation / Marque)')}</label>
                                 <div className="mt-1">
                                     <input
                                         name="nom_tenant"
@@ -117,7 +119,7 @@ const SetupSuperAdmin = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Sous-domaine</label>
+                                <label className="block text-sm font-medium text-gray-700">{t('Sous-domaine')}</label>
                                 <div className="mt-1 flex rounded-md justify-center items-center shadow-sm">
                                     <input
                                         name="sous_domaine"
@@ -135,7 +137,7 @@ const SetupSuperAdmin = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Pays</label>
+                                <label className="block text-sm font-medium text-gray-700">{t('Pays')}</label>
                                 <div className="mt-1">
                                     <select
                                         name="pays"
@@ -143,20 +145,20 @@ const SetupSuperAdmin = () => {
                                         onChange={handleChange}
                                         className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                                     >
-                                        <option value="CM">Cameroun</option>
-                                        <option value="SN">Sénégal</option>
-                                        <option value="CI">Côte d'Ivoire</option>
-                                        <option value="FR">France</option>
+                                        <option value="CM">{t('Cameroun')}</option>
+                                        <option value="SN">{t('Sénégal')}</option>
+                                        <option value="CI">{t("Côte d'Ivoire")}</option>
+                                        <option value="FR">{t('France')}</option>
                                     </select>
                                 </div>
                             </div>
 
                             <div className="sm:col-span-2 mt-4">
-                                <h3 className="text-lg font-medium leading-6 text-gray-900 border-b pb-2">Informations du Super Admin</h3>
+                                <h3 className="text-lg font-medium leading-6 text-gray-900 border-b pb-2">{t('Informations du Super Admin')}</h3>
                             </div>
 
                             <div className="sm:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700">Adresse e-mail</label>
+                                <label className="block text-sm font-medium text-gray-700">{t('Adresse e-mail')}</label>
                                 <div className="mt-1">
                                     <input
                                         name="email"
@@ -171,7 +173,7 @@ const SetupSuperAdmin = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Mot de passe</label>
+                                <label className="block text-sm font-medium text-gray-700">{t('Mot de passe')}</label>
                                 <div className="mt-1">
                                     <input
                                         name="mot_de_passe"
@@ -185,7 +187,7 @@ const SetupSuperAdmin = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Confirmer le mot de passe</label>
+                                <label className="block text-sm font-medium text-gray-700">{t('Confirmer le mot de passe')}</label>
                                 <div className="mt-1">
                                     <input
                                         name="confirm_password"
@@ -205,7 +207,7 @@ const SetupSuperAdmin = () => {
                                 disabled={loading}
                                 className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${loading ? 'opacity-75 cursor-not-allowed' : ''}`}
                             >
-                                {loading ? 'Création en cours...' : 'Créer le compte Super Admin'}
+                                {loading ? t('Création en cours...') : t('Créer le compte Super Admin')}
                             </button>
                         </div>
                     </form>

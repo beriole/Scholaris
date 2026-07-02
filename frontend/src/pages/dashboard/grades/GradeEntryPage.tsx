@@ -6,6 +6,7 @@ import {
     GraduationCap, ChevronRight
 } from 'lucide-react';
 import api from '../../../lib/api';
+import { useI18n } from '../../../i18n/i18n';
 
 interface EvalType { id: string; libelle: string; ponderation: number; }
 interface EleveRow {
@@ -39,6 +40,7 @@ const calcAvg = (grades: Record<string, { valeur: number } | null>, draft: Recor
 };
 
 const GradeEntryPage = () => {
+    const { t } = useI18n();
     const [params] = useSearchParams();
     const navigate = useNavigate();
 
@@ -150,7 +152,7 @@ const GradeEntryPage = () => {
             setSuccess(res.data.message);
             await fetchSheet();
         } catch (err: any) {
-            setError(err.response?.data?.error ?? 'Erreur lors de la sauvegarde.');
+            setError(err.response?.data?.error ?? t('Erreur lors de la sauvegarde.'));
         }
         setSaving(false);
     };
@@ -158,7 +160,7 @@ const GradeEntryPage = () => {
     if (loading) return (
         <div className="flex items-center justify-center h-64 gap-3">
             <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm text-slate-400">Chargement de la feuille de notes…</span>
+            <span className="text-sm text-slate-400">{t('Chargement de la feuille de notes…')}</span>
         </div>
     );
 
@@ -181,15 +183,15 @@ const GradeEntryPage = () => {
                         onClick={() => navigate(-1)}
                         className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 transition-colors mb-3"
                     >
-                        <ArrowLeft className="w-3.5 h-3.5" /> Retour
+                        <ArrowLeft className="w-3.5 h-3.5" /> {t('Retour')}
                     </button>
-                    <h2 className="text-lg font-bold text-slate-900">Saisie des notes</h2>
+                    <h2 className="text-lg font-bold text-slate-900">{t('Saisie des notes')}</h2>
                     <div className="flex items-center gap-2 mt-1 text-sm text-slate-500">
                         <span className="font-semibold text-slate-700">{sheet.matiere.nom}</span>
                         <ChevronRight className="w-3.5 h-3.5" />
                         <span>{sheet.periode.libelle}</span>
                         <span className="px-2 py-0.5 bg-slate-100 rounded text-xs font-semibold">
-                            coeff {sheet.matiere.coefficient}
+                            {t('coeff')} {sheet.matiere.coefficient}
                         </span>
                     </div>
                 </div>
@@ -200,7 +202,7 @@ const GradeEntryPage = () => {
                     className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 transition-all shadow-sm disabled:opacity-70 shrink-0"
                 >
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    Enregistrer
+                    {t('Enregistrer')}
                 </button>
             </div>
 
@@ -218,7 +220,7 @@ const GradeEntryPage = () => {
 
             {/* Types d'évaluation info */}
             <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span className="font-semibold">Types :</span>
+                <span className="font-semibold">{t('Types :')}</span>
                 {sheet.eval_types.map((et, i) => (
                     <span key={et.id} className="inline-flex items-center gap-1">
                         <span className="px-2 py-0.5 bg-slate-100 rounded font-semibold text-slate-700">{et.libelle}</span>
@@ -227,7 +229,7 @@ const GradeEntryPage = () => {
                     </span>
                 ))}
                 <span className="text-slate-300 mx-1">→</span>
-                <span className="text-slate-600">Moyenne pondérée</span>
+                <span className="text-slate-600">{t('Moyenne pondérée')}</span>
             </div>
 
             {/* Grille */}
@@ -235,7 +237,7 @@ const GradeEntryPage = () => {
                 {sheet.rows.length === 0 ? (
                     <div className="py-20 text-center">
                         <GraduationCap className="w-8 h-8 text-slate-200 mx-auto mb-3" />
-                        <p className="text-sm text-slate-400">Aucun élève inscrit dans cette classe.</p>
+                        <p className="text-sm text-slate-400">{t('Aucun élève inscrit dans cette classe.')}</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
@@ -243,14 +245,14 @@ const GradeEntryPage = () => {
                             <thead>
                                 <tr className="border-b border-slate-100 bg-slate-50/80">
                                     <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-8">#</th>
-                                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Élève</th>
+                                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Élève')}</th>
                                     {sheet.eval_types.map(et => (
                                         <th key={et.id} className="text-center px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider min-w-[100px]">
                                             {et.libelle}
                                             <span className="block text-[9px] font-normal text-slate-400 normal-case">×{et.ponderation}</span>
                                         </th>
                                     ))}
-                                    <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Moy.</th>
+                                    <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Moy.')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">

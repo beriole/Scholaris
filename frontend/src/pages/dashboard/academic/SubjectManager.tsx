@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Hash, Layers, Loader2, Trash2, Edit2, X, AlertCircle, ChevronDown } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
+import { useI18n } from '../../../i18n/i18n';
 
 interface Matiere {
     id: string;
@@ -22,6 +23,7 @@ const INPUT = 'w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl o
 
 const SubjectManager = () => {
     const { user } = useAuth();
+    const { t } = useI18n();
     const [groups,  setGroups]  = useState<Group[]>([]);
     const [loading, setLoading] = useState(true);
     const [err,     setErr]     = useState('');
@@ -44,7 +46,7 @@ const SubjectManager = () => {
             const res = await api.get(`/api/academic/subject-groups/${user.tenant_id}`);
             setGroups(res.data ?? []);
         } catch {
-            setErr('Erreur de chargement');
+            setErr(t('Erreur de chargement'));
         } finally {
             setLoading(false);
         }
@@ -66,7 +68,7 @@ const SubjectManager = () => {
             setGroupName('');
             setGroupModal(false);
             fetchGroups();
-        } catch { setErr('Erreur lors de la création du groupe'); }
+        } catch { setErr(t('Erreur lors de la création du groupe')); }
         finally { setSaving(false); }
     };
 
@@ -76,7 +78,7 @@ const SubjectManager = () => {
             await api.delete(`/api/academic/subject-groups/${id}`);
             setDeleteModal(null);
             fetchGroups();
-        } catch { setErr('Erreur lors de la suppression'); }
+        } catch { setErr(t('Erreur lors de la suppression')); }
         finally { setSaving(false); }
     };
 
@@ -114,7 +116,7 @@ const SubjectManager = () => {
             setSubjectModal(false);
             fetchGroups();
         } catch (e: any) {
-            setErr(e?.response?.data?.error ?? 'Erreur lors de l\'enregistrement');
+            setErr(e?.response?.data?.error ?? t('Erreur lors de l\'enregistrement'));
         } finally { setSaving(false); }
     };
 
@@ -124,7 +126,7 @@ const SubjectManager = () => {
             await api.delete(`/api/academic/subjects/${id}`);
             setDeleteModal(null);
             fetchGroups();
-        } catch { setErr('Erreur lors de la suppression'); }
+        } catch { setErr(t('Erreur lors de la suppression')); }
         finally { setSaving(false); }
     };
 
@@ -132,12 +134,12 @@ const SubjectManager = () => {
         <div className="space-y-8">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-xl font-black text-slate-900">Cours & Matières</h2>
-                    <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">Définition du programme académique</p>
+                    <h2 className="text-xl font-black text-slate-900">{t('Cours & Matières')}</h2>
+                    <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">{t('Définition du programme académique')}</p>
                 </div>
                 <button onClick={() => { setGroupModal(true); setGroupName(''); setErr(''); }}
                     className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-600/20">
-                    <Layers size={18} /> Nouveau Groupe
+                    <Layers size={18} /> {t('Nouveau Groupe')}
                 </button>
             </div>
 
@@ -154,7 +156,7 @@ const SubjectManager = () => {
             ) : groups.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-slate-400 gap-3">
                     <Layers size={40} className="text-slate-200" />
-                    <p className="text-sm font-medium">Aucun groupe de matières. Créez-en un pour commencer.</p>
+                    <p className="text-sm font-medium">{t('Aucun groupe de matières. Créez-en un pour commencer.')}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-8">
@@ -170,13 +172,13 @@ const SubjectManager = () => {
                                     </div>
                                     <div>
                                         <h3 className="text-base font-black text-slate-900">{group.nom}</h3>
-                                        <p className="text-xs text-slate-400">{group.matieres?.length ?? 0} matière(s)</p>
+                                        <p className="text-xs text-slate-400">{group.matieres?.length ?? 0} {t('matière(s)')}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <button onClick={() => openCreateSubject(group.id)}
                                         className="flex items-center gap-2 px-4 py-2 bg-white border border-emerald-100 text-emerald-600 text-xs font-black rounded-xl hover:bg-emerald-50 transition-all uppercase tracking-tighter">
-                                        <Plus size={13} /> Ajouter une matière
+                                        <Plus size={13} /> {t('Ajouter une matière')}
                                     </button>
                                     <button onClick={() => setDeleteModal({ type: 'group', id: group.id, nom: group.nom })}
                                         className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
@@ -189,10 +191,10 @@ const SubjectManager = () => {
                                 <table className="w-full">
                                     <thead>
                                         <tr className="text-[10px] font-black uppercase text-slate-400 tracking-widest text-left">
-                                            <th className="px-4 py-3">Code</th>
-                                            <th className="px-4 py-3">Matière</th>
-                                            <th className="px-4 py-3">Coefficient</th>
-                                            <th className="px-4 py-3 text-right">Actions</th>
+                                            <th className="px-4 py-3">{t('Code')}</th>
+                                            <th className="px-4 py-3">{t('Matière')}</th>
+                                            <th className="px-4 py-3">{t('Coefficient')}</th>
+                                            <th className="px-4 py-3 text-right">{t('Actions')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50">
@@ -226,7 +228,7 @@ const SubjectManager = () => {
                                         {(!group.matieres || group.matieres.length === 0) && (
                                             <tr>
                                                 <td colSpan={4} className="px-4 py-8 text-center text-sm text-slate-400">
-                                                    Aucune matière — cliquez sur "Ajouter une matière".
+                                                    {t('Aucune matière — cliquez sur « Ajouter une matière ».')}
                                                 </td>
                                             </tr>
                                         )}
@@ -241,17 +243,17 @@ const SubjectManager = () => {
             {/* ── Modal Groupe ── */}
             <AnimatePresence>
                 {groupModal && (
-                    <Modal title="Nouveau groupe de matières" onClose={() => setGroupModal(false)}>
+                    <Modal title={t('Nouveau groupe de matières')} onClose={() => setGroupModal(false)}>
                         <form onSubmit={handleCreateGroup} className="space-y-4">
                             <div>
-                                <label className="text-xs font-bold uppercase text-slate-400 ml-1">Nom du groupe</label>
+                                <label className="text-xs font-bold uppercase text-slate-400 ml-1">{t('Nom du groupe')}</label>
                                 <input required className={`${INPUT} mt-1`}
                                     placeholder="Ex: Sciences de la Nature"
                                     value={groupName}
                                     onChange={e => setGroupName(e.target.value)} />
                             </div>
                             {err && <p className="text-sm text-red-600">{err}</p>}
-                            <ModalButtons onCancel={() => setGroupModal(false)} saving={saving} label="Créer" />
+                            <ModalButtons onCancel={() => setGroupModal(false)} saving={saving} label={t('Créer')} />
                         </form>
                     </Modal>
                 )}
@@ -260,18 +262,18 @@ const SubjectManager = () => {
             {/* ── Modal Matière ── */}
             <AnimatePresence>
                 {subjectModal && (
-                    <Modal title={editSubject ? `Modifier "${editSubject.nom}"` : 'Nouvelle matière'} onClose={() => setSubjectModal(false)}>
+                    <Modal title={editSubject ? `${t('Modifier')} "${editSubject.nom}"` : t('Nouvelle matière')} onClose={() => setSubjectModal(false)}>
                         <form onSubmit={handleSaveSubject} className="space-y-4">
                             <div className="grid grid-cols-3 gap-3">
                                 <div className="col-span-1">
-                                    <label className="text-xs font-bold uppercase text-slate-400 ml-1">Code</label>
+                                    <label className="text-xs font-bold uppercase text-slate-400 ml-1">{t('Code')}</label>
                                     <input required className={`${INPUT} mt-1 uppercase`}
                                         placeholder="MAT"
                                         value={subjectData.code}
                                         onChange={e => setSubjectData(s => ({ ...s, code: e.target.value.toUpperCase() }))} />
                                 </div>
                                 <div className="col-span-2">
-                                    <label className="text-xs font-bold uppercase text-slate-400 ml-1">Libellé</label>
+                                    <label className="text-xs font-bold uppercase text-slate-400 ml-1">{t('Libellé')}</label>
                                     <input required className={`${INPUT} mt-1`}
                                         placeholder="Mathématiques"
                                         value={subjectData.nom}
@@ -279,14 +281,14 @@ const SubjectManager = () => {
                                 </div>
                             </div>
                             <div>
-                                <label className="text-xs font-bold uppercase text-slate-400 ml-1">Coefficient par défaut</label>
+                                <label className="text-xs font-bold uppercase text-slate-400 ml-1">{t('Coefficient par défaut')}</label>
                                 <input type="number" required min="1" max="20" className={`${INPUT} mt-1`}
                                     value={subjectData.coefficient}
                                     onChange={e => setSubjectData(s => ({ ...s, coefficient: parseInt(e.target.value) || 1 }))} />
-                                <p className="text-[10px] text-slate-400 mt-1 ml-1">Ce coefficient peut être redéfini par classe dans "Affectations".</p>
+                                <p className="text-[10px] text-slate-400 mt-1 ml-1">{t('Ce coefficient peut être redéfini par classe dans « Affectations ».')}</p>
                             </div>
                             {err && <p className="text-sm text-red-600">{err}</p>}
-                            <ModalButtons onCancel={() => setSubjectModal(false)} saving={saving} label={editSubject ? 'Enregistrer' : 'Créer'} />
+                            <ModalButtons onCancel={() => setSubjectModal(false)} saving={saving} label={editSubject ? t('Enregistrer') : t('Créer')} />
                         </form>
                     </Modal>
                 )}
@@ -295,24 +297,24 @@ const SubjectManager = () => {
             {/* ── Modal Suppression ── */}
             <AnimatePresence>
                 {deleteModal && (
-                    <Modal title="Confirmer la suppression" onClose={() => setDeleteModal(null)}>
+                    <Modal title={t('Confirmer la suppression')} onClose={() => setDeleteModal(null)}>
                         <p className="text-sm text-slate-600 mb-6">
-                            Supprimer <span className="font-bold text-slate-900">"{deleteModal.nom}"</span> ?
-                            {deleteModal.type === 'group' && ' Toutes les matières du groupe seront également supprimées.'}
-                            <br /><span className="text-red-600 text-xs mt-1 block">Cette action est irréversible.</span>
+                            {t('Supprimer')} <span className="font-bold text-slate-900">"{deleteModal.nom}"</span> ?
+                            {deleteModal.type === 'group' && ' ' + t('Toutes les matières du groupe seront également supprimées.')}
+                            <br /><span className="text-red-600 text-xs mt-1 block">{t('Cette action est irréversible.')}</span>
                         </p>
                         {err && <p className="text-sm text-red-600 mb-3">{err}</p>}
                         <div className="flex gap-3">
                             <button onClick={() => setDeleteModal(null)}
                                 className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-all">
-                                Annuler
+                                {t('Annuler')}
                             </button>
                             <button onClick={() => deleteModal.type === 'group'
                                 ? handleDeleteGroup(deleteModal.id)
                                 : handleDeleteSubject(deleteModal.id)}
                                 disabled={saving}
                                 className="flex-1 py-3 bg-red-600 text-white font-bold rounded-2xl hover:bg-red-700 disabled:opacity-60 flex items-center justify-center gap-2">
-                                {saving && <Loader2 size={14} className="animate-spin" />} Supprimer
+                                {saving && <Loader2 size={14} className="animate-spin" />} {t('Supprimer')}
                             </button>
                         </div>
                     </Modal>

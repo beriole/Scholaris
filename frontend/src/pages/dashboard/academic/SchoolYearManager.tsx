@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Plus, Loader2 } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
+import { useI18n } from '../../../i18n/i18n';
 
 const SchoolYearManager = () => {
     const { user } = useAuth();
+    const { t } = useI18n();
     const [years, setYears] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,7 +44,7 @@ const SchoolYearManager = () => {
             setIsModalOpen(false);
             fetchYears();
         } catch (err) {
-            alert('Erreur lors de la création');
+            alert(t('Erreur lors de la création'));
         }
     };
 
@@ -50,14 +52,14 @@ const SchoolYearManager = () => {
         <div className="space-y-8">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-xl font-black text-slate-900">Années Scolaires</h2>
-                    <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">Gestion du cycle de vie académique</p>
+                    <h2 className="text-xl font-black text-slate-900">{t('Années Scolaires')}</h2>
+                    <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">{t('Gestion du cycle de vie académique')}</p>
                 </div>
                 <button
                     onClick={() => setIsModalOpen(true)}
                     className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-600/20"
                 >
-                    <Plus size={18} /> Nouvelle Année
+                    <Plus size={18} /> {t('Nouvelle Année')}
                 </button>
             </div>
 
@@ -76,14 +78,14 @@ const SchoolYearManager = () => {
                         >
                             {year.est_active && (
                                 <div className="absolute top-0 right-0 px-4 py-1 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-bl-2xl">
-                                    Active
+                                    {t('Active')}
                                 </div>
                             )}
                             <Calendar className={`${year.est_active ? 'text-emerald-600' : 'text-slate-400'} mb-4`} size={32} />
                             <h3 className="text-2xl font-black text-slate-900 mb-2">{year.libelle}</h3>
                             <div className="flex flex-col text-sm text-slate-500 font-bold">
-                                <span>Du {new Date(year.date_debut).toLocaleDateString()}</span>
-                                <span>Au {new Date(year.date_fin).toLocaleDateString()}</span>
+                                <span>{t('Du')} {new Date(year.date_debut).toLocaleDateString()}</span>
+                                <span>{t('Au')} {new Date(year.date_fin).toLocaleDateString()}</span>
                             </div>
                         </motion.div>
                     ))}
@@ -100,7 +102,7 @@ const SchoolYearManager = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             className="bg-white p-10 rounded-[2.5rem] w-full max-w-md shadow-2xl"
                         >
-                            <h2 className="text-2xl font-black text-slate-900 mb-6">Ajouter une année</h2>
+                            <h2 className="text-2xl font-black text-slate-900 mb-6">{t('Ajouter une année')}</h2>
                             <div className="space-y-4">
                                 <input
                                     className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-emerald-500 font-bold"
@@ -129,12 +131,12 @@ const SchoolYearManager = () => {
                                         onChange={(e) => setFormData({ ...formData, est_active: e.target.checked })}
                                         className="w-5 h-5 accent-emerald-600"
                                     />
-                                    <span className="text-sm font-bold text-slate-600">Définir comme active</span>
+                                    <span className="text-sm font-bold text-slate-600">{t('Définir comme active')}</span>
                                 </label>
                             </div>
                             <div className="flex gap-4 mt-8">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 font-black rounded-2xl">Annuler</button>
-                                <button type="submit" className="flex-1 py-4 bg-emerald-600 text-white font-black rounded-2xl shadow-lg shadow-emerald-600/20">Créer</button>
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 font-black rounded-2xl">{t('Annuler')}</button>
+                                <button type="submit" className="flex-1 py-4 bg-emerald-600 text-white font-black rounded-2xl shadow-lg shadow-emerald-600/20">{t('Créer')}</button>
                             </div>
                         </motion.form>
                     </div>

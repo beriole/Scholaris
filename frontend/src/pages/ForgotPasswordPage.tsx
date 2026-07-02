@@ -11,8 +11,10 @@ import {
     ShieldCheck,
     CheckCircle2,
 } from "lucide-react";
+import { useI18n } from "../i18n/i18n";
 
 const ForgotPasswordPage = () => {
+    const { t } = useI18n();
     const [email, setEmail] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [isSent, setIsSent] = useState(false);
@@ -63,18 +65,15 @@ const ForgotPasswordPage = () => {
 
                         <div className="space-y-6">
                             <span className="inline-flex px-4 py-2 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-semibold border border-emerald-500/20">
-                                Sécurité & Authentification
+                                {t('Sécurité & Authentification')}
                             </span>
 
                             <h1 className="text-5xl font-black text-white leading-tight">
-                                Récupérez
-                                <br />
-                                l'accès à votre compte.
+                                {t("Récupérez l'accès à votre compte.")}
                             </h1>
 
                             <p className="text-slate-400 text-lg leading-relaxed">
-                                Nous vous enverrons un code OTP sécurisé afin de
-                                réinitialiser votre mot de passe en toute sécurité.
+                                {t('Nous vous enverrons un code OTP sécurisé afin de réinitialiser votre mot de passe en toute sécurité.')}
                             </p>
                         </div>
 
@@ -111,7 +110,7 @@ const ForgotPasswordPage = () => {
                                 className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors mb-8"
                             >
                                 <ArrowLeft className="w-4 h-4" />
-                                Retour à la connexion
+                                {t('Retour à la connexion')}
                             </Link>
 
                             <motion.div
@@ -136,16 +135,15 @@ const ForgotPasswordPage = () => {
                                         exit={{ opacity: 0 }}
                                     >
                                         <span className="inline-flex px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold mb-5">
-                                            Sécurité du compte
+                                            {t('Sécurité du compte')}
                                         </span>
 
                                         <h2 className="text-3xl font-black text-slate-900 leading-tight">
-                                            Mot de passe oublié ?
+                                            {t('Mot de passe oublié ?')}
                                         </h2>
 
                                         <p className="text-slate-500 mt-4 mb-8 leading-relaxed">
-                                            Saisissez votre adresse e-mail et nous vous
-                                            enverrons un code OTP sécurisé.
+                                            {t('Saisissez votre adresse e-mail et nous vous enverrons un code OTP sécurisé.')}
                                         </p>
 
                                         <form
@@ -154,7 +152,7 @@ const ForgotPasswordPage = () => {
                                         >
                                             <div>
                                                 <label className="block text-sm font-bold text-slate-700 mb-2">
-                                                    Adresse e-mail
+                                                    {t('Adresse e-mail')}
                                                 </label>
 
                                                 <div className="relative">
@@ -213,7 +211,7 @@ const ForgotPasswordPage = () => {
                                                     <Loader2 className="w-5 h-5 animate-spin" />
                                                 ) : (
                                                     <>
-                                                        Envoyer le code OTP
+                                                        {t('Envoyer le code OTP')}
                                                         <ArrowRight className="w-5 h-5" />
                                                     </>
                                                 )}
@@ -222,7 +220,7 @@ const ForgotPasswordPage = () => {
 
                                         <div className="flex items-center justify-center gap-2 mt-8 text-sm text-slate-500">
                                             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                                            Protection SSL & récupération sécurisée
+                                            {t('Protection SSL & récupération sécurisée')}
                                         </div>
                                     </motion.div>
                                 ) : (
@@ -237,11 +235,11 @@ const ForgotPasswordPage = () => {
                                             </div>
 
                                             <h3 className="text-3xl font-black text-slate-900 mb-4">
-                                                Code envoyé !
+                                                {t('Code envoyé !')}
                                             </h3>
 
                                             <p className="text-slate-500 mb-6">
-                                                Vérifiez votre boîte mail.
+                                                {t('Vérifiez votre boîte mail.')}
                                             </p>
 
                                             <div className="inline-flex px-4 py-2 rounded-xl bg-slate-100 font-semibold text-slate-800">
@@ -249,14 +247,14 @@ const ForgotPasswordPage = () => {
                                             </div>
 
                                             <p className="mt-4 text-sm text-slate-500">
-                                                Le code expire dans 10 minutes.
+                                                {t('Le code expire dans 10 minutes.')}
                                             </p>
 
                                             <button
                                                 onClick={() => setIsSent(false)}
                                                 className="mt-8 text-emerald-600 font-semibold"
                                             >
-                                                Utiliser une autre adresse
+                                                {t('Utiliser une autre adresse')}
                                             </button>
                                         </div>
                                     </motion.div>

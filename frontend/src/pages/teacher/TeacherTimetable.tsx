@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { CalendarDays, Loader2, MapPin, Clock } from 'lucide-react';
 import api from '../../lib/api';
 import { useTeacher } from './TeacherLayout';
+import { useI18n } from '../../i18n/i18n';
 
 const JOURS = ['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 const fmtTime = (t: string) => new Date(t).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -25,6 +26,7 @@ interface Slot {
 
 export default function TeacherTimetable() {
     const { profil, annee } = useTeacher();
+    const { t } = useI18n();
     const [slots, setSlots]     = useState<Slot[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -48,8 +50,8 @@ export default function TeacherTimetable() {
                     <CalendarDays className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                    <h1 className="text-xl font-black text-slate-900">Mon emploi du temps</h1>
-                    <p className="text-sm text-slate-400">{annee ? `Année ${annee.libelle}` : 'Aucune année active'}</p>
+                    <h1 className="text-xl font-black text-slate-900">{t('Mon emploi du temps')}</h1>
+                    <p className="text-sm text-slate-400">{annee ? `${t('Année')} ${annee.libelle}` : t('Aucune année active')}</p>
                 </div>
             </div>
 
@@ -58,7 +60,7 @@ export default function TeacherTimetable() {
             ) : slots.length === 0 ? (
                 <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-16 text-center">
                     <CalendarDays className="w-10 h-10 text-slate-200 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-slate-400">Aucun cours programmé. L'administration gère l'emploi du temps.</p>
+                    <p className="text-sm font-medium text-slate-400">{t("Aucun cours programmé. L'administration gère l'emploi du temps.")}</p>
                 </div>
             ) : (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -70,12 +72,12 @@ export default function TeacherTimetable() {
                             <motion.div key={jour} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: jour * 0.04 }}
                                 className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${isToday ? 'border-emerald-300 ring-1 ring-emerald-200' : 'border-slate-100'}`}>
                                 <div className={`px-4 py-3 flex items-center justify-between ${isToday ? 'bg-emerald-50' : 'bg-slate-50/60'}`}>
-                                    <span className={`font-black text-sm ${isToday ? 'text-emerald-700' : 'text-slate-700'}`}>{JOURS[jour]}</span>
-                                    {isToday && <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-600 bg-white px-2 py-0.5 rounded-full">Aujourd'hui</span>}
+                                    <span className={`font-black text-sm ${isToday ? 'text-emerald-700' : 'text-slate-700'}`}>{t(JOURS[jour])}</span>
+                                    {isToday && <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-600 bg-white px-2 py-0.5 rounded-full">{t("Aujourd'hui")}</span>}
                                 </div>
                                 <div className="p-3 space-y-2 min-h-[80px]">
                                     {daySlots.length === 0 ? (
-                                        <p className="text-xs text-slate-300 text-center py-6">Libre</p>
+                                        <p className="text-xs text-slate-300 text-center py-6">{t('Libre')}</p>
                                     ) : daySlots.map(s => (
                                         <div key={s.id} className="rounded-xl border border-slate-100 overflow-hidden">
                                             <div className={`h-1 bg-gradient-to-r ${colorOf[s.matiere.id]}`} />

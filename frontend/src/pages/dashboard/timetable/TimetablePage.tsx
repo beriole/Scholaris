@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
+import { useI18n } from '../../../i18n/i18n';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -55,6 +56,7 @@ const fmtTime = (t: string): string =>
 
 export default function TimetablePage() {
     const { user } = useAuth();
+    const { t } = useI18n();
 
     const [years,       setYears]       = useState<Year[]>([]);
     const [classes,     setClasses]     = useState<Class[]>([]);
@@ -159,7 +161,7 @@ export default function TimetablePage() {
 
     const handleSave = async () => {
         if (!form.matiere_id || !form.enseignant_id || !form.heure_debut || !form.heure_fin) {
-            setFormErr('Matière, enseignant, heure début et heure fin sont requis.');
+            setFormErr(t('Matière, enseignant, heure début et heure fin sont requis.'));
             return;
         }
         setSaving(true);
@@ -185,19 +187,19 @@ export default function TimetablePage() {
             }
             setShowModal(false);
         } catch (err: any) {
-            setFormErr(err?.response?.data?.error ?? 'Erreur lors de la sauvegarde.');
+            setFormErr(err?.response?.data?.error ?? t('Erreur lors de la sauvegarde.'));
         } finally {
             setSaving(false);
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Supprimer ce créneau ?')) return;
+        if (!confirm(t('Supprimer ce créneau ?'))) return;
         try {
             await api.delete(`/api/timetable/${id}`);
             setSlots(prev => prev.filter(s => s.id !== id));
         } catch (err: any) {
-            alert(err?.response?.data?.error ?? 'Erreur.');
+            alert(err?.response?.data?.error ?? t('Erreur.'));
         }
     };
 
@@ -210,7 +212,7 @@ export default function TimetablePage() {
             setSalleForm({ nom: '', capacite: '', type: 'classe' });
             setShowSalleModal(false);
         } catch (err: any) {
-            alert(err?.response?.data?.error ?? 'Erreur.');
+            alert(err?.response?.data?.error ?? t('Erreur.'));
         } finally {
             setSavingSalle(false);
         }
@@ -241,29 +243,29 @@ export default function TimetablePage() {
             {/* En-tête */}
             <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800">Emploi du temps</h1>
-                    <p className="text-slate-500 text-sm mt-1">Planification hebdomadaire par classe</p>
+                    <h1 className="text-2xl font-bold text-slate-800">{t('Emploi du temps')}</h1>
+                    <p className="text-slate-500 text-sm mt-1">{t('Planification hebdomadaire par classe')}</p>
                 </div>
                 <div className="flex gap-2">
                     <button onClick={() => setShowSalleModal(true)}
                         className="flex items-center gap-2 px-3 py-2 border border-slate-200 text-slate-600 rounded-xl text-sm hover:bg-slate-50 font-medium">
-                        <Building2 size={15} /> Salles
+                        <Building2 size={15} /> {t('Salles')}
                     </button>
                     <button onClick={openCreate} disabled={!selectedClass}
                         className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm hover:bg-emerald-700 font-medium disabled:opacity-50">
-                        <Plus size={15} /> Ajouter un créneau
+                        <Plus size={15} /> {t('Ajouter un créneau')}
                     </button>
                 </div>
             </div>
 
             {/* Sélecteurs */}
             <div className="flex flex-wrap gap-3 items-end">
-                <Select value={selectedYear}  onChange={e => setSelectedYear(e.target.value)}  label="Année scolaire">
-                    <option value="">-- Année --</option>
+                <Select value={selectedYear}  onChange={e => setSelectedYear(e.target.value)}  label={t('Année scolaire')}>
+                    <option value="">{t('-- Année --')}</option>
                     {years.map(y => <option key={y.id} value={y.id}>{y.libelle}</option>)}
                 </Select>
-                <Select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} label="Classe" className="min-w-[180px]">
-                    <option value="">-- Classe --</option>
+                <Select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} label={t('Classe')} className="min-w-[180px]">
+                    <option value="">{t('-- Classe --')}</option>
                     {classes.map(c => <option key={c.id} value={c.id}>{c.nom} ({c.niveau})</option>)}
                 </Select>
             </div>
@@ -272,7 +274,7 @@ export default function TimetablePage() {
             {!selectedClass ? (
                 <div className="flex flex-col items-center justify-center py-20 text-slate-400 gap-3">
                     <Clock size={40} className="text-slate-300" />
-                    <p className="text-sm">Sélectionnez une classe pour voir son emploi du temps.</p>
+                    <p className="text-sm">{t('Sélectionnez une classe pour voir son emploi du temps.')}</p>
                 </div>
             ) : loading ? (
                 <div className="flex items-center justify-center py-16">
@@ -285,7 +287,7 @@ export default function TimetablePage() {
                         <div className="border-r border-slate-100" />
                         {[1, 2, 3, 4, 5, 6].map(j => (
                             <div key={j} className="py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wide border-r border-slate-100 last:border-0">
-                                {JOURS[j]}
+                                {t(JOURS[j])}
                             </div>
                         ))}
                     </div>
@@ -362,7 +364,7 @@ export default function TimetablePage() {
                             className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-lg font-bold text-slate-800">
-                                    {editSlot ? 'Modifier le créneau' : 'Nouveau créneau'}
+                                    {editSlot ? t('Modifier le créneau') : t('Nouveau créneau')}
                                 </h2>
                                 <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
                                     <X size={18} />
@@ -377,37 +379,37 @@ export default function TimetablePage() {
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="col-span-2">
-                                    <ModalSelect label="Matière *" value={form.matiere_id} onChange={v => setForm(f => ({ ...f, matiere_id: v }))}>
-                                        <option value="">-- Choisir --</option>
+                                    <ModalSelect label={t('Matière *')} value={form.matiere_id} onChange={v => setForm(f => ({ ...f, matiere_id: v }))}>
+                                        <option value="">{t('-- Choisir --')}</option>
                                         {matieres.map(m => <option key={m.id} value={m.id}>{m.nom}</option>)}
                                     </ModalSelect>
                                 </div>
                                 <div className="col-span-2">
-                                    <ModalSelect label="Enseignant *" value={form.enseignant_id} onChange={v => setForm(f => ({ ...f, enseignant_id: v }))}>
-                                        <option value="">-- Choisir --</option>
+                                    <ModalSelect label={t('Enseignant *')} value={form.enseignant_id} onChange={v => setForm(f => ({ ...f, enseignant_id: v }))}>
+                                        <option value="">{t('-- Choisir --')}</option>
                                         {enseignants.map(e => <option key={e.id} value={e.id}>{e.nom} {e.prenom}</option>)}
                                     </ModalSelect>
                                 </div>
-                                <ModalSelect label="Jour *" value={form.jour_semaine} onChange={v => setForm(f => ({ ...f, jour_semaine: v }))}>
-                                    {[1,2,3,4,5,6].map(j => <option key={j} value={j}>{JOURS[j]}</option>)}
+                                <ModalSelect label={t('Jour *')} value={form.jour_semaine} onChange={v => setForm(f => ({ ...f, jour_semaine: v }))}>
+                                    {[1,2,3,4,5,6].map(j => <option key={j} value={j}>{t(JOURS[j])}</option>)}
                                 </ModalSelect>
-                                <ModalSelect label="Salle" value={form.salle_id} onChange={v => setForm(f => ({ ...f, salle_id: v }))}>
-                                    <option value="">-- Sans salle --</option>
+                                <ModalSelect label={t('Salle')} value={form.salle_id} onChange={v => setForm(f => ({ ...f, salle_id: v }))}>
+                                    <option value="">{t('-- Sans salle --')}</option>
                                     {salles.map(s => <option key={s.id} value={s.id}>{s.nom} (cap. {s.capacite})</option>)}
                                 </ModalSelect>
-                                <ModalInput label="Heure début *" type="time" value={form.heure_debut} onChange={v => setForm(f => ({ ...f, heure_debut: v }))} />
-                                <ModalInput label="Heure fin *"   type="time" value={form.heure_fin}   onChange={v => setForm(f => ({ ...f, heure_fin:   v }))} />
+                                <ModalInput label={t('Heure début *')} type="time" value={form.heure_debut} onChange={v => setForm(f => ({ ...f, heure_debut: v }))} />
+                                <ModalInput label={t('Heure fin *')}   type="time" value={form.heure_fin}   onChange={v => setForm(f => ({ ...f, heure_fin:   v }))} />
                             </div>
 
                             <div className="flex gap-3 pt-2">
                                 <button onClick={() => setShowModal(false)}
                                     className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50">
-                                    Annuler
+                                    {t('Annuler')}
                                 </button>
                                 <button onClick={handleSave} disabled={saving}
                                     className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60 flex items-center justify-center gap-2">
                                     {saving && <Loader2 size={14} className="animate-spin" />}
-                                    {editSlot ? 'Modifier' : 'Ajouter'}
+                                    {editSlot ? t('Modifier') : t('Ajouter')}
                                 </button>
                             </div>
                         </motion.div>
@@ -423,40 +425,40 @@ export default function TimetablePage() {
                         <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                             className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-bold text-slate-800">Gestion des salles</h2>
+                                <h2 className="text-lg font-bold text-slate-800">{t('Gestion des salles')}</h2>
                                 <button onClick={() => setShowSalleModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={18} /></button>
                             </div>
 
                             {/* Liste existante */}
                             <div className="max-h-48 overflow-y-auto space-y-1.5">
-                                {salles.length === 0 && <p className="text-sm text-slate-400 text-center py-4">Aucune salle configurée</p>}
+                                {salles.length === 0 && <p className="text-sm text-slate-400 text-center py-4">{t('Aucune salle configurée')}</p>}
                                 {salles.map(s => (
                                     <div key={s.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg text-sm">
                                         <span className="font-medium text-slate-700">{s.nom}</span>
-                                        <span className="text-slate-400 text-xs">{s.type} · {s.capacite} places</span>
+                                        <span className="text-slate-400 text-xs">{s.type} · {s.capacite} {t('places')}</span>
                                     </div>
                                 ))}
                             </div>
 
                             {/* Formulaire ajout */}
                             <div className="border-t border-slate-100 pt-4 space-y-3">
-                                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Ajouter une salle</p>
+                                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t('Ajouter une salle')}</p>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="col-span-2">
-                                        <ModalInput label="Nom *" type="text" value={salleForm.nom} onChange={v => setSalleForm(f => ({ ...f, nom: v }))} />
+                                        <ModalInput label={t('Nom *')} type="text" value={salleForm.nom} onChange={v => setSalleForm(f => ({ ...f, nom: v }))} />
                                     </div>
-                                    <ModalInput label="Capacité *" type="number" value={salleForm.capacite} onChange={v => setSalleForm(f => ({ ...f, capacite: v }))} />
-                                    <ModalSelect label="Type" value={salleForm.type} onChange={v => setSalleForm(f => ({ ...f, type: v }))}>
-                                        <option value="classe">Salle de classe</option>
-                                        <option value="laboratoire">Laboratoire</option>
-                                        <option value="salle_info">Salle info</option>
-                                        <option value="amphi">Amphithéâtre</option>
+                                    <ModalInput label={t('Capacité *')} type="number" value={salleForm.capacite} onChange={v => setSalleForm(f => ({ ...f, capacite: v }))} />
+                                    <ModalSelect label={t('Type')} value={salleForm.type} onChange={v => setSalleForm(f => ({ ...f, type: v }))}>
+                                        <option value="classe">{t('Salle de classe')}</option>
+                                        <option value="laboratoire">{t('Laboratoire')}</option>
+                                        <option value="salle_info">{t('Salle info')}</option>
+                                        <option value="amphi">{t('Amphithéâtre')}</option>
                                     </ModalSelect>
                                 </div>
                                 <button onClick={handleCreateSalle} disabled={savingSalle || !salleForm.nom || !salleForm.capacite}
                                     className="w-full py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 flex items-center justify-center gap-2">
                                     {savingSalle && <Loader2 size={14} className="animate-spin" />}
-                                    <Plus size={14} /> Ajouter
+                                    <Plus size={14} /> {t('Ajouter')}
                                 </button>
                             </div>
                         </motion.div>

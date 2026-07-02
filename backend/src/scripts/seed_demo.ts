@@ -10,7 +10,7 @@ import bcrypt from 'bcrypt';
 
 const TENANT_ID = 'a04c0c79-f850-4ba2-b324-6fe3fb030b61'; // tenant de berioletsague@gmail.com
 
-async function main() {
+export async function main() {
     // 1. École ----------------------------------------------------------------
     let ecole = await prisma.ecoles.findFirst({ where: { tenant_id: TENANT_ID } });
     if (!ecole) {
@@ -231,4 +231,6 @@ async function main() {
     console.log('\n✅ Seed démo terminé pour l\'école', ecole.nom);
 }
 
-main().then(() => process.exit(0)).catch((e) => { console.error(e); process.exit(1); });
+if (require.main === module) {
+    main().then(() => process.exit(0)).catch((e) => { console.error(e); process.exit(1); });
+}

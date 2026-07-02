@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Mail, Lock, ArrowRight, Loader2, ArrowLeft, AlertCircle } from 'lucide-react';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import LanguageToggle from '../components/LanguageToggle';
+import { useI18n } from '../i18n/i18n';
 
 const fadeInUp = {
     hidden: { opacity: 0, y: 20 },
@@ -19,6 +21,7 @@ const staggerContainer = {
 };
 
 const LoginPage = () => {
+    const { t } = useI18n();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -130,8 +133,9 @@ const LoginPage = () => {
                         transition={{ duration: 0.6 }}
                         className="mb-12"
                     >
-                        <h2 className="text-[2.5rem] font-extrabold text-slate-900 mb-3 tracking-tight">Connexion</h2>
-                        <p className="text-slate-500 font-medium text-[17px]">Entrez vos identifiants pour accéder au portail.</p>
+                        <div className="flex justify-end mb-4"><LanguageToggle /></div>
+                        <h2 className="text-[2.5rem] font-extrabold text-slate-900 mb-3 tracking-tight">{t('Connexion')}</h2>
+                        <p className="text-slate-500 font-medium text-[17px]">{t('Entrez vos identifiants pour accéder au portail.')}</p>
                     </motion.div>
 
                     <AnimatePresence>
@@ -158,7 +162,7 @@ const LoginPage = () => {
 
                             <motion.div variants={fadeInUp} className="group">
                                 <label className="block text-sm font-extrabold text-slate-700 mb-2">
-                                    Adresse e-mail
+                                    {t('Adresse e-mail')}
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-600 transition-colors">
@@ -178,10 +182,10 @@ const LoginPage = () => {
                             <motion.div variants={fadeInUp} className="group">
                                 <div className="flex items-center justify-between mb-2">
                                     <label className="block text-sm font-extrabold text-slate-700">
-                                        Mot de passe
+                                        {t('Mot de passe')}
                                     </label>
                                     <Link to="/forgot-password" className="text-sm font-bold text-emerald-600 hover:text-emerald-700 transition-colors">
-                                        Oublié ?
+                                        {t('Oublié ?')}
                                     </Link>
                                 </div>
                                 <div className="relative">
@@ -210,7 +214,7 @@ const LoginPage = () => {
                                 {isLoading ? (
                                     <Loader2 className="w-5 h-5 animate-spin" />
                                 ) : (
-                                    <>Accéder à l'espace <ArrowRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" /></>
+                                    <>{t("Accéder à l'espace")} <ArrowRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" /></>
                                 )}
                             </span>
                         </motion.button>

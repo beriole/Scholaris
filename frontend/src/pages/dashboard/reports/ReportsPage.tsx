@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
+import { useI18n } from '../../../i18n/i18n';
 
 interface Year    { id: string; libelle: string; est_active: boolean; }
 interface Period  { id: string; nom: string; ordre: number; }
@@ -28,6 +29,7 @@ type Tab = 'academic' | 'attendance' | 'finance';
 
 export default function ReportsPage() {
     const { user } = useAuth();
+    const { t } = useI18n();
     const [tab,      setTab]      = useState<Tab>('academic');
     const [years,    setYears]    = useState<Year[]>([]);
     const [periods,  setPeriods]  = useState<Period[]>([]);
@@ -91,8 +93,8 @@ export default function ReportsPage() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-2xl font-bold text-slate-800">Rapports & Statistiques</h1>
-                <p className="text-slate-500 text-sm mt-1">Analyse des performances académiques, présences et finances</p>
+                <h1 className="text-2xl font-bold text-slate-800">{t('Rapports & Statistiques')}</h1>
+                <p className="text-slate-500 text-sm mt-1">{t('Analyse des performances académiques, présences et finances')}</p>
             </div>
 
             {/* Onglets */}
@@ -104,20 +106,20 @@ export default function ReportsPage() {
                 ] as { key: Tab; icon: any; label: string }[]).map(({ key, icon: Icon, label }) => (
                     <button key={key} onClick={() => setTab(key)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === key ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
-                        <Icon size={14} /> {label}
+                        <Icon size={14} /> {t(label)}
                     </button>
                 ))}
             </div>
 
             {/* Filtres */}
             <div className="flex flex-wrap gap-3 items-end">
-                <SelField label="Année scolaire" value={selYear} onChange={setSelYear}>
-                    <option value="">-- Année --</option>
+                <SelField label={t('Année scolaire')} value={selYear} onChange={setSelYear}>
+                    <option value="">{t('-- Année --')}</option>
                     {years.map(y => <option key={y.id} value={y.id}>{y.libelle}</option>)}
                 </SelField>
                 {tab === 'academic' && (
-                    <SelField label="Séquence (optionnel)" value={selPeriod} onChange={setSelPeriod}>
-                        <option value="">Toutes séquences</option>
+                    <SelField label={t('Séquence (optionnel)')} value={selPeriod} onChange={setSelPeriod}>
+                        <option value="">{t('Toutes séquences')}</option>
                         {periods.map(p => <option key={p.id} value={p.id}>{p.nom}</option>)}
                     </SelField>
                 )}
@@ -131,20 +133,20 @@ export default function ReportsPage() {
                     {tab === 'academic' && (
                         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
                             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                                <p className="text-sm font-semibold text-slate-700">Résultats par classe</p>
-                                <span className="text-xs text-slate-400">{acadData.filter(r => r.stats).length} classe(s) avec données</span>
+                                <p className="text-sm font-semibold text-slate-700">{t('Résultats par classe')}</p>
+                                <span className="text-xs text-slate-400">{acadData.filter(r => r.stats).length} {t('classe(s) avec données')}</span>
                             </div>
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="bg-slate-50 border-b border-slate-100">
                                         {['Classe','Effectif','Moy. classe','Max','Min','Admis','Taux réussite'].map(h => (
-                                            <th key={h} className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide text-left">{h}</th>
+                                            <th key={h} className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide text-left">{t(h)}</th>
                                         ))}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {acadData.length === 0 ? (
-                                        <tr><td colSpan={7} className="py-12 text-center text-slate-400 text-sm">Aucune donnée disponible</td></tr>
+                                        <tr><td colSpan={7} className="py-12 text-center text-slate-400 text-sm">{t('Aucune donnée disponible')}</td></tr>
                                     ) : acadData.map((r, i) => (
                                         <motion.tr key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
                                             className="hover:bg-slate-50/50">
@@ -166,7 +168,7 @@ export default function ReportsPage() {
                                                     </td>
                                                 </>
                                             ) : (
-                                                <td colSpan={6} className="px-4 py-3 text-slate-300 text-xs italic">Pas de bulletins générés</td>
+                                                <td colSpan={6} className="px-4 py-3 text-slate-300 text-xs italic">{t('Pas de bulletins générés')}</td>
                                             )}
                                         </motion.tr>
                                     ))}
@@ -181,7 +183,7 @@ export default function ReportsPage() {
                             {attendData.length === 0 ? (
                                 <div className="flex flex-col items-center py-16 text-slate-400 gap-2">
                                     <Users size={36} className="text-slate-200" />
-                                    <p className="text-sm">Aucune donnée de présence disponible.</p>
+                                    <p className="text-sm">{t('Aucune donnée de présence disponible.')}</p>
                                 </div>
                             ) : attendData.map((r, i) => (
                                 <motion.div key={r.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
@@ -189,7 +191,7 @@ export default function ReportsPage() {
                                     <div className="flex items-center justify-between">
                                         <h3 className="font-bold text-slate-800">{r.nom} <span className="text-slate-400 font-normal text-sm">· {r.niveau}</span></h3>
                                         <span className={`text-sm font-bold ${r.stats.taux_presence >= 80 ? 'text-emerald-600' : r.stats.taux_presence >= 60 ? 'text-amber-600' : 'text-red-500'}`}>
-                                            {r.stats.taux_presence}% présence
+                                            {r.stats.taux_presence}% {t('présence')}
                                         </span>
                                     </div>
                                     {bar(r.stats.taux_presence, 100, r.stats.taux_presence >= 80 ? 'bg-emerald-500' : r.stats.taux_presence >= 60 ? 'bg-amber-500' : 'bg-red-400')}
@@ -202,17 +204,17 @@ export default function ReportsPage() {
                                         ].map(item => (
                                             <div key={item.label} className="bg-slate-50 rounded-lg p-3">
                                                 <p className={`text-xl font-bold ${item.color}`}>{item.val}</p>
-                                                <p className="text-xs text-slate-400 font-medium">{item.label}</p>
+                                                <p className="text-xs text-slate-400 font-medium">{t(item.label)}</p>
                                             </div>
                                         ))}
                                     </div>
                                     {r.top_absents.length > 0 && (
                                         <div>
-                                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Top absentéisme non justifié</p>
+                                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">{t('Top absentéisme non justifié')}</p>
                                             <div className="flex flex-wrap gap-2">
                                                 {r.top_absents.map((ta, j) => ta.eleve && (
                                                     <span key={j} className="px-2.5 py-1 bg-red-50 border border-red-100 text-red-700 text-xs rounded-full font-medium">
-                                                        {ta.eleve.prenom} {ta.eleve.nom} · {ta.absences} abs.
+                                                        {ta.eleve.prenom} {ta.eleve.nom} · {ta.absences} {t('abs.')}
                                                     </span>
                                                 ))}
                                             </div>
@@ -230,13 +232,13 @@ export default function ReportsPage() {
                             {finGlobal && (
                                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                     {[
-                                        { label: 'Total recouvré', val: fmtXAF(finGlobal.confirme_montant), sub: `${finGlobal.confirme_count} paiement(s)`, color: 'text-emerald-600' },
-                                        { label: 'En attente',     val: fmtXAF(finGlobal.attente_montant),  sub: `${finGlobal.attente_count} paiement(s)`,  color: 'text-amber-600' },
-                                        { label: 'Total global',   val: fmtXAF(finGlobal.confirme_montant + finGlobal.attente_montant), sub: 'paiements connus', color: 'text-slate-800' },
-                                        { label: 'Taux global', val: finGlobal.confirme_montant + finGlobal.attente_montant > 0 ? `${Math.round(finGlobal.confirme_montant / (finGlobal.confirme_montant + finGlobal.attente_montant) * 100)}%` : '—', sub: 'de recouvrement', color: 'text-blue-600' },
+                                        { label: 'Total recouvré', val: fmtXAF(finGlobal.confirme_montant), sub: `${finGlobal.confirme_count} ${t('paiement(s)')}`, color: 'text-emerald-600' },
+                                        { label: 'En attente',     val: fmtXAF(finGlobal.attente_montant),  sub: `${finGlobal.attente_count} ${t('paiement(s)')}`,  color: 'text-amber-600' },
+                                        { label: 'Total global',   val: fmtXAF(finGlobal.confirme_montant + finGlobal.attente_montant), sub: t('paiements connus'), color: 'text-slate-800' },
+                                        { label: 'Taux global', val: finGlobal.confirme_montant + finGlobal.attente_montant > 0 ? `${Math.round(finGlobal.confirme_montant / (finGlobal.confirme_montant + finGlobal.attente_montant) * 100)}%` : '—', sub: t('de recouvrement'), color: 'text-blue-600' },
                                     ].map(k => (
                                         <div key={k.label} className="bg-white rounded-xl border border-slate-200 p-4">
-                                            <p className="text-xs text-slate-400 font-medium mb-1">{k.label}</p>
+                                            <p className="text-xs text-slate-400 font-medium mb-1">{t(k.label)}</p>
                                             <p className={`text-xl font-bold ${k.color}`}>{k.val}</p>
                                             <p className="text-xs text-slate-400 mt-0.5">{k.sub}</p>
                                         </div>
@@ -247,19 +249,19 @@ export default function ReportsPage() {
                             {/* Par classe */}
                             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
                                 <div className="px-5 py-4 border-b border-slate-100">
-                                    <p className="text-sm font-semibold text-slate-700">Recouvrement par classe</p>
+                                    <p className="text-sm font-semibold text-slate-700">{t('Recouvrement par classe')}</p>
                                 </div>
                                 <table className="w-full text-sm">
                                     <thead>
                                         <tr className="bg-slate-50 border-b border-slate-100">
                                             {['Classe','Effectif','Montant dû','Montant payé','Taux'].map(h => (
-                                                <th key={h} className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide text-left">{h}</th>
+                                                <th key={h} className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide text-left">{t(h)}</th>
                                             ))}
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
                                         {finData.length === 0 ? (
-                                            <tr><td colSpan={5} className="py-12 text-center text-slate-400 text-sm">Aucune donnée</td></tr>
+                                            <tr><td colSpan={5} className="py-12 text-center text-slate-400 text-sm">{t('Aucune donnée')}</td></tr>
                                         ) : finData.map((r, i) => (
                                             <motion.tr key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
                                                 className="hover:bg-slate-50/50">

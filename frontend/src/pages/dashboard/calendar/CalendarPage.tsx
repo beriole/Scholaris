@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
+import { useI18n } from '../../../i18n/i18n';
 
 interface Year  { id: string; libelle: string; est_active: boolean; }
 interface Event {
@@ -32,6 +33,7 @@ const isoDate = (d: Date) => d.toISOString().split('T')[0];
 
 export default function CalendarPage() {
     const { user } = useAuth();
+    const { t } = useI18n();
 
     const now     = new Date();
     const [year,  setYear]  = useState(now.getFullYear());
@@ -98,7 +100,7 @@ export default function CalendarPage() {
     };
 
     const handleSave = async () => {
-        if (!form.libelle || !form.date_debut) { setErr('Libellé et date requis.'); return; }
+        if (!form.libelle || !form.date_debut) { setErr(t('Libellé et date requis.')); return; }
         setSaving(true); setErr('');
         try {
             const r = await api.post('/api/calendar', {
@@ -112,7 +114,7 @@ export default function CalendarPage() {
             setEvents(prev => [...prev, r.data]);
             setShowModal(false);
         } catch (e: any) {
-            setErr(e?.response?.data?.error ?? 'Erreur.');
+            setErr(e?.response?.data?.error ?? t('Erreur.'));
         } finally { setSaving(false); }
     };
 
@@ -127,14 +129,14 @@ export default function CalendarPage() {
         <div className="space-y-5">
             <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800">Calendrier scolaire</h1>
-                    <p className="text-slate-500 text-sm mt-1">Jours fériés, vacances, examens et événements</p>
+                    <h1 className="text-2xl font-bold text-slate-800">{t('Calendrier scolaire')}</h1>
+                    <p className="text-slate-500 text-sm mt-1">{t('Jours fériés, vacances, examens et événements')}</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="relative">
                         <select value={selYear} onChange={e => setSelYear(e.target.value)}
                             className="appearance-none border border-slate-200 rounded-lg px-3 py-2 pr-7 text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                            <option value="">-- Année --</option>
+                            <option value="">{t('-- Année --')}</option>
                             {years.map(y => <option key={y.id} value={y.id}>{y.libelle}</option>)}
                         </select>
                         <ChevronRight size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none rotate-90" />
@@ -145,7 +147,7 @@ export default function CalendarPage() {
             {/* Légende */}
             <div className="flex flex-wrap gap-2">
                 {Object.entries(TYPE_CONFIG).map(([k, v]) => (
-                    <span key={k} className={`px-2.5 py-1 rounded-full text-xs font-medium border ${v.bg} ${v.color}`}>{v.label}</span>
+                    <span key={k} className={`px-2.5 py-1 rounded-full text-xs font-medium border ${v.bg} ${v.color}`}>{t(v.label)}</span>
                 ))}
             </div>
 
@@ -153,14 +155,14 @@ export default function CalendarPage() {
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                     <button onClick={prevMonth} className="p-2 hover:bg-slate-100 rounded-lg transition-all"><ChevronLeft size={18} /></button>
-                    <h2 className="text-base font-bold text-slate-800">{MONTHS_FR[month]} {year}</h2>
+                    <h2 className="text-base font-bold text-slate-800">{t(MONTHS_FR[month])} {year}</h2>
                     <button onClick={nextMonth} className="p-2 hover:bg-slate-100 rounded-lg transition-all"><ChevronRight size={18} /></button>
                 </div>
 
                 {/* Jours de la semaine */}
                 <div className="grid grid-cols-7 border-b border-slate-100">
                     {DAYS_FR.map(d => (
-                        <div key={d} className="py-2 text-center text-xs font-semibold text-slate-400 uppercase tracking-wide">{d}</div>
+                        <div key={d} className="py-2 text-center text-xs font-semibold text-slate-400 uppercase tracking-wide">{t(d)}</div>
                     ))}
                 </div>
 
@@ -198,7 +200,7 @@ export default function CalendarPage() {
                                                     );
                                                 })}
                                                 {dayEvts.length > 3 && (
-                                                    <div className="text-[9px] text-slate-400 pl-1">+{dayEvts.length - 3} de plus</div>
+                                                    <div className="text-[9px] text-slate-400 pl-1">+{dayEvts.length - 3} {t('de plus')}</div>
                                                 )}
                                             </div>
                                         </>
@@ -214,20 +216,20 @@ export default function CalendarPage() {
             {events.length > 0 && (
                 <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
                     <div className="px-5 py-3 border-b border-slate-100">
-                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{events.length} événement(s) ce mois</p>
+                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{events.length} {t('événement(s) ce mois')}</p>
                     </div>
                     <div className="divide-y divide-slate-100">
                         {events.map(e => {
                             const cfg = TYPE_CONFIG[e.type] ?? TYPE_CONFIG.evenement;
                             return (
                                 <div key={e.id} className="flex items-center gap-3 px-5 py-3">
-                                    <span className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
+                                    <span className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${cfg.bg} ${cfg.color}`}>{t(cfg.label)}</span>
                                     <span className="flex-1 text-sm text-slate-700 font-medium">{e.libelle}</span>
                                     <span className="text-xs text-slate-400">
                                         {new Date(e.date_debut).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
                                         {e.date_fin && e.date_fin !== e.date_debut ? ` → ${new Date(e.date_fin).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}` : ''}
                                     </span>
-                                    {e.affecte_presences && <span className="text-[10px] text-orange-600 font-medium bg-orange-50 px-1.5 rounded">présences</span>}
+                                    {e.affecte_presences && <span className="text-[10px] text-orange-600 font-medium bg-orange-50 px-1.5 rounded">{t('présences')}</span>}
                                     <button onClick={() => handleDelete(e.id)}
                                         className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
                                         <Trash2 size={13} />
@@ -247,7 +249,7 @@ export default function CalendarPage() {
                         <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                             className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-base font-bold text-slate-800">Nouvel événement — {clickedDay}</h2>
+                                <h2 className="text-base font-bold text-slate-800">{t('Nouvel événement')} — {clickedDay}</h2>
                                 <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={16} /></button>
                             </div>
 
@@ -259,43 +261,43 @@ export default function CalendarPage() {
 
                             <div className="space-y-3">
                                 <div>
-                                    <label className="text-xs font-medium text-slate-500 mb-1 block">Libellé *</label>
+                                    <label className="text-xs font-medium text-slate-500 mb-1 block">{t('Libellé *')}</label>
                                     <input value={form.libelle} onChange={e => setForm(f => ({ ...f, libelle: e.target.value }))}
                                         className="input-field" placeholder="Ex: Fête nationale" />
                                 </div>
                                 <div className="relative">
-                                    <label className="text-xs font-medium text-slate-500 mb-1 block">Type *</label>
+                                    <label className="text-xs font-medium text-slate-500 mb-1 block">{t('Type *')}</label>
                                     <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
                                         className="input-field appearance-none pr-8">
-                                        {Object.entries(TYPE_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                                        {Object.entries(TYPE_CONFIG).map(([k, v]) => <option key={k} value={k}>{t(v.label)}</option>)}
                                     </select>
                                     <ChevronRight size={13} className="absolute right-2.5 bottom-2.5 text-slate-400 pointer-events-none rotate-90" />
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-xs font-medium text-slate-500 mb-1 block">Date début *</label>
+                                        <label className="text-xs font-medium text-slate-500 mb-1 block">{t('Date début *')}</label>
                                         <input type="date" value={form.date_debut} onChange={e => setForm(f => ({ ...f, date_debut: e.target.value }))} className="input-field" />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-medium text-slate-500 mb-1 block">Date fin</label>
+                                        <label className="text-xs font-medium text-slate-500 mb-1 block">{t('Date fin')}</label>
                                         <input type="date" value={form.date_fin} onChange={e => setForm(f => ({ ...f, date_fin: e.target.value }))} className="input-field" />
                                     </div>
                                 </div>
                                 <label className="flex items-center gap-2.5 cursor-pointer">
                                     <input type="checkbox" checked={form.affecte_presences} onChange={e => setForm(f => ({ ...f, affecte_presences: e.target.checked }))}
                                         className="w-4 h-4 rounded accent-emerald-600" />
-                                    <span className="text-sm text-slate-600">Affecte le calcul des présences</span>
+                                    <span className="text-sm text-slate-600">{t('Affecte le calcul des présences')}</span>
                                 </label>
                             </div>
 
                             <div className="flex gap-3 pt-1">
                                 <button onClick={() => setShowModal(false)}
                                     className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50">
-                                    Annuler
+                                    {t('Annuler')}
                                 </button>
                                 <button onClick={handleSave} disabled={saving}
                                     className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60 flex items-center justify-center gap-2">
-                                    {saving && <Loader2 size={13} className="animate-spin" />} Enregistrer
+                                    {saving && <Loader2 size={13} className="animate-spin" />} {t('Enregistrer')}
                                 </button>
                             </div>
                         </motion.div>

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { BookOpen, Layers, CalendarDays, ClipboardList, UserCheck, Clock, ArrowRight } from 'lucide-react';
 import api from '../../lib/api';
 import { useTeacher } from './TeacherLayout';
+import { useI18n } from '../../i18n/i18n';
 
 const JOURS = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 const fmtTime = (t: string) => new Date(t).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -15,6 +16,7 @@ interface Slot {
 
 export default function TeacherHome() {
     const { profil, annee, affectations } = useTeacher();
+    const { t } = useI18n();
     const navigate = useNavigate();
     const [slots, setSlots] = useState<Slot[]>([]);
 
@@ -47,10 +49,10 @@ export default function TeacherHome() {
                 <div className="absolute -right-10 -top-10 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl" />
                 <div className="absolute -right-20 bottom-0 w-56 h-56 bg-emerald-400/10 rounded-full blur-3xl" />
                 <div className="relative">
-                    <p className="text-emerald-300 text-sm font-semibold">Bonjour,</p>
+                    <p className="text-emerald-300 text-sm font-semibold">{t('Bonjour,')}</p>
                     <h1 className="text-2xl lg:text-3xl font-black mt-1">{profil.prenom} {profil.nom}</h1>
                     <p className="text-slate-300 text-sm mt-2 max-w-md">
-                        {profil.specialite ? `${profil.specialite} · ` : ''}{JOURS[todayIdx]} — voici votre activité du jour.
+                        {profil.specialite ? `${profil.specialite} · ` : ''}{t(JOURS[todayIdx])} — {t('voici votre activité du jour.')}
                     </p>
                 </div>
             </motion.div>
@@ -64,7 +66,7 @@ export default function TeacherHome() {
                             <k.icon className="w-5 h-5" />
                         </div>
                         <p className="text-2xl font-black text-slate-900">{k.value}</p>
-                        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide mt-0.5">{k.label}</p>
+                        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide mt-0.5">{t(k.label)}</p>
                     </motion.div>
                 ))}
             </div>
@@ -73,15 +75,15 @@ export default function TeacherHome() {
                 {/* Mes classes */}
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                     <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50">
-                        <h2 className="font-bold text-slate-900">Mes enseignements</h2>
+                        <h2 className="font-bold text-slate-900">{t('Mes enseignements')}</h2>
                         <button onClick={() => navigate('/prof/classes')}
                             className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
-                            Tout voir <ArrowRight className="w-3.5 h-3.5" />
+                            {t('Tout voir')} <ArrowRight className="w-3.5 h-3.5" />
                         </button>
                     </div>
                     {affectations.length === 0 ? (
                         <div className="p-10 text-center text-sm text-slate-400">
-                            Aucune affectation pour le moment. Contactez l'administration.
+                            {t("Aucune affectation pour le moment. Contactez l'administration.")}
                         </div>
                     ) : (
                         <div className="divide-y divide-slate-50">
@@ -95,12 +97,12 @@ export default function TeacherHome() {
                                         <p className="text-xs text-slate-400">{a.classe.nom} · {a.classe.niveau}</p>
                                     </div>
                                     <div className="flex gap-1.5">
-                                        <button title="Saisir les notes"
+                                        <button title={t('Saisir les notes')}
                                             onClick={() => navigate(`/prof/grades?classe_id=${a.classe.id}&matiere_id=${a.matiere.id}`)}
                                             className="p-2 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all">
                                             <ClipboardList className="w-4 h-4" />
                                         </button>
-                                        <button title="Faire l'appel"
+                                        <button title={t("Faire l'appel")}
                                             onClick={() => navigate(`/prof/attendance?classe_id=${a.classe.id}&matiere_id=${a.matiere.id}`)}
                                             className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all">
                                             <UserCheck className="w-4 h-4" />
@@ -116,10 +118,10 @@ export default function TeacherHome() {
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                     <div className="px-5 py-4 border-b border-slate-50 flex items-center gap-2">
                         <Clock className="w-4 h-4 text-emerald-600" />
-                        <h2 className="font-bold text-slate-900">Cours d'aujourd'hui</h2>
+                        <h2 className="font-bold text-slate-900">{t("Cours d'aujourd'hui")}</h2>
                     </div>
                     {todaySlots.length === 0 ? (
-                        <div className="p-10 text-center text-sm text-slate-400">Aucun cours programmé aujourd'hui. 🎉</div>
+                        <div className="p-10 text-center text-sm text-slate-400">{t("Aucun cours programmé aujourd'hui.")} 🎉</div>
                     ) : (
                         <div className="p-3 space-y-2">
                             {todaySlots.map(s => (

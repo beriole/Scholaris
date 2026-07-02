@@ -5,8 +5,11 @@ import {
     GraduationCap, Calendar, Bell, FileText, UserCheck, Layers,
     ChevronRight, Shield, Globe, TrendingUp, ClipboardList
 } from 'lucide-react';
+import { useI18n } from '../i18n/i18n';
+import LanguageToggle from '../components/LanguageToggle';
 
 const LandingPage = () => {
+    const { t } = useI18n();
     return (
         <div className="min-h-screen bg-white font-sans text-slate-900 antialiased">
 
@@ -23,17 +26,18 @@ const LandingPage = () => {
                     <nav className="hidden md:flex items-center gap-1">
                         {['Fonctionnalités', 'Modules', 'Tarifs', 'Contact'].map(item => (
                             <a key={item} href="#" className="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all">
-                                {item}
+                                {t(item)}
                             </a>
                         ))}
                     </nav>
 
                     <div className="flex items-center gap-2">
+                        <LanguageToggle />
                         <Link to="/login" className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all">
-                            Connexion
+                            {t('Connexion')}
                         </Link>
                         <Link to="/login" className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded-lg hover:bg-slate-800 transition-all shadow-sm">
-                            Demander une démo <ArrowRight className="w-3.5 h-3.5" />
+                            {t('Demander une démo')} <ArrowRight className="w-3.5 h-3.5" />
                         </Link>
                     </div>
                 </div>
@@ -46,24 +50,24 @@ const LandingPage = () => {
                     <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
                         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 text-xs font-semibold mb-8">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            Conçu pour les écoles africaines
+                            {t('Conçu pour les écoles africaines')}
                         </div>
 
                         <h1 className="text-[3.25rem] lg:text-[3.75rem] font-bold leading-[1.1] tracking-tight text-slate-900 mb-6">
-                            Pilotez votre école<br />
-                            <span className="text-emerald-600">avec précision.</span>
+                            {t('Pilotez votre école')}<br />
+                            <span className="text-emerald-600">{t('avec précision.')}</span>
                         </h1>
 
                         <p className="text-lg text-slate-500 leading-relaxed mb-10 max-w-[500px]">
-                            La suite complète pour gérer élèves, notes, finances et communications depuis une seule interface unifiée.
+                            {t('La suite complète pour gérer élèves, notes, finances et communications depuis une seule interface unifiée.')}
                         </p>
 
                         <div className="flex flex-wrap gap-3 mb-10">
                             <Link to="/login" className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 hover:-translate-y-0.5">
-                                Demander une démo <ArrowRight className="w-4 h-4" />
+                                {t('Demander une démo')} <ArrowRight className="w-4 h-4" />
                             </Link>
                             <Link to="/login" className="inline-flex items-center gap-2 px-5 py-3 bg-white text-slate-700 text-sm font-semibold rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all">
-                                Se connecter
+                                {t('Se connecter')}
                             </Link>
                         </div>
 
@@ -71,7 +75,7 @@ const LandingPage = () => {
                             {['Déploiement en 24h', 'Support francophone', 'Paiements XAF & Mobile Money'].map((item, i) => (
                                 <div key={i} className="flex items-center gap-1.5">
                                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                                    {item}
+                                    {t(item)}
                                 </div>
                             ))}
                         </div>
@@ -100,7 +104,7 @@ const LandingPage = () => {
                         ].map((stat, i) => (
                             <div key={i}>
                                 <p className="text-3xl font-bold text-slate-900 mb-1">{stat.value}</p>
-                                <p className="text-sm font-medium text-slate-500">{stat.label}</p>
+                                <p className="text-sm font-medium text-slate-500">{t(stat.label)}</p>
                             </div>
                         ))}
                     </div>
@@ -111,10 +115,10 @@ const LandingPage = () => {
             <section id="fonctionnalites" className="py-28 px-6">
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center max-w-xl mx-auto mb-20">
-                        <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-4">Fonctionnalités</p>
-                        <h2 className="text-4xl font-bold text-slate-900 tracking-tight mb-4">Tout ce dont votre école a besoin</h2>
+                        <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-4">{t('Fonctionnalités')}</p>
+                        <h2 className="text-4xl font-bold text-slate-900 tracking-tight mb-4">{t('Tout ce dont votre école a besoin')}</h2>
                         <p className="text-slate-500 leading-relaxed">
-                            Une suite académique, financière et communicationnelle intégrée dans une seule plateforme.
+                            {t('Une suite académique, financière et communicationnelle intégrée dans une seule plateforme.')}
                         </p>
                     </div>
 
@@ -131,8 +135,8 @@ const LandingPage = () => {
                                 <div className={`w-10 h-10 rounded-xl border flex items-center justify-center mb-6 ${f.color}`}>
                                     {f.icon}
                                 </div>
-                                <h3 className="text-lg font-semibold text-slate-900 mb-2">{f.title}</h3>
-                                <p className="text-slate-500 text-sm leading-relaxed">{f.desc}</p>
+                                <h3 className="text-lg font-semibold text-slate-900 mb-2">{t(f.title)}</h3>
+                                <p className="text-slate-500 text-sm leading-relaxed">{t(f.desc)}</p>
                             </motion.div>
                         ))}
                     </div>
@@ -143,8 +147,8 @@ const LandingPage = () => {
             <section className="py-24 bg-slate-50 px-6">
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center max-w-xl mx-auto mb-16">
-                        <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-4">Démarrage</p>
-                        <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Opérationnel en 24 heures</h2>
+                        <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-4">{t('Démarrage')}</p>
+                        <h2 className="text-4xl font-bold text-slate-900 tracking-tight">{t('Opérationnel en 24 heures')}</h2>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-10">
@@ -155,8 +159,8 @@ const LandingPage = () => {
                         ].map((step, i) => (
                             <div key={i} className="relative">
                                 <p className="text-7xl font-bold text-slate-100 mb-4 leading-none">{step.n}</p>
-                                <h3 className="text-lg font-semibold text-slate-900 mb-3">{step.title}</h3>
-                                <p className="text-slate-500 text-sm leading-relaxed">{step.desc}</p>
+                                <h3 className="text-lg font-semibold text-slate-900 mb-3">{t(step.title)}</h3>
+                                <p className="text-slate-500 text-sm leading-relaxed">{t(step.desc)}</p>
                             </div>
                         ))}
                     </div>
@@ -167,13 +171,13 @@ const LandingPage = () => {
             <section id="modules" className="py-28 px-6">
                 <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
                     <div>
-                        <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-4">Modules</p>
-                        <h2 className="text-4xl font-bold text-slate-900 tracking-tight mb-6">14 modules intégrés</h2>
+                        <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-4">{t('Modules')}</p>
+                        <h2 className="text-4xl font-bold text-slate-900 tracking-tight mb-6">{t('14 modules intégrés')}</h2>
                         <p className="text-slate-500 leading-relaxed mb-8 max-w-md">
-                            De la saisie des notes à la génération des bulletins PDF officiels, chaque flux de travail de votre établissement est couvert.
+                            {t('De la saisie des notes à la génération des bulletins PDF officiels, chaque flux de travail de votre établissement est couvert.')}
                         </p>
                         <Link to="/login" className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
-                            Voir toutes les fonctionnalités <ChevronRight className="w-4 h-4" />
+                            {t('Voir toutes les fonctionnalités')} <ChevronRight className="w-4 h-4" />
                         </Link>
                     </div>
 
@@ -181,7 +185,7 @@ const LandingPage = () => {
                         {MODULES.map((mod, i) => (
                             <div key={i} className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 hover:border-emerald-200 hover:bg-emerald-50/40 transition-all group cursor-default">
                                 <div className="text-slate-400 group-hover:text-emerald-600 transition-colors shrink-0">{mod.icon}</div>
-                                <span className="text-sm font-medium text-slate-700">{mod.name}</span>
+                                <span className="text-sm font-medium text-slate-700">{t(mod.name)}</span>
                             </div>
                         ))}
                     </div>
@@ -192,9 +196,9 @@ const LandingPage = () => {
             <section className="py-24 bg-slate-50 px-6">
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center max-w-xl mx-auto mb-16">
-                        <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-4">Sécurité</p>
-                        <h2 className="text-4xl font-bold text-slate-900 tracking-tight mb-4">Vos données sont protégées</h2>
-                        <p className="text-slate-500">Infrastructure conçue selon les standards internationaux de sécurité des données scolaires.</p>
+                        <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-4">{t('Sécurité')}</p>
+                        <h2 className="text-4xl font-bold text-slate-900 tracking-tight mb-4">{t('Vos données sont protégées')}</h2>
+                        <p className="text-slate-500">{t('Infrastructure conçue selon les standards internationaux de sécurité des données scolaires.')}</p>
                     </div>
 
                     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -208,8 +212,8 @@ const LandingPage = () => {
                                 <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center mb-4">
                                     {item.icon}
                                 </div>
-                                <h3 className="font-semibold text-slate-900 mb-2 text-sm">{item.title}</h3>
-                                <p className="text-slate-500 text-xs leading-relaxed">{item.desc}</p>
+                                <h3 className="font-semibold text-slate-900 mb-2 text-sm">{t(item.title)}</h3>
+                                <p className="text-slate-500 text-xs leading-relaxed">{t(item.desc)}</p>
                             </div>
                         ))}
                     </div>
@@ -220,16 +224,16 @@ const LandingPage = () => {
             <section className="py-28 px-6 bg-slate-900">
                 <div className="max-w-3xl mx-auto text-center">
                     <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-slate-300 text-xs font-semibold mb-8">
-                        <TrendingUp className="w-3.5 h-3.5" /> +34% de productivité administrative moyenne
+                        <TrendingUp className="w-3.5 h-3.5" /> {t('+34% de productivité administrative moyenne')}
                     </div>
                     <h2 className="text-4xl lg:text-5xl font-bold text-white tracking-tight mb-6">
-                        Modernisez votre école dès aujourd'hui.
+                        {t("Modernisez votre école dès aujourd'hui.")}
                     </h2>
                     <p className="text-slate-400 text-lg mb-10 leading-relaxed">
-                        Rejoignez les 120+ établissements qui ont confié leur gestion à Scholaris.
+                        {t('Rejoignez les 120+ établissements qui ont confié leur gestion à Scholaris.')}
                     </p>
                     <Link to="/login" className="inline-flex items-center gap-2 px-8 py-4 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-500 transition-all shadow-xl shadow-emerald-600/20 text-base">
-                        Contacter notre équipe <ArrowRight className="w-4 h-4" />
+                        {t('Contacter notre équipe')} <ArrowRight className="w-4 h-4" />
                     </Link>
                 </div>
             </section>
@@ -245,7 +249,7 @@ const LandingPage = () => {
                                 </div>
                                 <span className="font-bold text-white text-sm">Scholaris</span>
                             </Link>
-                            <p className="text-slate-500 text-sm leading-relaxed">La référence de la gestion scolaire en Afrique Centrale.</p>
+                            <p className="text-slate-500 text-sm leading-relaxed">{t('La référence de la gestion scolaire en Afrique Centrale.')}</p>
                         </div>
 
                         {[
@@ -254,11 +258,11 @@ const LandingPage = () => {
                             { title: 'Entreprise', links: ['À propos', 'Contact', 'Partenaires', 'Conditions'] },
                         ].map((col, i) => (
                             <div key={i}>
-                                <p className="text-white font-semibold text-sm mb-4">{col.title}</p>
+                                <p className="text-white font-semibold text-sm mb-4">{t(col.title)}</p>
                                 <ul className="space-y-2.5">
                                     {col.links.map(link => (
                                         <li key={link}>
-                                            <a href="#" className="text-slate-500 text-sm hover:text-white transition-colors">{link}</a>
+                                            <a href="#" className="text-slate-500 text-sm hover:text-white transition-colors">{t(link)}</a>
                                         </li>
                                     ))}
                                 </ul>
@@ -267,11 +271,11 @@ const LandingPage = () => {
                     </div>
 
                     <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
-                        <p className="text-slate-600 text-sm">© 2026 Scholaris. Développé pour l'éducation africaine.</p>
+                        <p className="text-slate-600 text-sm">{t("© 2026 Scholaris. Développé pour l'éducation africaine.")}</p>
                         <div className="flex gap-6">
-                            <a href="#" className="text-slate-600 text-sm hover:text-white transition-colors">Confidentialité</a>
-                            <a href="#" className="text-slate-600 text-sm hover:text-white transition-colors">CGU</a>
-                            <a href="#" className="text-slate-600 text-sm hover:text-white transition-colors">Mentions légales</a>
+                            <a href="#" className="text-slate-600 text-sm hover:text-white transition-colors">{t('Confidentialité')}</a>
+                            <a href="#" className="text-slate-600 text-sm hover:text-white transition-colors">{t('CGU')}</a>
+                            <a href="#" className="text-slate-600 text-sm hover:text-white transition-colors">{t('Mentions légales')}</a>
                         </div>
                     </div>
                 </div>

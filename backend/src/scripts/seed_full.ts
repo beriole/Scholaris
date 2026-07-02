@@ -25,7 +25,7 @@ const T = (hhmm: string): Date => {
 // pseudo-aléatoire déterministe (note 8–18)
 const note = (seed: number) => Math.round((8 + (Math.sin(seed) + 1) * 5) * 4) / 4;
 
-async function main() {
+export async function main() {
     const ecole = await prisma.ecoles.findFirst({ where: { tenant_id: TENANT_ID } });
     if (!ecole) throw new Error('École démo introuvable — lancez d\'abord seed_demo.ts');
     const ecole_id = ecole.id;
@@ -268,4 +268,6 @@ async function main() {
     console.log(`Classes: ${classes.length} · Élèves: ${inscriptions.length} · Matières: ${matieres.length}`);
 }
 
-main().then(() => process.exit(0)).catch((e) => { console.error(e); process.exit(1); });
+if (require.main === module) {
+    main().then(() => process.exit(0)).catch((e) => { console.error(e); process.exit(1); });
+}

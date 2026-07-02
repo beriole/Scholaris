@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
+import LanguageToggle from '../../components/LanguageToggle';
+import { useI18n } from '../../i18n/i18n';
 
 // ── Contexte partagé du portail enseignant ─────────────────────────────────────
 
@@ -44,6 +46,7 @@ const NAV = [
 
 export default function TeacherLayout() {
     const { user, logout } = useAuth();
+    const { t } = useI18n();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -120,7 +123,7 @@ export default function TeacherLayout() {
                             </div>
                             <div className="leading-tight">
                                 <p className="font-bold text-sm text-white">Sholaris</p>
-                                <p className="text-[10px] uppercase tracking-widest text-emerald-400 font-semibold">Enseignant</p>
+                                <p className="text-[10px] uppercase tracking-widest text-emerald-400 font-semibold">{t('Enseignant')}</p>
                             </div>
                         </div>
                         <button onClick={() => setMobile(false)} className="lg:hidden p-1 text-slate-400"><X className="w-4 h-4" /></button>
@@ -132,7 +135,7 @@ export default function TeacherLayout() {
                                 className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                                     isActive ? 'bg-emerald-500/15 text-emerald-300 shadow-inner' : 'text-slate-400 hover:text-white hover:bg-white/5'
                                 }`}>
-                                <Icon className="w-4 h-4 shrink-0" /> {label}
+                                <Icon className="w-4 h-4 shrink-0" /> {t(label)}
                             </NavLink>
                         ))}
                     </nav>
@@ -144,12 +147,12 @@ export default function TeacherLayout() {
                             </div>
                             <div className="min-w-0">
                                 <p className="text-xs font-semibold text-white truncate">{fullName}</p>
-                                <p className="text-[10px] text-slate-400 truncate">{data.profil.specialite ?? 'Enseignant'}</p>
+                                <p className="text-[10px] text-slate-400 truncate">{data.profil.specialite ?? t('Enseignant')}</p>
                             </div>
                         </div>
                         <button onClick={() => { logout(); navigate('/login'); }}
                             className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all">
-                            <LogOut className="w-4 h-4 shrink-0" /> Déconnexion
+                            <LogOut className="w-4 h-4 shrink-0" /> {t('Déconnexion')}
                         </button>
                     </div>
                 </aside>
@@ -164,10 +167,11 @@ export default function TeacherLayout() {
                             <div className="flex items-center gap-1.5 text-sm">
                                 <span className="text-slate-400 font-medium hidden sm:inline">{data.ecole?.nom ?? 'Mon établissement'}</span>
                                 <ChevronRight className="w-3.5 h-3.5 text-slate-300 hidden sm:inline" />
-                                <span className="text-slate-800 font-semibold">{current?.label ?? 'Accueil'}</span>
+                                <span className="text-slate-800 font-semibold">{t(current?.label ?? 'Accueil')}</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
+                            <LanguageToggle />
                             {data.annee && (
                                 <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full">
                                     <CalendarDays className="w-3.5 h-3.5" /> {data.annee.libelle}

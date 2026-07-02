@@ -29,9 +29,11 @@ import TeacherAttendance from './pages/teacher/TeacherAttendance';
 import TeacherTimetable  from './pages/teacher/TeacherTimetable';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
+import { I18nProvider } from './i18n/i18n';
 
 function App() {
   return (
+    <I18nProvider>
     <AuthProvider>
       <BrowserRouter>
         <Routes>
@@ -81,6 +83,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
+    </I18nProvider>
   );
 }
 

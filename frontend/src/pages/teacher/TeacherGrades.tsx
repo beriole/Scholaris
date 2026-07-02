@@ -3,11 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ClipboardList, ChevronDown, ArrowRight, AlertCircle } from 'lucide-react';
 import api from '../../lib/api';
 import { useTeacher } from './TeacherLayout';
+import { useI18n } from '../../i18n/i18n';
 
 interface Sequence { id: string; nom: string; ordre: number; }
 
 export default function TeacherGrades() {
     const { annee, affectations } = useTeacher();
+    const { t } = useI18n();
     const navigate = useNavigate();
     const [params] = useSearchParams();
 
@@ -43,39 +45,39 @@ export default function TeacherGrades() {
                     <ClipboardList className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                    <h1 className="text-xl font-black text-slate-900">Saisie des notes</h1>
-                    <p className="text-sm text-slate-400">Choisissez la classe, la matière et la séquence.</p>
+                    <h1 className="text-xl font-black text-slate-900">{t('Saisie des notes')}</h1>
+                    <p className="text-sm text-slate-400">{t('Choisissez la classe, la matière et la séquence.')}</p>
                 </div>
             </div>
 
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5">
-                <Field label="Classe">
-                    <Select value={classeId} onChange={setClasseId} placeholder="-- Choisir une classe --">
+                <Field label={t('Classe')}>
+                    <Select value={classeId} onChange={setClasseId} placeholder={t('-- Choisir une classe --')}>
                         {classes.map(c => <option key={c.id} value={c.id}>{c.nom} ({c.niveau})</option>)}
                     </Select>
                 </Field>
 
-                <Field label="Matière">
-                    <Select value={matiereId} onChange={setMatiereId} placeholder="-- Choisir une matière --" disabled={!classeId}>
+                <Field label={t('Matière')}>
+                    <Select value={matiereId} onChange={setMatiereId} placeholder={t('-- Choisir une matière --')} disabled={!classeId}>
                         {matieres.map(m => <option key={m.id} value={m.id}>{m.nom}</option>)}
                     </Select>
                 </Field>
 
-                <Field label="Séquence / Période">
-                    <Select value={seqId} onChange={setSeqId} placeholder="-- Choisir une séquence --">
+                <Field label={t('Séquence / Période')}>
+                    <Select value={seqId} onChange={setSeqId} placeholder={t('-- Choisir une séquence --')}>
                         {sequences.map(s => <option key={s.id} value={s.id}>{s.nom}</option>)}
                     </Select>
                 </Field>
 
                 {!annee && (
                     <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 rounded-xl px-3 py-2">
-                        <AlertCircle className="w-4 h-4" /> Aucune année scolaire active configurée.
+                        <AlertCircle className="w-4 h-4" /> {t('Aucune année scolaire active configurée.')}
                     </div>
                 )}
 
                 <button onClick={go} disabled={!ready}
                     className="w-full flex items-center justify-center gap-2 py-3.5 bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 disabled:opacity-50 disabled:shadow-none transition-all">
-                    Ouvrir la feuille de notes <ArrowRight className="w-4 h-4" />
+                    {t('Ouvrir la feuille de notes')} <ArrowRight className="w-4 h-4" />
                 </button>
             </div>
         </div>

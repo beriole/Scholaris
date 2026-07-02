@@ -8,6 +8,7 @@ import {
 import api from '../../../lib/api';
 import BulletinPDF from './BulletinPDF';
 import { downloadClassBulletins } from '../../../lib/bulletinPdf';
+import { useI18n } from '../../../i18n/i18n';
 
 interface BulletinDetail {
     id:                  string;
@@ -32,6 +33,7 @@ interface Bulletin {
 }
 
 const BulletinsPage = () => {
+    const { t } = useI18n();
     const [params]  = useSearchParams();
     const navigate  = useNavigate();
 
@@ -89,7 +91,7 @@ const BulletinsPage = () => {
     if (loading) return (
         <div className="flex items-center justify-center h-64 gap-3">
             <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm text-slate-400">Chargement des bulletins…</span>
+            <span className="text-sm text-slate-400">{t('Chargement des bulletins…')}</span>
         </div>
     );
 
@@ -123,9 +125,9 @@ const BulletinsPage = () => {
                 <div>
                     <button onClick={() => navigate(-1)}
                         className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 transition-colors mb-3">
-                        <ArrowLeft className="w-3.5 h-3.5" /> Retour
+                        <ArrowLeft className="w-3.5 h-3.5" /> {t('Retour')}
                     </button>
-                    <h2 className="text-lg font-bold text-slate-900">Bulletins</h2>
+                    <h2 className="text-lg font-bold text-slate-900">{t('Bulletins')}</h2>
                     {classeLabel && (
                         <div className="flex items-center gap-2 text-sm text-slate-500 mt-0.5">
                             <span className="font-semibold text-slate-700">{classeLabel}</span>
@@ -141,13 +143,13 @@ const BulletinsPage = () => {
                         <button onClick={handleDownloadClass} disabled={dlClass}
                             className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 transition-all shadow-sm disabled:opacity-70">
                             {dlClass ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                            Toute la classe ({bulletins.length})
+                            {t('Toute la classe')} ({bulletins.length})
                         </button>
                     )}
                     <button onClick={handleGenerate} disabled={generating}
                         className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 transition-all shadow-sm disabled:opacity-70">
                         {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-                        {bulletins.length > 0 ? 'Re-générer' : 'Générer les bulletins'}
+                        {bulletins.length > 0 ? t('Re-générer') : t('Générer les bulletins')}
                     </button>
                 </div>
             </div>
@@ -166,8 +168,8 @@ const BulletinsPage = () => {
             {bulletins.length === 0 ? (
                 <div className="py-24 text-center bg-white rounded-xl border border-dashed border-slate-200">
                     <FileText className="w-8 h-8 text-slate-200 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-slate-400">Aucun bulletin généré pour le moment.</p>
-                    <p className="text-xs text-slate-300 mt-1">Saisissez d'abord les notes, puis cliquez sur "Générer les bulletins".</p>
+                    <p className="text-sm font-medium text-slate-400">{t('Aucun bulletin généré pour le moment.')}</p>
+                    <p className="text-xs text-slate-300 mt-1">{t('Saisissez d\'abord les notes, puis cliquez sur « Générer les bulletins ».')}</p>
                 </div>
             ) : (
                 <div className="grid lg:grid-cols-[1fr_1.6fr] gap-6 items-start">
@@ -176,16 +178,16 @@ const BulletinsPage = () => {
                     <div className="space-y-4">
                         {stats && (
                             <div className="grid grid-cols-2 gap-3">
-                                <StatCard icon={<Users className="w-4 h-4 text-slate-400" />} value={bulletins.length} label="Élèves" />
-                                <StatCard icon={<TrendingUp className="w-4 h-4 text-emerald-500" />} value={moy(stats.moy)} label="Moy. classe" color="text-emerald-600" />
-                                <StatCard icon={<Award className="w-4 h-4 text-amber-500" />} value={moy(stats.max)} label="Meilleure note" color="text-amber-600" />
-                                <StatCard icon={null} value={`${Math.round((stats.admis / bulletins.length) * 100)}%`} label="Taux réussite" color="text-emerald-600" />
+                                <StatCard icon={<Users className="w-4 h-4 text-slate-400" />} value={bulletins.length} label={t('Élèves')} />
+                                <StatCard icon={<TrendingUp className="w-4 h-4 text-emerald-500" />} value={moy(stats.moy)} label={t('Moy. classe')} color="text-emerald-600" />
+                                <StatCard icon={<Award className="w-4 h-4 text-amber-500" />} value={moy(stats.max)} label={t('Meilleure note')} color="text-amber-600" />
+                                <StatCard icon={null} value={`${Math.round((stats.admis / bulletins.length) * 100)}%`} label={t('Taux réussite')} color="text-emerald-600" />
                             </div>
                         )}
 
                         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                             <div className="px-4 py-3 border-b border-slate-100">
-                                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Classement</p>
+                                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Classement')}</p>
                             </div>
                             <div className="divide-y divide-slate-100">
                                 {bulletins.map((b, i) => (
@@ -221,7 +223,7 @@ const BulletinsPage = () => {
                         ) : (
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                                 className="flex items-center justify-center h-64 bg-white rounded-xl border border-dashed border-slate-200">
-                                <p className="text-sm text-slate-400">Sélectionnez un élève pour voir son bulletin</p>
+                                <p className="text-sm text-slate-400">{t('Sélectionnez un élève pour voir son bulletin')}</p>
                             </motion.div>
                         )}
                     </AnimatePresence>

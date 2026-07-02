@@ -9,6 +9,8 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 import NotificationBell from '../../components/NotificationBell';
+import LanguageToggle from '../../components/LanguageToggle';
+import { useI18n } from '../../i18n/i18n';
 
 const NAV_ITEMS = [
     { icon: LayoutDashboard, label: 'Tableau de bord', path: '/ecole-dashboard' },
@@ -30,6 +32,7 @@ const NAV_ITEMS = [
 
 const SchoolDashboard = () => {
     const { user, logout } = useAuth();
+    const { t } = useI18n();
     const location = useLocation();
     const isRoot = location.pathname === '/ecole-dashboard';
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -84,8 +87,8 @@ const SchoolDashboard = () => {
                                     className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 cursor-not-allowed"
                                 >
                                     <Icon className="w-4 h-4 shrink-0" />
-                                    <span className="text-sm font-medium">{label}</span>
-                                    <span className="ml-auto text-[9px] font-bold uppercase tracking-wider text-slate-300 bg-slate-100 px-1.5 py-0.5 rounded">Bientôt</span>
+                                    <span className="text-sm font-medium">{t(label)}</span>
+                                    <span className="ml-auto text-[9px] font-bold uppercase tracking-wider text-slate-300 bg-slate-100 px-1.5 py-0.5 rounded">{t('Bientôt')}</span>
                                 </div>
                             );
                         }
@@ -102,7 +105,7 @@ const SchoolDashboard = () => {
                                 }`}
                             >
                                 <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-emerald-600' : ''}`} />
-                                {label}
+                                {t(label)}
                             </Link>
                         );
                     })}
@@ -116,7 +119,7 @@ const SchoolDashboard = () => {
                         </div>
                         <div className="min-w-0">
                             <p className="text-xs font-semibold text-slate-900 truncate">{user?.email}</p>
-                            <p className="text-[10px] text-slate-400 font-medium">Admin École</p>
+                            <p className="text-[10px] text-slate-400 font-medium">{t('Admin École')}</p>
                         </div>
                     </div>
                     <button
@@ -124,7 +127,7 @@ const SchoolDashboard = () => {
                         className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
                     >
                         <LogOut className="w-4 h-4 shrink-0" />
-                        Déconnexion
+                        {t('Déconnexion')}
                     </button>
                 </div>
             </aside>
@@ -146,13 +149,14 @@ const SchoolDashboard = () => {
                             <span>/</span>
                             <span className="text-slate-700 font-semibold capitalize">
                                 {location.pathname === '/ecole-dashboard'
-                                    ? 'Tableau de bord'
-                                    : NAV_ITEMS.find(n => location.pathname.startsWith(n.path) && n.path !== '/ecole-dashboard')?.label ?? ''}
+                                    ? t('Tableau de bord')
+                                    : t(NAV_ITEMS.find(n => location.pathname.startsWith(n.path) && n.path !== '/ecole-dashboard')?.label ?? '')}
                             </span>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-2">
+                        <LanguageToggle />
                         <NotificationBell />
                         <Link to="/ecole-dashboard/settings" className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 transition-all">
                             <Settings className="w-4 h-4" />
@@ -188,6 +192,7 @@ const fmt = (n: number) => new Intl.NumberFormat('fr-FR').format(n);
 
 const SchoolHomeDashboard = () => {
     const { user } = useAuth();
+    const { t } = useI18n();
     const [stats, setStats]   = useState<DashStats | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -226,13 +231,13 @@ const SchoolHomeDashboard = () => {
                     <h2 className="text-xl font-bold text-white mb-1">{user?.tenant_name}</h2>
                     <p className="text-slate-400 text-sm">
                         {stats?.setup.is_complete
-                            ? 'Votre établissement est entièrement configuré.'
-                            : 'Complétez la configuration de votre établissement.'}
+                            ? t('Votre établissement est entièrement configuré.')
+                            : t('Complétez la configuration de votre établissement.')}
                     </p>
                 </div>
                 <Link to="/ecole-dashboard/years"
                     className="shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-emerald-600/20 relative z-10">
-                    <Calendar className="w-4 h-4" /> Années scolaires
+                    <Calendar className="w-4 h-4" /> {t('Années scolaires')}
                 </Link>
             </div>
 
@@ -250,7 +255,7 @@ const SchoolHomeDashboard = () => {
                                 {card.icon}
                             </div>
                             <p className={`text-xl font-bold ${card.color} mb-0.5`}>{card.value}</p>
-                            <p className="text-xs text-slate-400 font-medium leading-tight">{card.label}</p>
+                            <p className="text-xs text-slate-400 font-medium leading-tight">{t(card.label)}</p>
                         </Link>
                     ))}
                 </div>
@@ -263,7 +268,7 @@ const SchoolHomeDashboard = () => {
                     {!stats.setup.is_complete && (
                         <div className="bg-white rounded-xl border border-slate-200 p-5">
                             <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                                <Settings size={15} className="text-slate-400" /> Guide de configuration
+                                <Settings size={15} className="text-slate-400" /> {t('Guide de configuration')}
                             </h3>
                             <div className="space-y-2">
                                 {setupSteps.map((step, i) => (
@@ -275,7 +280,7 @@ const SchoolHomeDashboard = () => {
                                             {step.done && <CheckCircle2 size={11} className="text-white" />}
                                         </div>
                                         <span className={`text-sm font-medium transition-colors ${step.done ? 'text-slate-400 line-through' : 'text-slate-700 group-hover:text-emerald-700'}`}>
-                                            {step.label}
+                                            {t(step.label)}
                                         </span>
                                         {!step.done && <ArrowUpRight size={13} className="ml-auto text-slate-300 group-hover:text-emerald-500" />}
                                     </Link>
@@ -287,10 +292,10 @@ const SchoolHomeDashboard = () => {
                     {/* Derniers paiements */}
                     <div className="bg-white rounded-xl border border-slate-200 p-5">
                         <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                            <CreditCard size={15} className="text-slate-400" /> Derniers paiements
+                            <CreditCard size={15} className="text-slate-400" /> {t('Derniers paiements')}
                         </h3>
                         {stats.derniers_paiements.length === 0 ? (
-                            <p className="text-sm text-slate-400 text-center py-4">Aucun paiement enregistré</p>
+                            <p className="text-sm text-slate-400 text-center py-4">{t('Aucun paiement enregistré')}</p>
                         ) : (
                             <div className="space-y-2">
                                 {stats.derniers_paiements.map(p => (
@@ -307,17 +312,17 @@ const SchoolHomeDashboard = () => {
                             </div>
                         )}
                         <Link to="/ecole-dashboard/finances" className="mt-3 flex items-center gap-1 text-xs text-emerald-600 hover:underline font-medium">
-                            Voir toutes les finances <ArrowUpRight size={12} />
+                            {t('Voir toutes les finances')} <ArrowUpRight size={12} />
                         </Link>
                     </div>
 
                     {/* Absences récentes */}
                     <div className="bg-white rounded-xl border border-slate-200 p-5">
                         <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                            <AlertCircle size={15} className="text-slate-400" /> Absences non justifiées (récentes)
+                            <AlertCircle size={15} className="text-slate-400" /> {t('Absences non justifiées (récentes)')}
                         </h3>
                         {stats.absences_recentes.length === 0 ? (
-                            <p className="text-sm text-slate-400 text-center py-4">Aucune absence récente</p>
+                            <p className="text-sm text-slate-400 text-center py-4">{t('Aucune absence récente')}</p>
                         ) : (
                             <div className="space-y-2">
                                 {stats.absences_recentes.map(a => (
@@ -334,26 +339,26 @@ const SchoolHomeDashboard = () => {
                             </div>
                         )}
                         <Link to="/ecole-dashboard/attendance" className="mt-3 flex items-center gap-1 text-xs text-emerald-600 hover:underline font-medium">
-                            Gérer les présences <ArrowUpRight size={12} />
+                            {t('Gérer les présences')} <ArrowUpRight size={12} />
                         </Link>
                     </div>
 
                     {/* Finances résumé */}
                     <div className="bg-white rounded-xl border border-slate-200 p-5">
                         <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                            <Wallet size={15} className="text-slate-400" /> Finances — résumé
+                            <Wallet size={15} className="text-slate-400" /> {t('Finances — résumé')}
                         </h3>
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-slate-500">Total recouvré</span>
+                                <span className="text-sm text-slate-500">{t('Total recouvré')}</span>
                                 <span className="text-sm font-bold text-emerald-600">{fmt(stats.finance.total_recouvre)} XAF</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-slate-500">En attente (mobile)</span>
+                                <span className="text-sm text-slate-500">{t('En attente (mobile)')}</span>
                                 <span className="text-sm font-semibold text-amber-600">{fmt(stats.finance.total_en_attente)} XAF</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-slate-500">Paiements ce mois</span>
+                                <span className="text-sm text-slate-500">{t('Paiements ce mois')}</span>
                                 <span className="text-sm font-semibold text-slate-700">{fmt(stats.finance.paiements_ce_mois)}</span>
                             </div>
                             {stats.finance.total_recouvre > 0 && (
@@ -363,12 +368,12 @@ const SchoolHomeDashboard = () => {
                                             width: `${Math.min(100, Math.round(stats.finance.total_recouvre / (stats.finance.total_recouvre + stats.finance.total_en_attente + 1) * 100))}%`
                                         }} />
                                     </div>
-                                    <p className="text-xs text-slate-400 mt-1">Taux de recouvrement immédiat</p>
+                                    <p className="text-xs text-slate-400 mt-1">{t('Taux de recouvrement immédiat')}</p>
                                 </div>
                             )}
                         </div>
                         <Link to="/ecole-dashboard/finances" className="mt-3 flex items-center gap-1 text-xs text-emerald-600 hover:underline font-medium">
-                            Voir le détail <ArrowUpRight size={12} />
+                            {t('Voir le détail')} <ArrowUpRight size={12} />
                         </Link>
                     </div>
                 </div>

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { UserCheck, Check, X, Clock, Ban, Loader2, Save, ChevronDown, CheckCircle2, AlertCircle } from 'lucide-react';
 import api from '../../lib/api';
 import { useTeacher } from './TeacherLayout';
+import { useI18n } from '../../i18n/i18n';
 
 type Statut = 'present' | 'absent' | 'retard' | 'exclu';
 interface Row { inscription_id: string; eleve_id: string; eleve: { nom: string; prenom: string; matricule: string; sexe: string }; }
@@ -17,6 +18,7 @@ const STATUTS: { value: Statut; label: string; icon: any; active: string }[] = [
 
 export default function TeacherAttendance() {
     const { affectations } = useTeacher();
+    const { t } = useI18n();
     const [params] = useSearchParams();
 
     const [classeId, setClasseId]   = useState(params.get('classe_id') ?? '');
@@ -91,22 +93,22 @@ export default function TeacherAttendance() {
                     <UserCheck className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                    <h1 className="text-xl font-black text-slate-900">Faire l'appel</h1>
-                    <p className="text-sm text-slate-400">Marquez la présence de vos élèves pour une séance.</p>
+                    <h1 className="text-xl font-black text-slate-900">{t("Faire l'appel")}</h1>
+                    <p className="text-sm text-slate-400">{t('Marquez la présence de vos élèves pour une séance.')}</p>
                 </div>
             </div>
 
             {/* Sélecteurs */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                <Sel label="Classe" value={classeId} onChange={setClasseId} ph="-- Classe --">
+                <Sel label={t('Classe')} value={classeId} onChange={setClasseId} ph={t('-- Classe --')}>
                     {classes.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
                 </Sel>
-                <Sel label="Matière" value={matiereId} onChange={setMatiereId} ph="-- Matière --" disabled={!classeId}>
+                <Sel label={t('Matière')} value={matiereId} onChange={setMatiereId} ph={t('-- Matière --')} disabled={!classeId}>
                     {matieres.map(m => <option key={m.id} value={m.id}>{m.nom}</option>)}
                 </Sel>
-                <Inp label="Date" type="date" value={date} onChange={setDate} />
-                <Inp label="Début" type="time" value={hDebut} onChange={setHDebut} />
-                <Inp label="Fin" type="time" value={hFin} onChange={setHFin} />
+                <Inp label={t('Date')} type="date" value={date} onChange={setDate} />
+                <Inp label={t('Début')} type="time" value={hDebut} onChange={setHDebut} />
+                <Inp label={t('Fin')} type="time" value={hFin} onChange={setHFin} />
             </div>
 
             {msg && <Banner ok text={msg} />}
@@ -115,25 +117,25 @@ export default function TeacherAttendance() {
             {/* Liste élèves */}
             {!classeId || !matiereId ? (
                 <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-14 text-center text-sm text-slate-400">
-                    Sélectionnez une classe et une matière pour faire l'appel.
+                    {t("Sélectionnez une classe et une matière pour faire l'appel.")}
                 </div>
             ) : loading ? (
                 <div className="flex justify-center py-14"><Loader2 className="w-7 h-7 animate-spin text-emerald-600" /></div>
             ) : rows.length === 0 ? (
                 <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-14 text-center text-sm text-slate-400">
-                    Aucun élève inscrit dans cette classe.
+                    {t('Aucun élève inscrit dans cette classe.')}
                 </div>
             ) : (
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                     {/* Barre d'actions */}
                     <div className="flex flex-wrap items-center gap-3 px-5 py-3.5 border-b border-slate-50 bg-slate-50/40">
-                        <span className="text-xs font-bold text-slate-500">{rows.length} élève(s)</span>
-                        <span className="text-xs text-emerald-600 font-semibold">{count('present')} présents</span>
-                        <span className="text-xs text-red-500 font-semibold">{count('absent')} absents</span>
-                        <span className="text-xs text-amber-500 font-semibold">{count('retard')} retards</span>
+                        <span className="text-xs font-bold text-slate-500">{rows.length} {t('élève(s)')}</span>
+                        <span className="text-xs text-emerald-600 font-semibold">{count('present')} {t('présents')}</span>
+                        <span className="text-xs text-red-500 font-semibold">{count('absent')} {t('absents')}</span>
+                        <span className="text-xs text-amber-500 font-semibold">{count('retard')} {t('retards')}</span>
                         <div className="ml-auto flex gap-2">
-                            <button onClick={() => setAll('present')} className="px-3 py-1.5 text-xs font-semibold bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-all">Tous présents</button>
-                            <button onClick={() => setAll('absent')} className="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all">Tous absents</button>
+                            <button onClick={() => setAll('present')} className="px-3 py-1.5 text-xs font-semibold bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-all">{t('Tous présents')}</button>
+                            <button onClick={() => setAll('absent')} className="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all">{t('Tous absents')}</button>
                         </div>
                     </div>
 
@@ -153,7 +155,7 @@ export default function TeacherAttendance() {
                                         const active = marks[r.eleve_id] === st.value;
                                         return (
                                             <button key={st.value} onClick={() => setMarks(m => ({ ...m, [r.eleve_id]: st.value }))}
-                                                title={st.label}
+                                                title={t(st.label)}
                                                 className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-all ${
                                                     active ? st.active : 'border-slate-200 text-slate-300 hover:text-slate-500 hover:border-slate-300'
                                                 }`}>
@@ -169,7 +171,7 @@ export default function TeacherAttendance() {
                     <div className="px-5 py-4 border-t border-slate-50 flex justify-end">
                         <button onClick={save} disabled={saving}
                             className="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 disabled:opacity-60 transition-all">
-                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Enregistrer l'appel
+                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} {t("Enregistrer l'appel")}
                         </button>
                     </div>
                 </div>

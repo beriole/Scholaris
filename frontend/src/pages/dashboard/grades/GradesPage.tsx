@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
+import { useI18n } from '../../../i18n/i18n';
 
 interface Year     { id: string; libelle: string; est_active: boolean; }
 interface Periode  { id: string; nom: string; ordre: number; type: string; }
@@ -18,6 +19,7 @@ const SELECT = 'w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rou
 
 const GradesPage = () => {
     const { user } = useAuth();
+    const { t } = useI18n();
     const navigate = useNavigate();
 
     const [activeYear, setActiveYear] = useState<Year | null>(null);
@@ -112,9 +114,9 @@ const GradesPage = () => {
     return (
         <div className="space-y-8 max-w-4xl">
             <div>
-                <h2 className="text-lg font-bold text-slate-900">Notes & Bulletins</h2>
+                <h2 className="text-lg font-bold text-slate-900">{t('Notes & Bulletins')}</h2>
                 <p className="text-sm text-slate-500 mt-0.5">
-                    Saisie des notes par séquence · Bulletins séquentiels & trimestriels (MINESEC)
+                    {t('Saisie des notes par séquence · Bulletins séquentiels & trimestriels (MINESEC)')}
                 </p>
             </div>
 
@@ -127,16 +129,16 @@ const GradesPage = () => {
                             <Settings className="w-5 h-5 text-amber-600" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-bold text-amber-900 mb-1">Configuration requise</h3>
+                            <h3 className="text-sm font-bold text-amber-900 mb-1">{t('Configuration requise')}</h3>
                             <p className="text-sm text-amber-700 leading-relaxed mb-4">
-                                Initialisez les séquences et les types d'évaluation par défaut pour {activeYear?.libelle ?? 'cette année'}.
+                                {t('Initialisez les séquences et les types d\'évaluation par défaut pour')} {activeYear?.libelle ?? t('cette année')}.
                             </p>
                             {setupError && <div className="flex items-center gap-2 text-sm text-red-600 mb-3"><AlertCircle className="w-4 h-4" /> {setupError}</div>}
                             {setupMsg && <div className="flex items-center gap-2 text-sm text-emerald-700 mb-3"><CheckCircle2 className="w-4 h-4" /> {setupMsg}</div>}
                             <button onClick={handleSetupAll} disabled={setupLoading || !activeYear}
                                 className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-xl hover:bg-amber-700 transition-all disabled:opacity-60">
                                 {setupLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Settings className="w-4 h-4" />}
-                                Configurer les séquences
+                                {t('Configurer les séquences')}
                             </button>
                         </div>
                     </div>
@@ -155,7 +157,7 @@ const GradesPage = () => {
                     {trimestres.map(t => (
                         <div key={t.id} className="p-3 rounded-xl border bg-slate-900 border-slate-900 text-center">
                             <p className="text-xs font-bold text-white">{t.nom}</p>
-                            <p className="text-[10px] text-slate-400 font-medium">Synthèse</p>
+                            <p className="text-[10px] text-slate-400 font-medium">{t('Synthèse')}</p>
                         </div>
                     ))}
                 </div>
@@ -164,30 +166,30 @@ const GradesPage = () => {
             {/* Sélecteur */}
             {hasSetup && (
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
-                    <h3 className="text-sm font-bold text-slate-900">Sélection</h3>
+                    <h3 className="text-sm font-bold text-slate-900">{t('Sélection')}</h3>
 
                     <div className="grid sm:grid-cols-3 gap-4">
                         <div className="space-y-1.5">
                             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                                <Layers className="w-3 h-3" /> Classe
+                                <Layers className="w-3 h-3" /> {t('Classe')}
                             </label>
                             <select className={SELECT} value={selClasse} onChange={e => handleClasseChange(e.target.value)}>
-                                <option value="">— Choisir —</option>
+                                <option value="">{t('— Choisir —')}</option>
                                 {classes.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
                             </select>
                         </div>
 
                         <div className="space-y-1.5">
                             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                                <CalendarRange className="w-3 h-3" /> Période
+                                <CalendarRange className="w-3 h-3" /> {t('Période')}
                             </label>
                             <select className={SELECT} value={selPeriode} onChange={e => setSelPeriode(e.target.value)}>
-                                <option value="">— Choisir —</option>
-                                <optgroup label="Séquences">
+                                <option value="">{t('— Choisir —')}</option>
+                                <optgroup label={t('Séquences')}>
                                     {sequences.map(s => <option key={s.id} value={s.id}>{s.nom}</option>)}
                                 </optgroup>
                                 {trimestres.length > 0 && (
-                                    <optgroup label="Trimestres (bulletin de synthèse)">
+                                    <optgroup label={t('Trimestres (bulletin de synthèse)')}>
                                         {trimestres.map(t => <option key={t.id} value={t.id}>{t.nom}</option>)}
                                     </optgroup>
                                 )}
@@ -196,12 +198,12 @@ const GradesPage = () => {
 
                         <div className="space-y-1.5">
                             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                                <BookOpen className="w-3 h-3" /> Matière
+                                <BookOpen className="w-3 h-3" /> {t('Matière')}
                             </label>
                             <select className={SELECT} value={selMatiere} onChange={e => setSelMatiere(e.target.value)}
                                 disabled={!selClasse || matieres.length === 0 || isTrimestre}>
-                                <option value="">— Choisir —</option>
-                                {matieres.map(m => <option key={m.id} value={m.id}>{m.nom} (coeff {m.coefficient})</option>)}
+                                <option value="">{t('— Choisir —')}</option>
+                                {matieres.map(m => <option key={m.id} value={m.id}>{m.nom} ({t('coeff')} {m.coefficient})</option>)}
                             </select>
                         </div>
                     </div>
@@ -209,7 +211,7 @@ const GradesPage = () => {
                     {isTrimestre && (
                         <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2">
                             <AlertCircle className="w-3.5 h-3.5 text-slate-400" />
-                            Le bulletin trimestriel agrège automatiquement les notes des séquences du trimestre. La saisie se fait par séquence.
+                            {t('Le bulletin trimestriel agrège automatiquement les notes des séquences du trimestre. La saisie se fait par séquence.')}
                         </div>
                     )}
 
@@ -227,11 +229,11 @@ const GradesPage = () => {
                     <div className="flex flex-wrap gap-3 pt-2 border-t border-slate-100">
                         <button onClick={goToEntry} disabled={!canEntry}
                             className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm">
-                            <ClipboardList className="w-4 h-4" /> Saisir les notes <ChevronRight className="w-4 h-4" />
+                            <ClipboardList className="w-4 h-4" /> {t('Saisir les notes')} <ChevronRight className="w-4 h-4" />
                         </button>
                         <button onClick={goToBulletins} disabled={!canBulletin}
                             className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-                            <FileText className="w-4 h-4" /> Voir / générer les bulletins
+                            <FileText className="w-4 h-4" /> {t('Voir / générer les bulletins')}
                         </button>
                     </div>
                 </div>
