@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, Plus, Search, X, Loader2, ChevronDown,
-    GraduationCap, AlertCircle, UserX, MoreHorizontal, Upload, User
+    GraduationCap, AlertCircle, UserX, MoreHorizontal, Upload, User, Download
 } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
 import { uploadImageFile } from '../../../lib/uploadImage';
+import { downloadClassRoster } from '../../../lib/classPdf';
 import { useI18n } from '../../../i18n/i18n';
 
 interface Student {
@@ -53,6 +54,8 @@ const StudentsPage = () => {
     const [form, setForm] = useState(EMPTY_FORM);
     const [activeYear, setActiveYear] = useState<any>(null);
     const [photoUploading, setPhotoUploading] = useState(false);
+    const [school, setSchool] = useState<{ nom: string; logo_url?: string | null; ville?: string | null; telephone?: string | null }>({ nom: 'Mon Établissement' });
+    const [downloading, setDownloading] = useState(false);
 
     const handlePhotoFile = async (file?: File) => {
         if (!file) return;
@@ -90,6 +93,35 @@ const StudentsPage = () => {
     };
 
     useEffect(() => { fetchAll(); }, [user]);
+
+    useEffect(() => {
+        api.get('/api/settings/school')
+            .then(r => setSchool({
+                nom: r.data.ecole?.nom ?? 'Mon Établissement',
+                logo_url: r.data.ecole?.logo_url ?? null,
+                ville: r.data.ecole?.ville ?? null,
+                telephone: r.data.ecole?.telephone ?? null,
+            }))
+            .catch(() => {});
+    }, []);
+
+    const handleDownloadRoster = async () => {
+        if (!displayed.length) return;
+        setDownloading(true);
+        try {
+            const classeName = filterClasse
+                ? (classes.find(c => c.id === filterClasse)?.nom ?? 'Classe')
+                : t('Tous les élèves');
+            await downloadClassRoster(
+                displayed.map(s => ({
+                    matricule: s.matricule, nom: s.nom, prenom: s.prenom,
+                    sexe: s.sexe, date_naissance: s.date_naissance, statut: s.statut,
+                })),
+                school, classeName, activeYear?.libelle ?? '',
+            );
+        } catch (e) { console.error(e); }
+        finally { setDownloading(false); }
+    };
 
     const handleYearChange = async (yearId: string) => {
         const y = years.find(y => y.id === yearId);
@@ -182,12 +214,22 @@ const StudentsPage = () => {
                         {activeYear && <span className="ml-2 text-emerald-600 font-semibold">· {activeYear.libelle}</span>}
                     </p>
                 </div>
-                <button
-                    onClick={openAdd}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 transition-all shadow-sm shrink-0"
-                >
-                    <Plus className="w-4 h-4" /> {t('Ajouter un élève')}
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                    <button
+                        onClick={handleDownloadRoster}
+                        disabled={downloading || displayed.length === 0}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 transition-all shadow-sm disabled:opacity-50"
+                    >
+                        {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                        {t('Télécharger la liste')}
+                    </button>
+                    <button
+                        onClick={openAdd}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 transition-all shadow-sm"
+                    >
+                        <Plus className="w-4 h-4" /> {t('Ajouter un élève')}
+                    </button>
+                </div>
             </div>
 
             {/* Filters */}

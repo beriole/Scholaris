@@ -3,11 +3,12 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, FileText, Loader2, AlertCircle,
-    CheckCircle2, ChevronRight, TrendingUp, Award, Users, Download,
+    CheckCircle2, ChevronRight, TrendingUp, Award, Users, Download, Table2,
 } from 'lucide-react';
 import api from '../../../lib/api';
 import BulletinPDF from './BulletinPDF';
 import { downloadClassBulletins } from '../../../lib/bulletinPdf';
+import { downloadGradeSheet } from '../../../lib/classPdf';
 import { useI18n } from '../../../i18n/i18n';
 
 interface BulletinDetail {
@@ -40,7 +41,7 @@ const BulletinsPage = () => {
     const periode_id = params.get('periode_id') ?? '';
     const classe_id  = params.get('classe_id')  ?? '';
 
-    const [school, setSchool] = useState<{ nom: string; logo_url?: string | null }>({ nom: 'Mon Établissement' });
+    const [school, setSchool] = useState<{ nom: string; logo_url?: string | null; ville?: string | null; telephone?: string | null }>({ nom: 'Mon Établissement' });
     const [bulletins,  setBulletins]  = useState<Bulletin[]>([]);
     const [loading,    setLoading]    = useState(true);
     const [generating, setGenerating] = useState(false);
@@ -48,6 +49,7 @@ const BulletinsPage = () => {
     const [genMsg,     setGenMsg]     = useState('');
     const [selected,   setSelected]   = useState<Bulletin | null>(null);
     const [dlClass,    setDlClass]    = useState(false);
+    const [dlSheet,    setDlSheet]    = useState(false);
     const fetchBulletins = async () => {
         if (!periode_id || !classe_id) return;
         setLoading(true);
@@ -67,7 +69,12 @@ const BulletinsPage = () => {
 
     useEffect(() => {
         api.get('/api/settings/school')
-            .then(r => setSchool({ nom: r.data.ecole?.nom ?? 'Mon Établissement', logo_url: r.data.ecole?.logo_url ?? null }))
+            .then(r => setSchool({
+                nom: r.data.ecole?.nom ?? 'Mon Établissement',
+                logo_url: r.data.ecole?.logo_url ?? null,
+                ville: r.data.ecole?.ville ?? null,
+                telephone: r.data.ecole?.telephone ?? null,
+            }))
             .catch(() => {});
     }, []);
 
@@ -118,6 +125,16 @@ const BulletinsPage = () => {
         } finally { setDlClass(false); }
     };
 
+    const handleDownloadSheet = async () => {
+        if (!bulletins.length) return;
+        setDlSheet(true);
+        try {
+            await downloadGradeSheet(bulletins as any, school, classeLabel, periodLabel, anneeLabel);
+        } catch (e) {
+            console.error(e); setError('Erreur lors de la génération du bordereau.');
+        } finally { setDlSheet(false); }
+    };
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -139,6 +156,13 @@ const BulletinsPage = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    {bulletins.length > 0 && (
+                        <button onClick={handleDownloadSheet} disabled={dlSheet}
+                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-50 transition-all shadow-sm disabled:opacity-70">
+                            {dlSheet ? <Loader2 className="w-4 h-4 animate-spin" /> : <Table2 className="w-4 h-4" />}
+                            {t('Bordereau de notes')}
+                        </button>
+                    )}
                     {bulletins.length > 0 && (
                         <button onClick={handleDownloadClass} disabled={dlClass}
                             className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 transition-all shadow-sm disabled:opacity-70">

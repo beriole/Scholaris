@@ -200,6 +200,7 @@ export const EN: Record<string, string> = {
     // ── Page Bulletins ──────────────────────────────────────────────
     'Chargement des bulletins…': 'Loading report cards…',
     'Toute la classe': 'Whole class',
+    'Bordereau de notes': 'Grade sheet',
     "Saisissez d'abord les notes, puis cliquez sur « Générer les bulletins ».": 'First enter the grades, then click "Generate report cards".',
     'Moy. classe': 'Class avg.',
 
@@ -259,6 +260,8 @@ export const EN: Record<string, string> = {
     'Archiver cet élève ?': 'Archive this student?',
     'élève(s) inscrit(s)': 'enrolled student(s)',
     'Ajouter un élève': 'Add a student',
+    'Télécharger la liste': 'Download list',
+    'Tous les élèves': 'All students',
     'Rechercher par nom ou matricule…': 'Search by name or ID…',
     'Toutes les classes': 'All classes',
     'Aucun résultat.': 'No results.',
