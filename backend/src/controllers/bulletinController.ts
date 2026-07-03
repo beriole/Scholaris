@@ -12,12 +12,15 @@ const qStr = (v: unknown): string | undefined =>
 
 const pStr = (v: string | string[]): string => Array.isArray(v) ? v[0] : v;
 
+// Les notes « absent » / « non composé » sont exclues. Une matière sans aucune
+// note valide renvoie null → elle (et son coefficient) est exclue de la moyenne.
 const calcSubjectAvg = (
-    notes: { valeur: Decimal; type_evaluation: { ponderation: Decimal } | null }[]
+    notes: { valeur: Decimal; statut?: string | null; type_evaluation: { ponderation: Decimal } | null }[]
 ): number | null => {
-    if (notes.length === 0) return null;
+    const valid = notes.filter(n => (n.statut ?? 'saisi') === 'saisi');
+    if (valid.length === 0) return null;
     let totalW = 0, totalC = 0;
-    for (const n of notes) {
+    for (const n of valid) {
         const c = toNum(n.type_evaluation?.ponderation) || 1;
         totalW += toNum(n.valeur) * c;
         totalC += c;
@@ -126,7 +129,7 @@ export const generateClassBulletins = async (req: Request, res: Response) => {
             for (const mat of matieres) {
                 const matNotes = byMatiere[mat.id];
                 if (!matNotes) continue;
-                const avg = calcSubjectAvg(matNotes.map(n => ({ valeur: n.valeur, type_evaluation: n.type_evaluation })));
+                const avg = calcSubjectAvg(matNotes.map(n => ({ valeur: n.valeur, statut: n.statut, type_evaluation: n.type_evaluation })));
                 if (avg !== null) {
                     const coeff = coeffOverride[mat.id] ?? toNum(mat.coefficient);
                     totalW += avg * coeff;

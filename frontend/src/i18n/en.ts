@@ -102,6 +102,7 @@ export const EN: Record<string, string> = {
     "Enregistrer l'appel": 'Save attendance',
     'Présent': 'Present',
     'Absent': 'Absent',
+    'Non composé': 'Did not sit',
     'Retard': 'Late',
     'Exclu': 'Excluded',
     'Tous présents': 'All present',

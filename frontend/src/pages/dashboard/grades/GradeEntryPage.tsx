@@ -9,10 +9,12 @@ import api from '../../../lib/api';
 import { useI18n } from '../../../i18n/i18n';
 
 interface EvalType { id: string; libelle: string; ponderation: number; }
+type NoteStatut = 'saisi' | 'absent' | 'non_compose';
 interface EleveRow {
     inscription_id: string;
     eleve: { nom: string; prenom: string; matricule: string };
-    grades: Record<string, { id: string; valeur: number } | null>;
+    grades: Record<string, { id: string; valeur: number; statut?: string } | null>;
+    statut?: NoteStatut;
     moyenne: number | null;
 }
 interface GradeSheet {
@@ -56,6 +58,8 @@ const GradeEntryPage = () => {
 
     // draft[inscription_id][type_eval_id] = valeur string
     const [draft, setDraft] = useState<Record<string, Record<string, string>>>({});
+    // rowStatus[inscription_id] = 'saisi' | 'absent' | 'non_compose'
+    const [rowStatus, setRowStatus] = useState<Record<string, NoteStatut>>({});
     const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
     const fetchSheet = async () => {
@@ -70,14 +74,17 @@ const GradeEntryPage = () => {
 
             // Pré-remplir le draft avec les notes existantes
             const d: Record<string, Record<string, string>> = {};
+            const st: Record<string, NoteStatut> = {};
             for (const row of res.data.rows as EleveRow[]) {
                 d[row.inscription_id] = {};
                 for (const et of res.data.eval_types as EvalType[]) {
                     const existing = row.grades[et.id];
                     d[row.inscription_id][et.id] = existing != null ? String(existing.valeur) : '';
                 }
+                st[row.inscription_id] = (row.statut as NoteStatut) ?? 'saisi';
             }
             setDraft(d);
+            setRowStatus(st);
         } catch (err: any) {
             setError(err.response?.data?.error ?? 'Erreur lors du chargement.');
         }
@@ -128,6 +135,18 @@ const GradeEntryPage = () => {
 
         const grades: any[] = [];
         for (const row of sheet.rows) {
+            const statut = rowStatus[row.inscription_id] ?? 'saisi';
+            if (statut !== 'saisi') {
+                // Absent / Non composé : marquer chaque type d'évaluation de l'élève.
+                for (const et of sheet.eval_types) {
+                    grades.push({
+                        inscription_id: row.inscription_id,
+                        matiere_id, periode_id, type_eval_id: et.id,
+                        valeur: 0, statut,
+                    });
+                }
+                continue;
+            }
             for (const et of sheet.eval_types) {
                 const val = draft[row.inscription_id]?.[et.id];
                 if (val === '' || val === undefined) continue;
@@ -137,6 +156,7 @@ const GradeEntryPage = () => {
                     periode_id,
                     type_eval_id: et.id,
                     valeur: parseFloat(val),
+                    statut: 'saisi',
                 });
             }
         }
@@ -253,10 +273,13 @@ const GradeEntryPage = () => {
                                         </th>
                                     ))}
                                     <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Moy.')}</th>
+                                    <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Statut')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {sheet.rows.map((row, rowIdx) => {
+                                    const statut = rowStatus[row.inscription_id] ?? 'saisi';
+                                    const isAbs = statut !== 'saisi';
                                     const avg = calcAvg(row.grades, draft[row.inscription_id] ?? {}, sheet.eval_types);
                                     return (
                                         <motion.tr
@@ -288,9 +311,10 @@ const GradeEntryPage = () => {
                                                             onChange={e => handleChange(row.inscription_id, et.id, e.target.value)}
                                                             onKeyDown={e => handleKeyDown(e, row.inscription_id, et.id)}
                                                             placeholder="—"
+                                                            disabled={isAbs}
                                                             className={`
                                                                 w-20 text-center px-2 py-1.5 text-sm font-semibold rounded-lg border outline-none transition-all
-                                                                ${isLow
+                                                                ${isAbs ? 'border-slate-100 bg-slate-100 text-slate-300 cursor-not-allowed' : isLow
                                                                     ? 'border-red-200 bg-red-50 text-red-700 focus:border-red-400 focus:ring-2 focus:ring-red-400/10'
                                                                     : 'border-slate-200 bg-slate-50 text-slate-900 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/10'
                                                                 }
@@ -301,13 +325,28 @@ const GradeEntryPage = () => {
                                                 );
                                             })}
                                             <td className="px-4 py-2 text-center">
-                                                {avg !== null ? (
+                                                {isAbs ? (
+                                                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${statut === 'absent' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>
+                                                        {statut === 'absent' ? 'Abs' : 'NC'}
+                                                    </span>
+                                                ) : avg !== null ? (
                                                     <span className={`text-sm font-bold ${avg >= 10 ? 'text-emerald-600' : 'text-red-500'}`}>
                                                         {avg.toFixed(2)}
                                                     </span>
                                                 ) : (
                                                     <span className="text-slate-300 text-xs">—</span>
                                                 )}
+                                            </td>
+                                            <td className="px-4 py-2 text-center">
+                                                <select
+                                                    value={statut}
+                                                    onChange={e => setRowStatus(s => ({ ...s, [row.inscription_id]: e.target.value as NoteStatut }))}
+                                                    className="text-xs font-semibold px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 outline-none focus:border-emerald-400 cursor-pointer"
+                                                >
+                                                    <option value="saisi">{t('Présent')}</option>
+                                                    <option value="absent">{t('Absent')}</option>
+                                                    <option value="non_compose">{t('Non composé')}</option>
+                                                </select>
                                             </td>
                                         </motion.tr>
                                     );

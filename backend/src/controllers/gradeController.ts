@@ -12,12 +12,16 @@ const qStr = (v: unknown): string | undefined =>
 
 const pStr = (v: string | string[]): string => Array.isArray(v) ? v[0] : v;
 
+// Moyenne d'une matière : les notes marquées « absent » ou « non composé »
+// sont exclues du calcul. Si aucune note valide → null (matière non prise en
+// compte dans la moyenne générale, coefficient exclu).
 const calcSubjectAvg = (
-    grades: { valeur: Decimal; type_evaluation: { ponderation: Decimal } | null }[]
+    grades: { valeur: Decimal; statut?: string | null; type_evaluation: { ponderation: Decimal } | null }[]
 ): number | null => {
-    if (grades.length === 0) return null;
+    const valid = grades.filter(g => (g.statut ?? 'saisi') === 'saisi');
+    if (valid.length === 0) return null;
     let totalW = 0, totalC = 0;
-    for (const g of grades) {
+    for (const g of valid) {
         const c = toNum(g.type_evaluation?.ponderation) || 1;
         totalW += toNum(g.valeur) * c;
         totalC += c;
@@ -77,17 +81,24 @@ export const getGradeSheet = async (req: Request, res: Response) => {
 
         const rows = inscriptions.map(insc => {
             const eleveNotes = notesByEleve[insc.eleve_id] ?? [];
-            const gradeByType: Record<string, { id: string; valeur: number } | null> = {};
+            const gradeByType: Record<string, { id: string; valeur: number; statut: string } | null> = {};
             for (const et of evalTypes) {
                 const note = eleveNotes.find(n => n.type_evaluation_id === et.id);
-                gradeByType[et.id] = note ? { id: note.id, valeur: toNum(note.valeur) } : null;
+                gradeByType[et.id] = note ? { id: note.id, valeur: toNum(note.valeur), statut: note.statut ?? 'saisi' } : null;
             }
+            // Statut au niveau matière : « absent »/« non composé » si toutes les
+            // notes saisies partagent ce statut (permet l'affichage Abs/NC).
+            const statuts = eleveNotes.map(n => n.statut ?? 'saisi');
+            const statutMatiere = statuts.length > 0 && statuts.every(s => s !== 'saisi')
+                ? (statuts.includes('non_compose') ? 'non_compose' : 'absent')
+                : 'saisi';
             return {
                 inscription_id: insc.id,
                 eleve_id: insc.eleve_id,
                 eleve: insc.eleve,
                 grades: gradeByType,
-                moyenne: calcSubjectAvg(eleveNotes.map(n => ({ valeur: n.valeur, type_evaluation: n.type_evaluation }))),
+                statut: statutMatiere,
+                moyenne: calcSubjectAvg(eleveNotes.map(n => ({ valeur: n.valeur, statut: n.statut, type_evaluation: n.type_evaluation }))),
             };
         });
 
@@ -118,6 +129,7 @@ export const saveBulkGrades = async (req: Request, res: Response) => {
     }
 
     for (const g of grades) {
+        if ((g.statut ?? 'saisi') !== 'saisi') continue; // absent / non composé : pas de valeur
         const val = parseFloat(g.valeur);
         if (isNaN(val) || val < 0 || val > 20) {
             return res.status(400).json({ error: `Note invalide : ${g.valeur}. Doit être entre 0 et 20.` });
@@ -163,6 +175,9 @@ export const saveBulkGrades = async (req: Request, res: Response) => {
             if (!enseignant_id) {
                 return res.status(400).json({ error: 'Aucun enseignant affecté à cette matière dans cette classe. Faites d\'abord l\'affectation.' });
             }
+            const statut = (g.statut ?? 'saisi') as string;
+            const isAbs  = statut !== 'saisi';
+            const valeur = isAbs ? 0 : parseFloat(g.valeur);
             ops.push(
                 prisma.notes.upsert({
                     where: {
@@ -173,16 +188,17 @@ export const saveBulkGrades = async (req: Request, res: Response) => {
                             periode_id:         g.periode_id,
                         },
                     },
-                    update: { valeur: parseFloat(g.valeur) },
+                    update: { valeur, statut, est_absent: isAbs },
                     create: {
                         eleve_id:           insc.eleve_id,
                         matiere_id:         g.matiere_id,
                         classe_id:          insc.classe_id,
                         periode_id:         g.periode_id,
                         type_evaluation_id,
-                        valeur:             parseFloat(g.valeur),
+                        valeur,
                         note_max:           20,
-                        est_absent:         false,
+                        est_absent:         isAbs,
+                        statut,
                         enseignant_id,
                     },
                 })
@@ -241,7 +257,7 @@ export const getClassGradeSummary = async (req: Request, res: Response) => {
             const matieres = [];
             for (const [mid, matNotes] of Object.entries(byMatiere)) {
                 const mat = matNotes[0].matiere;
-                const avg = calcSubjectAvg(matNotes.map(n => ({ valeur: n.valeur, type_evaluation: n.type_evaluation })));
+                const avg = calcSubjectAvg(matNotes.map(n => ({ valeur: n.valeur, statut: n.statut, type_evaluation: n.type_evaluation })));
                 if (avg !== null) {
                     const coeff = toNum(mat.coefficient);
                     totalW += avg * coeff;
