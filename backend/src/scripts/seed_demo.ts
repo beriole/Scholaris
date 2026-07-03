@@ -51,25 +51,39 @@ export async function main() {
     // marquer comme active sur l'école
     await prisma.ecoles.update({ where: { id: ecole_id }, data: { annee_active_id: annee_id } });
 
-    // 3. Périodes d'évaluation (3 trimestres) ---------------------------------
-    const periodesData = [
+    // 3. Périodes d'évaluation — MINESEC ---------------------------------------
+    //    5 séquences (type='sequence') : saisie des notes + bulletins séquentiels.
+    //    3 trimestres (type='trimestre') : bulletins de synthèse.
+    //    ⚠ Le hub Notes/Bulletins (getSequencesByYear) n'affiche que les 'sequence'
+    //    pour la saisie ; il faut donc impérativement les créer ici (sinon seed_full
+    //    retombe sur un trimestre et les données sont invisibles dans l'UI).
+    const sequencesData = [
+        { nom: 'Séquence 1', ordre: 1, date_debut: '2025-09-01', date_fin: '2025-10-25' },
+        { nom: 'Séquence 2', ordre: 2, date_debut: '2025-10-26', date_fin: '2025-12-15' },
+        { nom: 'Séquence 3', ordre: 3, date_debut: '2026-01-05', date_fin: '2026-02-15' },
+        { nom: 'Séquence 4', ordre: 4, date_debut: '2026-02-16', date_fin: '2026-03-30' },
+        { nom: 'Séquence 5', ordre: 5, date_debut: '2026-04-01', date_fin: '2026-05-30' },
+    ];
+    const trimestresData = [
         { nom: '1er Trimestre', ordre: 1, date_debut: '2025-09-01', date_fin: '2025-12-15' },
         { nom: '2e Trimestre',  ordre: 2, date_debut: '2026-01-05', date_fin: '2026-03-30' },
         { nom: '3e Trimestre',  ordre: 3, date_debut: '2026-04-01', date_fin: '2026-07-15' },
     ];
-    for (const p of periodesData) {
-        const exist = await prisma.periodes_evaluation.findFirst({ where: { ecole_id, annee_id, nom: p.nom } });
-        if (!exist) {
-            await prisma.periodes_evaluation.create({
-                data: {
-                    ecole_id, annee_id, nom: p.nom, type: 'trimestre', ordre: p.ordre,
-                    date_debut: new Date(p.date_debut), date_fin: new Date(p.date_fin),
-                    notes_cloturees: false, bulletins_publies: false,
-                },
-            });
+    for (const [type, list] of [['sequence', sequencesData], ['trimestre', trimestresData]] as const) {
+        for (const p of list) {
+            const exist = await prisma.periodes_evaluation.findFirst({ where: { ecole_id, annee_id, nom: p.nom, type } });
+            if (!exist) {
+                await prisma.periodes_evaluation.create({
+                    data: {
+                        ecole_id, annee_id, nom: p.nom, type, ordre: p.ordre,
+                        date_debut: new Date(p.date_debut), date_fin: new Date(p.date_fin),
+                        notes_cloturees: false, bulletins_publies: false,
+                    },
+                });
+            }
         }
     }
-    console.log('✓ Périodes:', periodesData.length);
+    console.log(`✓ Périodes: ${sequencesData.length} séquences + ${trimestresData.length} trimestres`);
 
     // 4. Types d'évaluation ----------------------------------------------------
     const typesData = [
