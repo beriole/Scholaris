@@ -154,9 +154,9 @@ const GradesPage = () => {
                             <p className="text-[10px] text-slate-400 font-medium">T{Math.ceil(s.ordre / 2)}</p>
                         </div>
                     ))}
-                    {trimestres.map(t => (
-                        <div key={t.id} className="p-3 rounded-xl border bg-slate-900 border-slate-900 text-center">
-                            <p className="text-xs font-bold text-white">{t.nom}</p>
+                    {trimestres.map(tr => (
+                        <div key={tr.id} className="p-3 rounded-xl border bg-slate-900 border-slate-900 text-center">
+                            <p className="text-xs font-bold text-white">{tr.nom}</p>
                             <p className="text-[10px] text-slate-400 font-medium">{t('Synthèse')}</p>
                         </div>
                     ))}
