@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { Decimal } from '@prisma/client/runtime/client';
-import { getPaymentStatus } from '../services/fapshiService';
 
 const toNum = (v: Decimal | number | null | undefined): number => {
     if (v == null) return 0;
@@ -203,36 +202,6 @@ export const recordPayment = async (req: Request, res: Response) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Erreur lors de l\'enregistrement du paiement.' });
-    }
-};
-
-// GET /api/finance/payments/fapshi-status/:transId
-// Vérifie le statut Fapshi et met à jour le paiement si confirmé
-export const checkFapshiStatus = async (req: Request, res: Response) => {
-    const transId = pStr(req.params.transId);
-
-    try {
-        const fapshiStatus = await getPaymentStatus(transId);
-
-        // Mettre à jour le statut du paiement en DB
-        if (fapshiStatus.status === 'SUCCESSFUL' || fapshiStatus.status === 'FAILED' || fapshiStatus.status === 'EXPIRED') {
-            const dbStatut = fapshiStatus.status === 'SUCCESSFUL' ? 'confirme' : 'echec';
-            await prisma.paiements.updateMany({
-                where: { reference_transaction: transId, statut: 'en_attente' },
-                data: { statut: dbStatut },
-            });
-        }
-
-        res.json({
-            transId,
-            status: fapshiStatus.status,
-            amount: fapshiStatus.amount,
-            medium: fapshiStatus.medium,
-        });
-    } catch (error: any) {
-        console.error(error);
-        const code = error?.response?.status ?? 500;
-        res.status(code).json({ error: 'Impossible de vérifier le statut Fapshi.' });
     }
 };
 
