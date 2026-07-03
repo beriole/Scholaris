@@ -202,6 +202,11 @@ export const EN: Record<string, string> = {
     'Chargement des bulletins…': 'Loading report cards…',
     'Toute la classe': 'Whole class',
     'Bordereau de notes': 'Grade sheet',
+    'En-tête du bulletin': 'Report card header',
+    'Boîte postale (BP)': 'P.O Box',
+    'Devise / Motto': 'Motto',
+    'N° Contribuable': 'Tax number',
+    'Registre de commerce (RC)': 'Trade register (RC)',
     "Saisissez d'abord les notes, puis cliquez sur « Générer les bulletins ».": 'First enter the grades, then click "Generate report cards".',
     'Moy. classe': 'Class avg.',
 

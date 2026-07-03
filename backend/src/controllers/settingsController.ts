@@ -10,7 +10,9 @@ export const getSchoolSettings = async (req: Request, res: Response) => {
             where: { tenant_id },
             select: {
                 id: true, nom: true, code: true, adresse: true, ville: true,
-                region: true, telephone: true, logo_url: true, systeme_notation: true,
+                region: true, telephone: true, email: true, boite_postale: true,
+                devise: true, numero_contribuable: true, registre_commerce: true,
+                logo_url: true, systeme_notation: true,
                 annee_active_id: true,
                 annee_active: { select: { id: true, libelle: true } },
             },
@@ -32,7 +34,8 @@ export const getSchoolSettings = async (req: Request, res: Response) => {
 // PUT /api/settings/school
 export const updateSchoolSettings = async (req: Request, res: Response) => {
     const tenant_id = req.user!.tenant_id;
-    const { nom, adresse, ville, region, telephone, logo_url, systeme_notation } = req.body;
+    const { nom, adresse, ville, region, telephone, email, boite_postale, devise,
+            numero_contribuable, registre_commerce, logo_url, systeme_notation } = req.body;
 
     try {
         const ecole = await prisma.ecoles.findFirst({ where: { tenant_id }, select: { id: true } });
@@ -44,6 +47,11 @@ export const updateSchoolSettings = async (req: Request, res: Response) => {
         if (ville !== undefined)            data.ville            = ville;
         if (region !== undefined)           data.region           = region;
         if (telephone !== undefined)        data.telephone        = telephone;
+        if (email !== undefined)            data.email            = email;
+        if (boite_postale !== undefined)    data.boite_postale    = boite_postale;
+        if (devise !== undefined)           data.devise           = devise;
+        if (numero_contribuable !== undefined) data.numero_contribuable = numero_contribuable;
+        if (registre_commerce !== undefined)   data.registre_commerce   = registre_commerce;
         if (logo_url !== undefined)         data.logo_url         = logo_url;
         if (systeme_notation !== undefined) data.systeme_notation = systeme_notation;
 

@@ -258,6 +258,167 @@ export const getClassBulletins = async (req: Request, res: Response) => {
     }
 };
 
+// GET /api/bulletins/class-detailed?classe_id=...&periode_id=...
+// Données enrichies pour le modèle GHAHS : par matière → moyennes par séquence
+// (T1/T2/T3), Test Av, Total, rang par matière, enseignant ; + totaux, rang
+// général, effectif, moyenne de classe. Calculé à la volée depuis les notes.
+const TERM_LABELS: Record<number, string> = { 1: 'FIRST TERM', 2: 'SECOND TERM', 3: 'THIRD TERM' };
+const remark = (avg: number | null): string => {
+    if (avg === null) return '';
+    if (avg >= 16) return 'FULLY ACQ';
+    if (avg >= 12) return 'ACQUIRED';
+    if (avg >= 10) return 'COURSE OF ACQ';
+    return 'NOT ACQ';
+};
+
+export const getClassBulletinsDetailed = async (req: Request, res: Response) => {
+    const classe_id  = qStr(req.query.classe_id);
+    const periode_id = qStr(req.query.periode_id);
+    if (!classe_id || !periode_id) return res.status(400).json({ error: 'classe_id et periode_id requis.' });
+
+    try {
+        const [periode, classe] = await Promise.all([
+            prisma.periodes_evaluation.findUnique({
+                where: { id: periode_id },
+                select: { annee_id: true, nom: true, type: true, ordre: true },
+            }),
+            prisma.classes.findUnique({ where: { id: classe_id }, select: { ecole_id: true, nom: true, niveau: true } }),
+        ]);
+        if (!periode) return res.status(404).json({ error: 'Période introuvable.' });
+        if (!classe)  return res.status(404).json({ error: 'Classe introuvable.' });
+
+        // Séquences composant la période (colonnes T1/T2/T3)
+        let seqPeriodes: { id: string; nom: string; ordre: number }[] = [];
+        if (periode.type === 'trimestre') {
+            seqPeriodes = await prisma.periodes_evaluation.findMany({
+                where: { ecole_id: classe.ecole_id, annee_id: periode.annee_id, type: 'sequence',
+                    ordre: { in: [periode.ordre * 2 - 1, periode.ordre * 2] } },
+                select: { id: true, nom: true, ordre: true },
+                orderBy: { ordre: 'asc' },
+            });
+        }
+        if (seqPeriodes.length === 0) seqPeriodes = [{ id: periode_id, nom: periode.nom, ordre: periode.ordre }];
+        const notePeriodeIds = seqPeriodes.map(s => s.id);
+
+        const [matieres, affectations, inscriptions] = await Promise.all([
+            prisma.matieres.findMany({
+                where: { ecole_id: classe.ecole_id },
+                select: { id: true, nom: true, code: true, coefficient: true, groupe: { select: { nom: true, ordre_affichage: true } } },
+            }),
+            prisma.affectations_matieres.findMany({
+                where: { classe_id, annee_id: periode.annee_id, est_actif: true },
+                select: { matiere_id: true, coefficient: true, enseignant: { select: { nom: true, prenom: true } } },
+            }),
+            prisma.inscriptions.findMany({
+                where: { classe_id, annee_id: periode.annee_id, statut: 'actif' },
+                include: { eleve: { select: { id: true, nom: true, prenom: true, matricule: true, sexe: true, date_naissance: true, lieu_naissance: true, nationalite: true, photo_url: true } } },
+                orderBy: { eleve: { nom: 'asc' } },
+            }),
+        ]);
+
+        const coeffOverride: Record<string, number> = {};
+        const teacherByMat: Record<string, string> = {};
+        for (const a of affectations) {
+            if (a.coefficient != null) coeffOverride[a.matiere_id] = toNum(a.coefficient);
+            if (a.enseignant) teacherByMat[a.matiere_id] = `${a.enseignant.nom} ${a.enseignant.prenom ?? ''}`.trim();
+        }
+
+        const eleveIds = inscriptions.map(i => i.eleve_id);
+        const notes = await prisma.notes.findMany({
+            where: { eleve_id: { in: eleveIds }, classe_id, periode_id: { in: notePeriodeIds } },
+            include: { type_evaluation: { select: { ponderation: true } } },
+        });
+        // notes[eleve][matiere][periode] = liste
+        const map: Record<string, Record<string, Record<string, typeof notes>>> = {};
+        for (const n of notes) {
+            ((map[n.eleve_id] ??= {})[n.matiere_id] ??= {})[n.periode_id] ??= [];
+            map[n.eleve_id][n.matiere_id][n.periode_id].push(n);
+        }
+
+        // Coefficient effectif d'une matière
+        const coefOf = (m: typeof matieres[0]) => coeffOverride[m.id] ?? toNum(m.coefficient);
+
+        // 1er passage : Test Av par (élève, matière) pour pouvoir classer par matière
+        type Subj = { matiere_id: string; nom: string; code: string; coef: number; teacher: string;
+            t_scores: (number | null)[]; test_av: number | null; total: number | null; statut: string; rank: number | null; remark: string };
+        const perStudent: { insc: typeof inscriptions[0]; subjects: Subj[]; totalW: number; totalC: number }[] = [];
+
+        for (const insc of inscriptions) {
+            const byMat = map[insc.eleve_id] ?? {};
+            const subjects: Subj[] = [];
+            let totalW = 0, totalC = 0;
+            for (const m of matieres) {
+                const byPer = byMat[m.id];
+                if (!byPer) continue; // matière non concernée par l'élève
+                const t_scores = seqPeriodes.map(sp => calcSubjectAvg((byPer[sp.id] ?? []).map(n => ({ valeur: n.valeur, statut: n.statut, type_evaluation: n.type_evaluation }))));
+                const allNotes = Object.values(byPer).flat();
+                const test_av = calcSubjectAvg(allNotes.map(n => ({ valeur: n.valeur, statut: n.statut, type_evaluation: n.type_evaluation })));
+                const statuts = allNotes.map(n => n.statut ?? 'saisi');
+                const statut = statuts.length > 0 && statuts.every(s => s !== 'saisi')
+                    ? (statuts.includes('non_compose') ? 'non_compose' : 'absent') : 'saisi';
+                const coef = coefOf(m);
+                if (test_av !== null) { totalW += test_av * coef; totalC += coef; }
+                subjects.push({
+                    matiere_id: m.id, nom: m.nom, code: m.code, coef, teacher: teacherByMat[m.id] ?? '',
+                    t_scores, test_av, total: test_av !== null ? Math.round(test_av * coef * 100) / 100 : null,
+                    statut, rank: null, remark: remark(test_av),
+                });
+            }
+            perStudent.push({ insc, subjects, totalW, totalC });
+        }
+
+        // Rang par matière (sur Test Av)
+        for (const m of matieres) {
+            const scored = perStudent
+                .map(ps => ({ eleve_id: ps.insc.eleve_id, s: ps.subjects.find(x => x.matiere_id === m.id) }))
+                .filter(x => x.s && x.s.test_av !== null)
+                .sort((a, b) => (b.s!.test_av ?? 0) - (a.s!.test_av ?? 0));
+            let r = 1;
+            for (let i = 0; i < scored.length; i++) {
+                if (i > 0 && scored[i].s!.test_av !== scored[i - 1].s!.test_av) r = i + 1;
+                scored[i].s!.rank = r;
+            }
+        }
+
+        // Moyenne générale + rang général
+        const students = perStudent.map(ps => {
+            const moyenne_generale = ps.totalC > 0 ? Math.round((ps.totalW / ps.totalC) * 100) / 100 : null;
+            const no_papers_passed = ps.subjects.filter(s => s.test_av !== null && s.test_av >= 10).length;
+            return {
+                eleve: ps.insc.eleve,
+                subjects: ps.subjects,
+                moyenne_generale,
+                total_coef: Math.round(ps.totalC * 100) / 100,
+                total_points: Math.round(ps.totalW * 100) / 100,
+                no_papers_passed,
+                rang: null as number | null,
+            };
+        });
+        const ranked = students.filter(s => s.moyenne_generale !== null)
+            .sort((a, b) => (b.moyenne_generale ?? 0) - (a.moyenne_generale ?? 0));
+        let rg = 1;
+        for (let i = 0; i < ranked.length; i++) {
+            if (i > 0 && ranked[i].moyenne_generale !== ranked[i - 1].moyenne_generale) rg = i + 1;
+            ranked[i].rang = rg;
+        }
+        const moys = ranked.map(s => s.moyenne_generale as number);
+        const class_av = moys.length ? Math.round((moys.reduce((a, b) => a + b, 0) / moys.length) * 100) / 100 : null;
+
+        res.json({
+            periode: { nom: periode.nom, ordre: periode.ordre, type: periode.type,
+                term_label: periode.type === 'trimestre' ? (TERM_LABELS[periode.ordre] ?? periode.nom.toUpperCase()) : periode.nom.toUpperCase() },
+            classe: { nom: classe.nom, niveau: classe.niveau },
+            effectif: inscriptions.length,
+            sequences: seqPeriodes.map((s, i) => ({ id: s.id, nom: s.nom, label: `T${i + 1}` })),
+            class_av,
+            students,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erreur lors du calcul du bulletin détaillé.' });
+    }
+};
+
 // GET /api/bulletins/:eleve_id/:periode_id
 export const getStudentBulletin = async (req: Request, res: Response) => {
     const eleve_id   = pStr(req.params.eleve_id);

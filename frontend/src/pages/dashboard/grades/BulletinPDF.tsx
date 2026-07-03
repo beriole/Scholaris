@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Printer, Download, Loader2, User } from 'lucide-react';
 import { downloadBulletin, type BulletinData, type School, type ClassStats } from '../../../lib/bulletinPdf';
 
-interface Props { bulletin: BulletinData; school: School; stats: ClassStats; }
+interface Props { bulletin: BulletinData; school: School; stats: ClassStats; onDownload?: () => Promise<void> | void; }
 
 const N = (n: any) => Number(n) || 0;
 const f2 = (n: any) => N(n).toFixed(2);
@@ -11,12 +11,12 @@ const col = (a: number) => a >= 14 ? '#047857' : a >= 10 ? '#2563eb' : '#dc2626'
 const mention = (a: number) => a >= 18 ? 'Excellent' : a >= 16 ? 'Très Bien' : a >= 14 ? 'Bien' : a >= 12 ? 'Assez Bien' : a >= 10 ? 'Passable' : 'Insuffisant';
 const decision = (a: number) => a >= 16 ? 'Tableau d\'Honneur + Félicitations' : a >= 14 ? 'Tableau d\'Honneur + Encouragements' : a >= 12 ? 'Tableau d\'Honneur' : a >= 10 ? 'Travail passable — peut mieux faire' : 'Travail insuffisant — Avertissement';
 
-export default function BulletinPDF({ bulletin: b, school, stats }: Props) {
+export default function BulletinPDF({ bulletin: b, school, stats, onDownload }: Props) {
     const [exporting, setExporting] = useState(false);
 
     const handleDownload = async () => {
         setExporting(true);
-        try { await downloadBulletin(b, school, stats); }
+        try { await (onDownload ? onDownload() : downloadBulletin(b, school, stats)); }
         catch (e) { console.error(e); alert('Erreur lors de la génération du PDF.'); }
         finally { setExporting(false); }
     };

@@ -41,6 +41,11 @@ model ecoles {
   ville            String?  @db.VarChar
   region           String?  @db.VarChar
   telephone        String?  @db.VarChar
+  email            String?  @db.VarChar
+  boite_postale    String?  @db.VarChar // BP / P.O Box
+  devise           String?  @db.VarChar // motto de l'etablissement
+  numero_contribuable String? @db.VarChar // Tax
+  registre_commerce   String? @db.VarChar // RC
   logo_url         String?  @db.VarChar
   annee_active_id  String?  @unique @db.Uuid
   systeme_notation String   @db.VarChar // sur_20 | sur_10

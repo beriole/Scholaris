@@ -18,6 +18,11 @@ interface EcoleData {
     ville:             string | null;
     region:            string | null;
     telephone:         string | null;
+    email:                string | null;
+    boite_postale:        string | null;
+    devise:               string | null;
+    numero_contribuable:  string | null;
+    registre_commerce:    string | null;
     logo_url:          string | null;
     systeme_notation:  string;
     annee_active:      { id: string; libelle: string } | null;
@@ -90,7 +95,9 @@ function SchoolTab() {
     const [msg,     setMsg]     = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
     const [form, setForm] = useState({
-        nom: '', adresse: '', ville: '', region: '', telephone: '', logo_url: '', systeme_notation: 'sur_20',
+        nom: '', adresse: '', ville: '', region: '', telephone: '',
+        email: '', boite_postale: '', devise: '', numero_contribuable: '', registre_commerce: '',
+        logo_url: '', systeme_notation: 'sur_20',
     });
     const [activeYear,    setActiveYear]    = useState('');
     const [savingYear,    setSavingYear]    = useState(false);
@@ -123,6 +130,11 @@ function SchoolTab() {
                     ville:            e.ville            ?? '',
                     region:           e.region           ?? '',
                     telephone:        e.telephone        ?? '',
+                    email:               e.email               ?? '',
+                    boite_postale:       e.boite_postale       ?? '',
+                    devise:              e.devise              ?? '',
+                    numero_contribuable: e.numero_contribuable ?? '',
+                    registre_commerce:   e.registre_commerce   ?? '',
                     logo_url:         e.logo_url         ?? '',
                     systeme_notation: e.systeme_notation,
                 });
@@ -233,6 +245,32 @@ function SchoolTab() {
                         <input value={form.region} onChange={e => setForm(f => ({ ...f, region: e.target.value }))}
                             className="input-field" placeholder="Centre" />
                     </Field>
+
+                    {/* En-tête du bulletin (modèle GHAHS) */}
+                    <p className="col-span-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mt-2 pt-3 border-t border-slate-100">
+                        {t('En-tête du bulletin')}
+                    </p>
+                    <Field label={t('Email')}>
+                        <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                            className="input-field" placeholder="contact@ecole.cm" />
+                    </Field>
+                    <Field label={t('Boîte postale (BP)')}>
+                        <input value={form.boite_postale} onChange={e => setForm(f => ({ ...f, boite_postale: e.target.value }))}
+                            className="input-field" placeholder="31743 Yaoundé" />
+                    </Field>
+                    <Field label={t('Devise / Motto')} className="col-span-2">
+                        <input value={form.devise} onChange={e => setForm(f => ({ ...f, devise: e.target.value }))}
+                            className="input-field" placeholder="Solid Foundation - Discipline - Success" />
+                    </Field>
+                    <Field label={t('N° Contribuable')}>
+                        <input value={form.numero_contribuable} onChange={e => setForm(f => ({ ...f, numero_contribuable: e.target.value }))}
+                            className="input-field" placeholder="M0907..." />
+                    </Field>
+                    <Field label={t('Registre de commerce (RC)')}>
+                        <input value={form.registre_commerce} onChange={e => setForm(f => ({ ...f, registre_commerce: e.target.value }))}
+                            className="input-field" placeholder="RC552/TR/46" />
+                    </Field>
+
                     <Field label={t("Logo de l'établissement")} className="col-span-2">
                         <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl border border-slate-100">
                             <div className="w-16 h-16 rounded-xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">

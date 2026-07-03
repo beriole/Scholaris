@@ -7,9 +7,21 @@ import {
 } from 'lucide-react';
 import api from '../../../lib/api';
 import BulletinPDF from './BulletinPDF';
-import { downloadClassBulletins } from '../../../lib/bulletinPdf';
 import { downloadGradeSheet } from '../../../lib/classPdf';
+import {
+    downloadBulletinDetailed, downloadClassDetailed,
+    type DetailStudent, type BulletinContext, type SchoolFull,
+} from '../../../lib/bulletinTemplates';
 import { useI18n } from '../../../i18n/i18n';
+
+interface DetailedResponse {
+    periode: { nom: string; ordre: number; type: string; term_label: string };
+    classe: { nom: string; niveau: string };
+    effectif: number;
+    sequences: { id: string; nom: string; label: string }[];
+    class_av: number | null;
+    students: DetailStudent[];
+}
 
 interface BulletinDetail {
     id:                  string;
@@ -41,7 +53,8 @@ const BulletinsPage = () => {
     const periode_id = params.get('periode_id') ?? '';
     const classe_id  = params.get('classe_id')  ?? '';
 
-    const [school, setSchool] = useState<{ nom: string; logo_url?: string | null; ville?: string | null; telephone?: string | null }>({ nom: 'Mon Établissement' });
+    const [school, setSchool] = useState<SchoolFull>({ nom: 'Mon Établissement' });
+    const [detailed, setDetailed] = useState<DetailedResponse | null>(null);
     const [bulletins,  setBulletins]  = useState<Bulletin[]>([]);
     const [loading,    setLoading]    = useState(true);
     const [generating, setGenerating] = useState(false);
@@ -65,18 +78,49 @@ const BulletinsPage = () => {
         setLoading(false);
     };
 
-    useEffect(() => { fetchBulletins(); }, [periode_id, classe_id]);
+    const fetchDetailed = async () => {
+        if (!periode_id || !classe_id) return;
+        try {
+            const res = await api.get('/api/bulletins/class-detailed', { params: { periode_id, classe_id } });
+            setDetailed(res.data);
+        } catch { setDetailed(null); }
+    };
+
+    useEffect(() => { fetchBulletins(); fetchDetailed(); }, [periode_id, classe_id]);
 
     useEffect(() => {
         api.get('/api/settings/school')
-            .then(r => setSchool({
-                nom: r.data.ecole?.nom ?? 'Mon Établissement',
-                logo_url: r.data.ecole?.logo_url ?? null,
-                ville: r.data.ecole?.ville ?? null,
-                telephone: r.data.ecole?.telephone ?? null,
-            }))
+            .then(r => {
+                const e = r.data.ecole ?? {};
+                setSchool({
+                    nom: e.nom ?? 'Mon Établissement',
+                    logo_url: e.logo_url ?? null,
+                    ville: e.ville ?? null,
+                    telephone: e.telephone ?? null,
+                    email: e.email ?? null,
+                    boite_postale: e.boite_postale ?? null,
+                    devise: e.devise ?? null,
+                    numero_contribuable: e.numero_contribuable ?? null,
+                    registre_commerce: e.registre_commerce ?? null,
+                    adresse: e.adresse ?? null,
+                    region: e.region ?? null,
+                });
+            })
             .catch(() => {});
     }, []);
+
+    const buildCtx = (): BulletinContext | null => {
+        if (!detailed) return null;
+        return {
+            school,
+            periode: detailed.periode,
+            classe: detailed.classe,
+            effectif: detailed.effectif,
+            sequences: detailed.sequences,
+            class_av: detailed.class_av,
+            anneeLabel: anneeLabel,
+        };
+    };
 
     const handleGenerate = async () => {
         setGenerating(true);
@@ -85,7 +129,7 @@ const BulletinsPage = () => {
         try {
             const res = await api.post('/api/bulletins/generate', { periode_id, classe_id });
             setGenMsg(res.data.message);
-            await fetchBulletins();
+            await Promise.all([fetchBulletins(), fetchDetailed()]);
         } catch (err: any) {
             setError(err.response?.data?.error ?? 'Erreur lors de la génération.');
         }
@@ -116,13 +160,22 @@ const BulletinsPage = () => {
     const clsStats = { moy: stats?.moy ?? null, max: stats?.max ?? null, min: stats?.min ?? null };
 
     const handleDownloadClass = async () => {
-        if (!bulletins.length) return;
+        const ctx = buildCtx();
+        if (!ctx || !detailed?.students.length) { setError('Données du bulletin indisponibles. Générez les bulletins puis réessayez.'); return; }
         setDlClass(true);
         try {
-            await downloadClassBulletins(bulletins as any, school, clsStats, classeLabel, periodLabel);
+            await downloadClassDetailed(detailed.students, ctx);
         } catch (e) {
             console.error(e); setError('Erreur lors de la génération du PDF de la classe.');
         } finally { setDlClass(false); }
+    };
+
+    const handleDownloadOne = async (matricule: string) => {
+        const ctx = buildCtx();
+        const st = detailed?.students.find(s => s.eleve.matricule === matricule);
+        if (!ctx || !st) { setError('Données du bulletin indisponibles.'); return; }
+        try { await downloadBulletinDetailed(st, ctx); }
+        catch (e) { console.error(e); setError('Erreur lors de la génération du PDF.'); }
     };
 
     const handleDownloadSheet = async () => {
@@ -242,7 +295,8 @@ const BulletinsPage = () => {
                             <motion.div key={selected.id}
                                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
                                 className="sticky top-6 overflow-auto max-h-[80vh] pb-4">
-                                <BulletinPDF bulletin={selected} school={school} stats={clsStats} />
+                                <BulletinPDF bulletin={selected} school={school} stats={clsStats}
+                                    onDownload={() => handleDownloadOne(selected.eleve.matricule)} />
                             </motion.div>
                         ) : (
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
