@@ -438,7 +438,7 @@ export default function AttendancePage() {
                             <div className="relative">
                                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                 <input value={searchHist} onChange={e => setSearchHist(e.target.value)}
-                                    placeholder="Rechercher un élève…"
+                                    placeholder="Search a student…"
                                     className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
                             </div>
                         </div>

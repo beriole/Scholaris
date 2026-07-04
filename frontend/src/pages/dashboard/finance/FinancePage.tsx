@@ -629,7 +629,7 @@ const NewTrancheModal = ({ anneeId, classes, onClose, onSuccess }: {
 
                     <div className="grid grid-cols-2 gap-4">
                         <FField label={t('Nom de la tranche')} required>
-                            <input required className={INPUT} placeholder="1ère tranche" value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} />
+                            <input required className={INPUT} placeholder="1st instalment" value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} />
                         </FField>
                         <FField label={t('Ordre')}>
                             <input type="number" min="1" className={INPUT} value={form.ordre} onChange={e => setForm(f => ({ ...f, ordre: e.target.value }))} />

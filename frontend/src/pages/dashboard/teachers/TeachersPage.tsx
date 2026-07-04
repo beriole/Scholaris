@@ -335,7 +335,7 @@ const TeachersPage = () => {
                                     </div>
 
                                     <Field label={t('Spécialité')}>
-                                        <input className={INPUT} placeholder="Mathématiques" value={form.specialite} onChange={e => setForm(f => ({ ...f, specialite: e.target.value }))} />
+                                        <input className={INPUT} placeholder="Mathematics" value={form.specialite} onChange={e => setForm(f => ({ ...f, specialite: e.target.value }))} />
                                     </Field>
 
                                     <div className="grid grid-cols-2 gap-4">

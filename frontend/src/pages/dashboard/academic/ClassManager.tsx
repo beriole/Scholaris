@@ -168,7 +168,7 @@ const ClassManager = () => {
                                     <input
                                         required
                                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-emerald-500 font-bold"
-                                        placeholder="Ex: Terminale C2"
+                                        placeholder="e.g. Form 5"
                                         value={formData.nom}
                                         onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
                                     />
@@ -192,7 +192,7 @@ const ClassManager = () => {
                                         <label className="text-xs font-black uppercase text-slate-400 ml-1">{t('Série / Spéc.')}</label>
                                         <input
                                             className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-emerald-500 font-bold"
-                                            placeholder="Ex: TI, C, D"
+                                            placeholder="e.g. Science, Arts"
                                             value={formData.serie}
                                             onChange={(e) => setFormData({ ...formData, serie: e.target.value })}
                                         />

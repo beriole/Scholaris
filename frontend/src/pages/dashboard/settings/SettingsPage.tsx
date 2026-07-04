@@ -217,7 +217,7 @@ function SchoolTab() {
                 <div className="grid grid-cols-2 gap-4">
                     <Field label={t("Nom de l'établissement *")} className="col-span-2">
                         <input value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
-                            className="input-field" placeholder="Lycée de la Réussite" />
+                            className="input-field" placeholder="Green Hills Academy" />
                     </Field>
                     <Field label={t('Téléphone')}>
                         <input value={form.telephone} onChange={e => setForm(f => ({ ...f, telephone: e.target.value }))}

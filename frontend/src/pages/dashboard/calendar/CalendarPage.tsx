@@ -263,7 +263,7 @@ export default function CalendarPage() {
                                 <div>
                                     <label className="text-xs font-medium text-slate-500 mb-1 block">{t('Libellé *')}</label>
                                     <input value={form.libelle} onChange={e => setForm(f => ({ ...f, libelle: e.target.value }))}
-                                        className="input-field" placeholder="Ex: Fête nationale" />
+                                        className="input-field" placeholder="e.g. National Day" />
                                 </div>
                                 <div className="relative">
                                     <label className="text-xs font-medium text-slate-500 mb-1 block">{t('Type *')}</label>

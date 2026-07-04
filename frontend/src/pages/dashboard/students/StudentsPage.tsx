@@ -446,7 +446,7 @@ const StudentsPage = () => {
                                         <input required className={INPUT} placeholder="TAGNE" value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} />
                                     </Field>
                                     <Field label={t('Prénom')} required>
-                                        <input required className={INPUT} placeholder="Jean-Pierre" value={form.prenom} onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))} />
+                                        <input required className={INPUT} placeholder="John" value={form.prenom} onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))} />
                                     </Field>
                                 </div>
 

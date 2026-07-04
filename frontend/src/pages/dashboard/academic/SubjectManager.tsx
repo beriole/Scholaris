@@ -248,7 +248,7 @@ const SubjectManager = () => {
                             <div>
                                 <label className="text-xs font-bold uppercase text-slate-400 ml-1">{t('Nom du groupe')}</label>
                                 <input required className={`${INPUT} mt-1`}
-                                    placeholder="Ex: Sciences de la Nature"
+                                    placeholder="Ex: Science Subjects"
                                     value={groupName}
                                     onChange={e => setGroupName(e.target.value)} />
                             </div>
@@ -275,7 +275,7 @@ const SubjectManager = () => {
                                 <div className="col-span-2">
                                     <label className="text-xs font-bold uppercase text-slate-400 ml-1">{t('Libellé')}</label>
                                     <input required className={`${INPUT} mt-1`}
-                                        placeholder="Mathématiques"
+                                        placeholder="Mathematics"
                                         value={subjectData.nom}
                                         onChange={e => setSubjectData(s => ({ ...s, nom: e.target.value }))} />
                                 </div>
