@@ -237,18 +237,21 @@ export function renderGHAHS(doc: any, st: DetailStudent, ctx: BulletinContext, l
     y = idTop + idH;
 
     // ── Tableau des notes (grille complète) ──────────────────────
+    // Colonnes T = nombre de séquences du term (T1/T2/T3 selon le term, comme l'officiel).
+    const nT = Math.min(Math.max(ctx.sequences.length, 1), 5);
+    const wT = 8, wSubj = 40, wAv = 16, wCoef = 12, wTot = 16, wRank = 12, wRem = 24;
+    const wTeach = innerW - (wSubj + nT * wT + wAv + wCoef + wTot + wRank + wRem);
     const cols = [
-        { key: 'subj', w: 40, label: 'Subjects', a: 'left' as const },
-        { key: 't1', w: 8, label: 'T1', a: 'center' as const },
-        { key: 't2', w: 8, label: 'T2', a: 'center' as const },
-        { key: 't3', w: 8, label: 'T3', a: 'center' as const },
-        { key: 'av', w: 16, label: 'Test Av.', a: 'center' as const },
-        { key: 'coef', w: 12, label: 'Coef.', a: 'center' as const },
-        { key: 'tot', w: 16, label: 'Total', a: 'center' as const },
-        { key: 'rank', w: 12, label: 'Rank', a: 'center' as const },
-        { key: 'rem', w: 24, label: 'Remarks', a: 'left' as const },
-        { key: 'teach', w: innerW - (40 + 24 + 16 + 12 + 16 + 12 + 24), label: "Teacher's Name", a: 'left' as const },
+        { w: wSubj, label: 'Subjects', a: 'left' as const },
+        ...ctx.sequences.slice(0, nT).map(s => ({ w: wT, label: s.label, a: 'center' as const })),
+        { w: wAv, label: 'Test Av.', a: 'center' as const },
+        { w: wCoef, label: 'Coef.', a: 'center' as const },
+        { w: wTot, label: 'Total', a: 'center' as const },
+        { w: wRank, label: 'Rank', a: 'center' as const },
+        { w: wRem, label: 'Remarks', a: 'left' as const },
+        { w: wTeach, label: "Teacher's Name", a: 'left' as const },
     ];
+    const base = 1 + nT; // index de « Test Av. »
     const xs: number[] = []; { let cx = x0; for (const c of cols) { xs.push(cx); cx += c.w; } }
     const cAlignX = (i: number) => cols[i].a === 'center' ? xs[i] + cols[i].w / 2 : xs[i] + 1.6;
     const tblTop = y, headH = 6, rowH = 5.6;
@@ -265,28 +268,28 @@ export function renderGHAHS(doc: any, st: DetailStudent, ctx: BulletinContext, l
         const isNC = s.statut !== 'saisi';
         doc.setTextColor(DARK[0], DARK[1], DARK[2]); doc.setFont('times', 'normal');
         doc.text(s.nom.slice(0, 26), xs[0] + 1.6, y + 3.8);
-        for (let ti = 0; ti < 3; ti++) {
+        for (let ti = 0; ti < nT; ti++) {
             const v = s.t_scores[ti];
             doc.text(v == null ? '' : (Math.round(v * 100) / 100).toString(), cAlignX(1 + ti), y + 3.8, { align: 'center' });
         }
         const [r, g, b] = rgb(s.test_av);
         doc.setFont('times', 'bold'); doc.setTextColor(r, g, b);
-        doc.text(isNC ? (s.statut === 'absent' ? 'Abs' : 'NC') : f2(s.test_av), cAlignX(4), y + 3.8, { align: 'center' });
+        doc.text(isNC ? (s.statut === 'absent' ? 'Abs' : 'NC') : f2(s.test_av), cAlignX(base), y + 3.8, { align: 'center' });
         doc.setFont('times', 'normal'); doc.setTextColor(DARK[0], DARK[1], DARK[2]);
-        doc.text(f2(s.coef), cAlignX(5), y + 3.8, { align: 'center' });
-        doc.text(isNC ? '' : f2(s.total), cAlignX(6), y + 3.8, { align: 'center' });
-        doc.text(isNC ? '' : (s.rank != null ? String(s.rank) : ''), cAlignX(7), y + 3.8, { align: 'center' });
-        doc.setFontSize(6.2); doc.text(isNC ? '' : s.remark, xs[8] + 1.6, y + 3.8); doc.setFontSize(7);
-        doc.text(s.teacher.slice(0, 26), xs[9] + 1.6, y + 3.8);
+        doc.text(f2(s.coef), cAlignX(base + 1), y + 3.8, { align: 'center' });
+        doc.text(isNC ? '' : f2(s.total), cAlignX(base + 2), y + 3.8, { align: 'center' });
+        doc.text(isNC ? '' : (s.rank != null ? String(s.rank) : ''), cAlignX(base + 3), y + 3.8, { align: 'center' });
+        doc.setFontSize(6.2); doc.text(isNC ? '' : s.remark, xs[base + 4] + 1.6, y + 3.8); doc.setFontSize(7);
+        doc.text(s.teacher.slice(0, 26), xs[base + 5] + 1.6, y + 3.8);
         y += rowH;
     });
 
     // ligne totaux
     doc.setFillColor(GREEN_LT[0], GREEN_LT[1], GREEN_LT[2]); doc.rect(x0, y, innerW, rowH, 'F');
     doc.setFont('times', 'bold'); doc.setTextColor(DARK[0], DARK[1], DARK[2]); doc.setFontSize(7.2);
-    doc.text(f2(st.total_coef), cAlignX(5), y + 3.8, { align: 'center' });
-    doc.text(f2(st.total_points), cAlignX(6), y + 3.8, { align: 'center' });
-    doc.setFontSize(7); doc.text(`Terms Position: ${st.rang ?? '—'}/${ctx.effectif}`, xs[8] + 1.6, y + 3.8);
+    doc.text(f2(st.total_coef), cAlignX(base + 1), y + 3.8, { align: 'center' });
+    doc.text(f2(st.total_points), cAlignX(base + 2), y + 3.8, { align: 'center' });
+    doc.setFontSize(7); doc.text(`Terms Position: ${st.rang ?? '—'}/${ctx.effectif}`, xs[base + 4] + 1.6, y + 3.8);
     y += rowH;
     const tblBottom = y;
 

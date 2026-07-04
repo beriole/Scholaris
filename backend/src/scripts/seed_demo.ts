@@ -99,8 +99,9 @@ export async function main() {
           seqs: [['Sequence 1', '2025-09-08', '2025-10-10'], ['Sequence 2', '2025-10-13', '2025-11-14'], ['Sequence 3', '2025-11-17', '2025-12-12']] },
         { nom: 'Second Term', ordre: 2, debut: '2026-01-05', fin: '2026-03-27',
           seqs: [['Sequence 4', '2026-01-05', '2026-01-30'], ['Sequence 5', '2026-02-02', '2026-02-27'], ['Sequence 6', '2026-03-02', '2026-03-27']] },
+        // Third Term : 2 séquences seulement (comme le bulletin officiel : T1, T2)
         { nom: 'Third Term',  ordre: 3, debut: '2026-04-06', fin: '2026-06-19',
-          seqs: [['Sequence 7', '2026-04-06', '2026-05-01'], ['Sequence 8', '2026-05-04', '2026-05-29'], ['Sequence 9', '2026-06-01', '2026-06-19']] },
+          seqs: [['Sequence 7', '2026-04-06', '2026-05-08'], ['Sequence 8', '2026-05-11', '2026-06-19']] },
     ];
     let seqOrdre = 1;
     for (const term of terms) {
@@ -115,7 +116,7 @@ export async function main() {
             });
         }
     }
-    console.log('✓ Périodes: 3 Terms + 9 séquences');
+    console.log(`✓ Périodes: 3 Terms + ${seqOrdre - 1} séquences`);
 
     // 4. Type d'évaluation — UNE seule note par séquence (secondaire anglophone,
     //    pas deux comme à l'université). T1/T2/T3 = la note de chaque séquence.
