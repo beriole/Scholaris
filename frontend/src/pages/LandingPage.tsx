@@ -96,13 +96,13 @@ const LandingPage = () => {
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
                         {[
-                            { value: '120+', label: 'Établissements actifs' },
-                            { value: '18 500+', label: 'Élèves gérés' },
-                            { value: '95 000+', label: 'Bulletins générés' },
-                            { value: '99.9%', label: 'Disponibilité SLA' },
+                            { value: 'Forms 1–5', label: '+ Lower & Upper Sixth' },
+                            { value: 'GCE', label: 'O-Level & A-Level programme' },
+                            { value: '3 Terms', label: 'Bulletins officiels par an' },
+                            { value: 'Anglophone', label: 'Système camerounais' },
                         ].map((stat, i) => (
                             <div key={i}>
-                                <p className="text-3xl font-bold text-slate-900 mb-1">{stat.value}</p>
+                                <p className="text-2xl lg:text-3xl font-extrabold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent mb-1">{stat.value}</p>
                                 <p className="text-sm font-medium text-slate-500">{t(stat.label)}</p>
                             </div>
                         ))}
@@ -146,18 +146,18 @@ const LandingPage = () => {
             <section className="py-24 bg-slate-50 px-6">
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center max-w-xl mx-auto mb-16">
-                        <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-4">{t('Démarrage')}</p>
-                        <h2 className="text-4xl font-bold text-slate-900 tracking-tight">{t('Opérationnel en 24 heures')}</h2>
+                        <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-4">{t('Le flux de travail')}</p>
+                        <h2 className="text-4xl font-bold text-slate-900 tracking-tight">{t('De la note au bulletin, en 3 étapes')}</h2>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-10">
                         {[
-                            { n: '01', title: 'Prise en charge', desc: 'Notre équipe configure votre espace, paramètre vos classes et importe vos données existantes.' },
-                            { n: '02', title: 'Formation express', desc: 'Vos administrateurs, enseignants et personnels maîtrisent la plateforme en moins d\'une journée.' },
-                            { n: '03', title: 'Pilotage en direct', desc: 'Notes saisies, bulletins générés automatiquement, parents notifiés. La machine tourne seule.' },
+                            { n: '01', title: 'Saisie des notes', desc: 'Les enseignants saisissent une note par séquence, par classe et par matière — élèves absents ou non composés gérés.' },
+                            { n: '02', title: 'Bulletins & synthèses', desc: 'Génération automatique des bulletins officiels par term (T1·T2·T3), avec positions, moyennes et remarques de compétence.' },
+                            { n: '03', title: 'Cartes & emplois du temps', desc: 'Éditez et imprimez les cartes d\'étudiant et les emplois du temps de classe en PDF, prêts à distribuer.' },
                         ].map((step, i) => (
                             <div key={i} className="relative">
-                                <p className="text-7xl font-bold text-slate-100 mb-4 leading-none">{step.n}</p>
+                                <p className="text-7xl font-extrabold text-emerald-100 mb-4 leading-none">{step.n}</p>
                                 <h3 className="text-lg font-semibold text-slate-900 mb-3">{t(step.title)}</h3>
                                 <p className="text-slate-500 text-sm leading-relaxed">{t(step.desc)}</p>
                             </div>
@@ -204,11 +204,11 @@ const LandingPage = () => {
                         {[
                             { icon: <Shield className="w-5 h-5" />, title: 'Authentification JWT', desc: 'Tokens sécurisés, sessions limitées, aucun accès non autorisé.' },
                             { icon: <Users className="w-5 h-5" />, title: 'Rôles & Permissions', desc: 'Chaque utilisateur voit uniquement ce qu\'il est autorisé à voir.' },
-                            { icon: <Globe className="w-5 h-5" />, title: 'Isolation Multi-tenant', desc: 'Les données de chaque école sont totalement cloisonnées.' },
+                            { icon: <Globe className="w-5 h-5" />, title: 'Données de l\'école', desc: 'Toutes les données restent la propriété de Green Hills Academy.' },
                             { icon: <ClipboardList className="w-5 h-5" />, title: 'Logs d\'activité', desc: 'Traçabilité complète de toutes les actions sur la plateforme.' },
                         ].map((item, i) => (
-                            <div key={i} className="p-6 bg-white rounded-2xl border border-slate-200">
-                                <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center mb-4">
+                            <div key={i} className="p-6 bg-white rounded-2xl border border-slate-200 hover:border-emerald-200 hover:shadow-md transition-all">
+                                <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
                                     {item.icon}
                                 </div>
                                 <h3 className="font-semibold text-slate-900 mb-2 text-sm">{t(item.title)}</h3>

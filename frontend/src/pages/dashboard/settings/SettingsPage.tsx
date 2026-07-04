@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import api from '../../../lib/api';
 import { uploadImageFile } from '../../../lib/uploadImage';
+import SectionBanner from '../../../components/SectionBanner';
 import { useI18n } from '../../../i18n/i18n';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -57,10 +58,9 @@ export default function SettingsPage() {
 
     return (
         <div className="max-w-3xl mx-auto space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold text-slate-800">{t('Paramètres')}</h1>
-                <p className="text-slate-500 text-sm mt-1">{t('Configuration de votre établissement et de votre compte')}</p>
-            </div>
+            <SectionBanner icon={<Building2 className="w-6 h-6" />}
+                title={t('Paramètres')}
+                subtitle={t('Configuration de votre établissement et de votre compte')} />
 
             {/* Onglets */}
             <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit">

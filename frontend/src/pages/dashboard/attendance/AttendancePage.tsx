@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
+import SectionBanner from '../../../components/SectionBanner';
 import { useI18n } from '../../../i18n/i18n';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -285,10 +286,9 @@ export default function AttendancePage() {
     return (
         <div className="p-6 space-y-6">
             {/* En-tête */}
-            <div>
-                <h1 className="text-2xl font-bold text-slate-800">{t('Présences & Absences')}</h1>
-                <p className="text-slate-500 text-sm mt-1">{t('Saisie des présences et suivi des absences par classe')}</p>
-            </div>
+            <SectionBanner icon={<UserCheck className="w-6 h-6" />}
+                title={t('Présences & Absences')}
+                subtitle={t('Saisie des présences et suivi des absences par classe')} />
 
             {/* Sélecteurs globaux */}
             <div className="flex flex-wrap gap-3 items-end">

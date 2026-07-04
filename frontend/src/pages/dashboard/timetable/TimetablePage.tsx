@@ -7,6 +7,7 @@ import {
 import api from '../../../lib/api';
 import { downloadClassTimetable } from '../../../lib/timetablePdf';
 import { useAuth } from '../../../context/AuthContext';
+import SectionBanner from '../../../components/SectionBanner';
 import { useI18n } from '../../../i18n/i18n';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -265,26 +266,25 @@ export default function TimetablePage() {
     return (
         <div className="p-6 space-y-6">
             {/* En-tête */}
-            <div className="flex items-center justify-between flex-wrap gap-3">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-800">{t('Emploi du temps')}</h1>
-                    <p className="text-slate-500 text-sm mt-1">{t('Planification hebdomadaire par classe')}</p>
-                </div>
-                <div className="flex gap-2">
-                    <button onClick={() => setShowSalleModal(true)}
-                        className="flex items-center gap-2 px-3 py-2 border border-slate-200 text-slate-600 rounded-xl text-sm hover:bg-slate-50 font-medium">
-                        <Building2 size={15} /> {t('Salles')}
-                    </button>
-                    <button onClick={handleDownloadTimetable} disabled={!selectedClass || slots.length === 0 || ttDownloading}
-                        className="flex items-center gap-2 px-3 py-2 border border-slate-200 text-slate-700 rounded-xl text-sm hover:bg-slate-50 font-medium disabled:opacity-50">
-                        {ttDownloading ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />} {t('Télécharger le PDF')}
-                    </button>
-                    <button onClick={openCreate} disabled={!selectedClass}
-                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm hover:bg-emerald-700 font-medium disabled:opacity-50">
-                        <Plus size={15} /> {t('Ajouter un créneau')}
-                    </button>
-                </div>
-            </div>
+            <SectionBanner icon={<Clock className="w-6 h-6" />}
+                title={t('Emploi du temps')}
+                subtitle={t('Planification hebdomadaire par classe')}
+                right={
+                    <div className="flex flex-wrap gap-2">
+                        <button onClick={() => setShowSalleModal(true)}
+                            className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl text-sm font-medium transition-colors">
+                            <Building2 size={15} /> {t('Salles')}
+                        </button>
+                        <button onClick={handleDownloadTimetable} disabled={!selectedClass || slots.length === 0 || ttDownloading}
+                            className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50">
+                            {ttDownloading ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />} {t('PDF')}
+                        </button>
+                        <button onClick={openCreate} disabled={!selectedClass}
+                            className="flex items-center gap-2 px-4 py-2 bg-white text-emerald-700 rounded-xl text-sm font-bold hover:bg-emerald-50 transition-colors disabled:opacity-50 shadow-sm">
+                            <Plus size={15} /> {t('Ajouter')}
+                        </button>
+                    </div>
+                } />
 
             {/* Sélecteurs */}
             <div className="flex flex-wrap gap-3 items-end">
