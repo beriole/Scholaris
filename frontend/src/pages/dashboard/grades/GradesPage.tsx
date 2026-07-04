@@ -112,13 +112,29 @@ const GradesPage = () => {
     );
 
     return (
-        <div className="space-y-8 max-w-4xl">
-            <div>
-                <h2 className="text-lg font-bold text-slate-900">{t('Notes & Bulletins')}</h2>
-                <p className="text-sm text-slate-500 mt-0.5">
-                    {t('Saisie des notes par séquence · Bulletins séquentiels & trimestriels (MINESEC)')}
-                </p>
-            </div>
+        <div className="space-y-7 max-w-4xl">
+            {/* Bannière de section — émeraude raffiné */}
+            <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900 p-6 shadow-lg shadow-emerald-900/20">
+                <div className="absolute -right-8 -top-10 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute right-0 top-0 h-full w-1 bg-gradient-to-b from-amber-300 to-amber-500" />
+                <div className="relative z-10 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-white/15 border border-white/20 backdrop-blur flex items-center justify-center shrink-0">
+                        <ClipboardList className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-extrabold text-white tracking-tight">{t('Notes & Bulletins')}</h2>
+                        <p className="text-emerald-50/80 text-sm mt-0.5">
+                            {t('Saisie des notes par séquence · Bulletins séquentiels & trimestriels')}
+                        </p>
+                    </div>
+                    {activeYear && (
+                        <span className="ml-auto hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-emerald-900 bg-amber-300 px-3 py-1.5 rounded-full shadow">
+                            <CalendarRange className="w-3.5 h-3.5" /> {activeYear.libelle}
+                        </span>
+                    )}
+                </div>
+            </motion.div>
 
             {/* Setup */}
             {!hasSetup && (
@@ -147,20 +163,26 @@ const GradesPage = () => {
 
             {/* Périodes (vue d'ensemble) */}
             {hasSetup && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+                <motion.div initial="hidden" animate="show"
+                    variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04 } } }}
+                    className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
                     {sequences.map(s => (
-                        <div key={s.id} className="p-3 rounded-xl border bg-white border-slate-200 text-center">
+                        <motion.div key={s.id} variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
+                            whileHover={{ y: -3 }}
+                            className="p-3 rounded-xl border bg-white border-slate-200 text-center hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-600/5 transition-colors">
                             <p className="text-xs font-bold text-slate-900">{s.nom}</p>
-                            <p className="text-[10px] text-slate-400 font-medium">T{Math.ceil(s.ordre / 2)}</p>
-                        </div>
+                            <p className="text-[10px] text-emerald-600 font-bold">T{Math.ceil(s.ordre / 2)}</p>
+                        </motion.div>
                     ))}
                     {trimestres.map(tr => (
-                        <div key={tr.id} className="p-3 rounded-xl border bg-slate-900 border-slate-900 text-center">
+                        <motion.div key={tr.id} variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
+                            whileHover={{ y: -3 }}
+                            className="p-3 rounded-xl border border-emerald-800 text-center bg-gradient-to-br from-emerald-700 to-emerald-900 shadow-sm">
                             <p className="text-xs font-bold text-white">{tr.nom}</p>
-                            <p className="text-[10px] text-slate-400 font-medium">{t('Synthèse')}</p>
-                        </div>
+                            <p className="text-[10px] text-amber-300 font-bold">{t('Synthèse')}</p>
+                        </motion.div>
                     ))}
-                </div>
+                </motion.div>
             )}
 
             {/* Sélecteur */}
@@ -232,7 +254,7 @@ const GradesPage = () => {
                             <ClipboardList className="w-4 h-4" /> {t('Saisir les notes')} <ChevronRight className="w-4 h-4" />
                         </button>
                         <button onClick={goToBulletins} disabled={!canBulletin}
-                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-800 to-emerald-950 text-white text-sm font-semibold rounded-xl hover:from-emerald-700 hover:to-emerald-900 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm">
                             <FileText className="w-4 h-4" /> {t('Voir / générer les bulletins')}
                         </button>
                     </div>

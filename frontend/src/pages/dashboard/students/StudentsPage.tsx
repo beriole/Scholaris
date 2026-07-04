@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Users, Plus, Search, X, Loader2, ChevronDown,
-    GraduationCap, AlertCircle, UserX, MoreHorizontal, Upload, User, Download, CreditCard
+    Plus, Search, X, Loader2, ChevronDown,
+    GraduationCap, AlertCircle, UserX, Upload, User, Download, CreditCard
 } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
@@ -327,7 +327,7 @@ const StudentsPage = () => {
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                 {loading ? (
                     <div className="flex items-center justify-center gap-3 py-20">
                         <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
@@ -335,7 +335,9 @@ const StudentsPage = () => {
                     </div>
                 ) : displayed.length === 0 ? (
                     <div className="py-20 text-center">
-                        <GraduationCap className="w-8 h-8 text-slate-200 mx-auto mb-3" />
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-4">
+                            <GraduationCap className="w-7 h-7 text-emerald-300" />
+                        </div>
                         <p className="text-sm font-medium text-slate-400">
                             {search || filterClasse ? t('Aucun résultat.') : t('Aucun élève inscrit pour le moment.')}
                         </p>
@@ -349,12 +351,12 @@ const StudentsPage = () => {
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="border-b border-slate-100 bg-slate-50/60">
-                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Élève')}</th>
-                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Matricule')}</th>
-                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Classe')}</th>
-                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Niveau')}</th>
-                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Statut')}</th>
+                                <tr className="border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-emerald-50/40">
+                                    <th className="text-left px-5 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Élève')}</th>
+                                    <th className="text-left px-5 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Matricule')}</th>
+                                    <th className="text-left px-5 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Classe')}</th>
+                                    <th className="text-left px-5 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Niveau')}</th>
+                                    <th className="text-left px-5 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Statut')}</th>
                                     <th className="px-5 py-3" />
                                 </tr>
                             </thead>
@@ -364,14 +366,14 @@ const StudentsPage = () => {
                                     return (
                                         <motion.tr
                                             key={s.id}
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            transition={{ delay: i * 0.03 }}
-                                            className="hover:bg-slate-50/60 transition-colors"
+                                            initial={{ opacity: 0, y: 6 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: i * 0.025, duration: 0.3 }}
+                                            className={`${i % 2 ? 'bg-slate-50/40' : ''} hover:bg-emerald-50/50 transition-colors`}
                                         >
                                             <td className="px-5 py-3.5">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 shrink-0">
+                                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-sm shadow-emerald-600/20">
                                                         {s.nom.charAt(0)}{s.prenom.charAt(0)}
                                                     </div>
                                                     <div>
