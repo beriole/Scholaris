@@ -38,7 +38,15 @@ const SchoolDashboard = () => {
     const [mobileOpen, setMobileOpen] = useState(false);
 
     const initial = user?.email?.[0]?.toUpperCase() ?? 'A';
-    const schoolName = user?.tenant_name ?? 'Mon Établissement';
+    const [school, setSchool] = useState<{ nom: string; logo_url?: string | null }>({ nom: user?.tenant_name ?? 'Mon Établissement' });
+    const schoolName = school.nom;
+    const monogram = schoolName.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'GH';
+
+    useEffect(() => {
+        api.get('/api/settings/school')
+            .then(r => setSchool({ nom: r.data.ecole?.nom ?? user?.tenant_name ?? 'Mon Établissement', logo_url: r.data.ecole?.logo_url ?? null }))
+            .catch(() => {});
+    }, []);
 
     return (
         <div className="flex min-h-screen bg-slate-50 font-sans">
@@ -58,13 +66,22 @@ const SchoolDashboard = () => {
                 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
                 lg:translate-x-0
             `}>
-                {/* Logo */}
-                <div className="h-14 flex items-center justify-between px-5 border-b border-slate-100 shrink-0">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 bg-emerald-600 rounded-lg flex items-center justify-center shrink-0">
-                            <BookOpen className="w-3.5 h-3.5 text-white" />
+                {/* Logo / marque GHAHS */}
+                <div className="h-16 flex items-center justify-between px-4 border-b border-slate-100 shrink-0">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                        {school.logo_url ? (
+                            <img src={school.logo_url} alt="logo"
+                                className="w-9 h-9 rounded-lg object-contain bg-white border border-slate-100 shrink-0"
+                                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                        ) : (
+                            <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-lg flex items-center justify-center shrink-0 shadow-sm shadow-emerald-600/30">
+                                <span className="text-white font-extrabold text-[13px] tracking-tight">{monogram}</span>
+                            </div>
+                        )}
+                        <div className="min-w-0">
+                            <p className="font-bold text-[13px] text-slate-900 truncate leading-tight max-w-[135px]">{schoolName}</p>
+                            <p className="text-[9px] uppercase tracking-[0.15em] text-emerald-600 font-bold">High School</p>
                         </div>
-                        <span className="font-bold text-sm text-slate-900 truncate max-w-[120px]">{schoolName}</span>
                     </div>
                     <button onClick={() => setMobileOpen(false)} className="lg:hidden p-1 text-slate-400">
                         <X className="w-4 h-4" />
@@ -100,7 +117,7 @@ const SchoolDashboard = () => {
                                 onClick={() => setMobileOpen(false)}
                                 className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                                     isActive
-                                        ? 'bg-emerald-50 text-emerald-700 font-semibold'
+                                        ? 'bg-emerald-50 text-emerald-700 font-semibold ring-1 ring-emerald-100 shadow-sm shadow-emerald-600/5'
                                         : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                                 }`}
                             >
@@ -221,22 +238,23 @@ const SchoolHomeDashboard = () => {
 
     return (
         <div className="space-y-6">
-            {/* Welcome banner */}
-            <div className="bg-slate-900 rounded-2xl p-6 flex items-center justify-between gap-6 overflow-hidden relative">
-                <div className="absolute -right-8 -top-8 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+            {/* Welcome banner — charte GHAHS verte */}
+            <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900 rounded-2xl p-6 flex items-center justify-between gap-6 overflow-hidden relative shadow-lg shadow-emerald-900/20">
+                <div className="absolute -right-10 -top-12 w-56 h-56 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute right-24 -bottom-16 w-40 h-40 bg-emerald-300/20 rounded-full blur-2xl pointer-events-none" />
                 <div className="relative z-10">
-                    <p className="text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
-                        {stats?.annee_active ? stats.annee_active.libelle : schoolName}
+                    <p className="text-emerald-200 text-xs font-semibold uppercase tracking-[0.15em] mb-2">
+                        {stats?.annee_active ? stats.annee_active.libelle : t('Academic Year')}
                     </p>
-                    <h2 className="text-xl font-bold text-white mb-1">{user?.tenant_name}</h2>
-                    <p className="text-slate-400 text-sm">
+                    <h2 className="text-2xl font-extrabold text-white mb-1 tracking-tight">{user?.tenant_name}</h2>
+                    <p className="text-emerald-50/80 text-sm">
                         {stats?.setup.is_complete
                             ? t('Votre établissement est entièrement configuré.')
                             : t('Complétez la configuration de votre établissement.')}
                     </p>
                 </div>
                 <Link to="/ecole-dashboard/years"
-                    className="shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-emerald-600/20 relative z-10">
+                    className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-emerald-50 text-emerald-700 text-sm font-bold rounded-xl transition-all shadow-lg relative z-10">
                     <Calendar className="w-4 h-4" /> {t('Années scolaires')}
                 </Link>
             </div>
