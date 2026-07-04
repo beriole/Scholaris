@@ -8,6 +8,7 @@ import {
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import LanguageToggle from '../../components/LanguageToggle';
+import { PageTransition } from '../../lib/motion';
 import { useI18n } from '../../i18n/i18n';
 
 // ── Contexte partagé du portail enseignant ─────────────────────────────────────
@@ -45,7 +46,7 @@ const NAV = [
 ];
 
 export default function TeacherLayout() {
-    const { user, logout } = useAuth();
+    const { logout } = useAuth();
     const { t } = useI18n();
     const location = useLocation();
     const navigate = useNavigate();
@@ -132,10 +133,20 @@ export default function TeacherLayout() {
                     <nav className="flex-1 overflow-y-auto py-5 px-3 space-y-1">
                         {NAV.map(({ to, label, icon: Icon, end }) => (
                             <NavLink key={to} to={to} end={end} onClick={() => setMobile(false)}
-                                className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                                    isActive ? 'bg-emerald-500/15 text-emerald-300 shadow-inner' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                className={({ isActive }) => `relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                                    isActive ? 'text-emerald-300' : 'text-slate-400 hover:text-white hover:bg-white/5'
                                 }`}>
-                                <Icon className="w-4 h-4 shrink-0" /> {t(label)}
+                                {({ isActive }) => (
+                                    <>
+                                        {isActive && (
+                                            <motion.span layoutId="teacherNavPill"
+                                                className="absolute inset-0 rounded-xl bg-emerald-500/15 shadow-inner"
+                                                transition={{ type: 'spring', stiffness: 380, damping: 32 }} />
+                                        )}
+                                        <Icon className="w-4 h-4 shrink-0 relative z-10" />
+                                        <span className="relative z-10">{t(label)}</span>
+                                    </>
+                                )}
                             </NavLink>
                         ))}
                     </nav>
@@ -182,7 +193,11 @@ export default function TeacherLayout() {
                     </header>
 
                     <main className="flex-1 p-5 lg:p-8 overflow-x-hidden">
-                        <Outlet />
+                        <AnimatePresence mode="wait">
+                            <PageTransition key={location.pathname}>
+                                <Outlet />
+                            </PageTransition>
+                        </AnimatePresence>
                     </main>
                 </div>
             </div>

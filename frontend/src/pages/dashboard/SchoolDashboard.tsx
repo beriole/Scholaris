@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Outlet, useLocation, Link, NavLink } from 'react-router-dom';
+import { Outlet, useLocation, Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { PageTransition, MotionCard, stagger, EASE } from '../../lib/motion';
 import {
     Users, GraduationCap, Wallet, Calendar, Settings, Bell,
     LogOut, LayoutDashboard, BookOpen, Layers, UserCheck, Menu, X,
@@ -90,39 +92,31 @@ const SchoolDashboard = () => {
 
                 {/* Nav */}
                 <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
-                    {NAV_ITEMS.map(({ icon: Icon, label, path, disabled }) => {
-                        const isActive = disabled
-                            ? false
-                            : path === '/ecole-dashboard'
-                                ? location.pathname === path
-                                : location.pathname.startsWith(path);
-
-                        if (disabled) {
-                            return (
-                                <div
-                                    key={path}
-                                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 cursor-not-allowed"
-                                >
-                                    <Icon className="w-4 h-4 shrink-0" />
-                                    <span className="text-sm font-medium">{t(label)}</span>
-                                    <span className="ml-auto text-[9px] font-bold uppercase tracking-wider text-slate-300 bg-slate-100 px-1.5 py-0.5 rounded">{t('Bientôt')}</span>
-                                </div>
-                            );
-                        }
+                    {NAV_ITEMS.map(({ icon: Icon, label, path }) => {
+                        const isActive = path === '/ecole-dashboard'
+                            ? location.pathname === path
+                            : location.pathname.startsWith(path);
 
                         return (
                             <Link
                                 key={path}
                                 to={path}
                                 onClick={() => setMobileOpen(false)}
-                                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                className={`relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                                     isActive
-                                        ? 'bg-emerald-50 text-emerald-700 font-semibold ring-1 ring-emerald-100 shadow-sm shadow-emerald-600/5'
+                                        ? 'text-emerald-700 font-semibold'
                                         : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                                 }`}
                             >
-                                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-emerald-600' : ''}`} />
-                                {t(label)}
+                                {isActive && (
+                                    <motion.span
+                                        layoutId="navActivePill"
+                                        className="absolute inset-0 rounded-lg bg-emerald-50 ring-1 ring-emerald-100 shadow-sm shadow-emerald-600/5"
+                                        transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                                    />
+                                )}
+                                <Icon className={`w-4 h-4 shrink-0 relative z-10 ${isActive ? 'text-emerald-600' : ''}`} />
+                                <span className="relative z-10">{t(label)}</span>
                             </Link>
                         );
                     })}
@@ -186,7 +180,11 @@ const SchoolDashboard = () => {
 
                 {/* Page content */}
                 <main className="flex-1 p-6 lg:p-8 overflow-x-hidden">
-                    {isRoot ? <SchoolHomeDashboard /> : <Outlet />}
+                    <AnimatePresence mode="wait">
+                        <PageTransition key={location.pathname}>
+                            {isRoot ? <SchoolHomeDashboard /> : <Outlet />}
+                        </PageTransition>
+                    </AnimatePresence>
                 </main>
             </div>
         </div>
@@ -239,9 +237,17 @@ const SchoolHomeDashboard = () => {
     return (
         <div className="space-y-6">
             {/* Welcome banner — charte GHAHS verte */}
-            <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900 rounded-2xl p-6 flex items-center justify-between gap-6 overflow-hidden relative shadow-lg shadow-emerald-900/20">
-                <div className="absolute -right-10 -top-12 w-56 h-56 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute right-24 -bottom-16 w-40 h-40 bg-emerald-300/20 rounded-full blur-2xl pointer-events-none" />
+            <motion.div
+                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }}
+                className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900 rounded-2xl p-6 flex items-center justify-between gap-6 overflow-hidden relative shadow-lg shadow-emerald-900/20">
+                <motion.div
+                    animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
+                    transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+                    className="absolute -right-10 -top-12 w-56 h-56 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+                <motion.div
+                    animate={{ scale: [1, 1.25, 1], opacity: [0.4, 0.7, 0.4] }}
+                    transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+                    className="absolute right-24 -bottom-16 w-40 h-40 bg-emerald-300/20 rounded-full blur-2xl pointer-events-none" />
                 <div className="relative z-10">
                     <p className="text-emerald-200 text-xs font-semibold uppercase tracking-[0.15em] mb-2">
                         {stats?.annee_active ? stats.annee_active.libelle : t('Academic Year')}
@@ -253,11 +259,13 @@ const SchoolHomeDashboard = () => {
                             : t('Complétez la configuration de votre établissement.')}
                     </p>
                 </div>
-                <Link to="/ecole-dashboard/years"
-                    className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-emerald-50 text-emerald-700 text-sm font-bold rounded-xl transition-all shadow-lg relative z-10">
-                    <Calendar className="w-4 h-4" /> {t('Années scolaires')}
-                </Link>
-            </div>
+                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} className="shrink-0 relative z-10">
+                    <Link to="/ecole-dashboard/years"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-emerald-50 text-emerald-700 text-sm font-bold rounded-xl transition-colors shadow-lg">
+                        <Calendar className="w-4 h-4" /> {t('Années scolaires')}
+                    </Link>
+                </motion.div>
+            </motion.div>
 
             {/* KPI grid */}
             {loading ? (
@@ -265,18 +273,21 @@ const SchoolHomeDashboard = () => {
                     <Loader2 size={28} className="animate-spin text-emerald-600" />
                 </div>
             ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                <motion.div variants={stagger(0.06)} initial="hidden" animate="show"
+                    className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                     {kpiCards.map((card, i) => (
-                        <Link key={i} to={card.path}
-                            className="bg-white rounded-xl border border-slate-200 p-4 hover:border-emerald-200 hover:shadow-sm transition-all group">
-                            <div className={`w-9 h-9 ${card.bg} ${card.color} rounded-lg flex items-center justify-center mb-3`}>
-                                {card.icon}
-                            </div>
-                            <p className={`text-xl font-bold ${card.color} mb-0.5`}>{card.value}</p>
-                            <p className="text-xs text-slate-400 font-medium leading-tight">{t(card.label)}</p>
-                        </Link>
+                        <MotionCard key={i} className="h-full">
+                            <Link to={card.path}
+                                className="block h-full bg-white rounded-xl border border-slate-200 p-4 hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-600/5 transition-colors group">
+                                <div className={`w-9 h-9 ${card.bg} ${card.color} rounded-lg flex items-center justify-center mb-3 transition-transform group-hover:scale-110`}>
+                                    {card.icon}
+                                </div>
+                                <p className={`text-xl font-bold ${card.color} mb-0.5`}>{card.value}</p>
+                                <p className="text-xs text-slate-400 font-medium leading-tight">{t(card.label)}</p>
+                            </Link>
+                        </MotionCard>
                     ))}
-                </div>
+                </motion.div>
             )}
 
             {/* Contenu principal en deux colonnes */}

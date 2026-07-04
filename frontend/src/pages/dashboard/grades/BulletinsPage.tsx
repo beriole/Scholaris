@@ -6,10 +6,9 @@ import {
     CheckCircle2, ChevronRight, TrendingUp, Award, Users, Download, Table2,
 } from 'lucide-react';
 import api from '../../../lib/api';
-import BulletinPDF from './BulletinPDF';
 import { downloadGradeSheet } from '../../../lib/classPdf';
 import {
-    downloadBulletinDetailed, downloadClassDetailed,
+    downloadBulletinDetailed, downloadClassDetailed, bulletinPreviewUrl,
     type DetailStudent, type BulletinContext, type SchoolFull,
 } from '../../../lib/bulletinTemplates';
 import { useI18n } from '../../../i18n/i18n';
@@ -65,6 +64,8 @@ const BulletinsPage = () => {
     const [selected,   setSelected]   = useState<Bulletin | null>(null);
     const [dlClass,    setDlClass]    = useState(false);
     const [dlSheet,    setDlSheet]    = useState(false);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [previewLoading, setPreviewLoading] = useState(false);
     const fetchBulletins = async () => {
         if (!periode_id || !classe_id) return;
         setLoading(true);
@@ -120,11 +121,28 @@ const BulletinsPage = () => {
             effectif: detailed.effectif,
             sequences: detailed.sequences,
             class_av: detailed.class_av,
-            anneeLabel: anneeLabel,
+            anneeLabel: bulletins[0]?.periode?.annee?.libelle ?? '',
             is_last_term: detailed.is_last_term,
             annual_class_av: detailed.annual_class_av,
         };
     };
+
+    // Aperçu écran = le vrai PDF officiel (renderGHAHS) affiché dans un <iframe>.
+    useEffect(() => {
+        let revoked = false;
+        let url: string | null = null;
+        if (!selected || !detailed) { setPreviewUrl(null); return; }
+        const st = detailed.students.find(s => s.eleve.matricule === selected.eleve.matricule);
+        const ctx = buildCtx();
+        if (!st || !ctx) { setPreviewUrl(null); return; }
+        setPreviewLoading(true);
+        bulletinPreviewUrl(st, ctx)
+            .then(u => { if (revoked) { URL.revokeObjectURL(u); return; } url = u; setPreviewUrl(u); })
+            .catch(() => setPreviewUrl(null))
+            .finally(() => { if (!revoked) setPreviewLoading(false); });
+        return () => { revoked = true; if (url) URL.revokeObjectURL(url); };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selected, detailed, school]);
 
     const handleGenerate = async () => {
         setGenerating(true);
@@ -160,8 +178,6 @@ const BulletinsPage = () => {
         moy:   bulletins.reduce((a, b) => a + b.moyenne_generale, 0) / bulletins.length,
         admis: bulletins.filter(b => b.moyenne_generale >= 10).length,
     } : null;
-
-    const clsStats = { moy: stats?.moy ?? null, max: stats?.max ?? null, min: stats?.min ?? null };
 
     const handleDownloadClass = async () => {
         const ctx = buildCtx();
@@ -298,9 +314,27 @@ const BulletinsPage = () => {
                         {selected ? (
                             <motion.div key={selected.id}
                                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                                className="sticky top-6 overflow-auto max-h-[80vh] pb-4">
-                                <BulletinPDF bulletin={selected} school={school} stats={clsStats}
-                                    onDownload={() => handleDownloadOne(selected.eleve.matricule)} />
+                                className="sticky top-6 bg-white rounded-xl border border-slate-200 overflow-hidden">
+                                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-semibold text-slate-900 truncate">{selected.eleve.nom} {selected.eleve.prenom}</p>
+                                        <p className="text-xs text-slate-400">{t('Aperçu du bulletin officiel')}</p>
+                                    </div>
+                                    <button onClick={() => handleDownloadOne(selected.eleve.matricule)}
+                                        className="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition-all shrink-0">
+                                        <Download className="w-3.5 h-3.5" /> {t('Télécharger')}
+                                    </button>
+                                </div>
+                                <div className="relative bg-slate-100" style={{ height: '80vh' }}>
+                                    {previewLoading && (
+                                        <div className="absolute inset-0 flex items-center justify-center gap-2 text-slate-400 text-sm z-10 bg-slate-100/70">
+                                            <Loader2 className="w-4 h-4 animate-spin" /> {t('Génération de l\'aperçu…')}
+                                        </div>
+                                    )}
+                                    {previewUrl && (
+                                        <iframe key={previewUrl} src={previewUrl} title="bulletin" className="w-full h-full border-0" />
+                                    )}
+                                </div>
                             </motion.div>
                         ) : (
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}

@@ -51,6 +51,10 @@ const GREEN_LT: [number, number, number] = [220, 238, 231]; // fond léger
 const DARK: [number, number, number] = [17, 24, 39];
 const GREY: [number, number, number] = [90, 100, 115];
 const LINE: [number, number, number] = [120, 130, 140];
+const GOLD: [number, number, number] = [176, 141, 63];      // accent doré (filets/anneaux)
+const GOLD_LT: [number, number, number] = [214, 187, 122];
+const GREEN_DK: [number, number, number] = [4, 66, 48];     // émeraude profond
+const IVORY: [number, number, number] = [250, 250, 246];    // fond crème
 
 // ── Décors ────────────────────────────────────────────────────────────────────
 function star(doc: any, cx: number, cy: number, r: number, color: [number, number, number]) {
@@ -63,33 +67,6 @@ function star(doc: any, cx: number, cy: number, r: number, color: [number, numbe
     const rel = pts.slice(1).map((p, i) => [p[0] - pts[i][0], p[1] - pts[i][1]]);
     doc.setFillColor(color[0], color[1], color[2]);
     doc.lines(rel, pts[0][0], pts[0][1], [1, 1], 'F', true);
-}
-
-// Ruban drapeau camerounais (vert-rouge-jaune) + toque au coin. dir=1 gauche, -1 droite.
-function flagCorner(doc: any, cornerX: number, topY: number, dir: number) {
-    const s = 22;
-    const p = (dx: number) => cornerX + dir * dx;
-    // triangle drapeau (bande diagonale)
-    // vert
-    doc.setFillColor(7, 104, 74);
-    doc.triangle(p(0), topY, p(s), topY, p(0), topY + s, 'F');
-    // rouge (bande médiane) — triangle décalé
-    doc.setFillColor(200, 30, 40);
-    doc.triangle(p(4), topY, p(s), topY, p(4), topY + s - 4, 'F');
-    // jaune (bord)
-    doc.setFillColor(240, 190, 30);
-    doc.triangle(p(11), topY, p(s), topY, p(11), topY + s - 11, 'F');
-    // étoile jaune sur le rouge
-    star(doc, p(8.5), topY + 8, 2.1, [245, 205, 40]);
-    // toque (graduation cap) sous le ruban
-    const cx = p(9), cy = topY + s + 4;
-    doc.setFillColor(30, 35, 45);
-    doc.lines([[6, -3], [-6, -3], [-6, 3]], cx, cy, [1, 1], 'F', true); // losange (mortarboard)
-    doc.setFillColor(45, 52, 66);
-    doc.rect(cx - 2.2, cy, 4.4, 2.4, 'F'); // base
-    doc.setDrawColor(30, 35, 45); doc.setLineWidth(0.3);
-    doc.line(cx, cy - 3, cx + 4.5, cy - 1.5); // cordon
-    doc.setFillColor(210, 170, 40); doc.circle(cx + 4.5, cy + 0.5, 0.7, 'F'); // gland
 }
 
 // Code-barres pseudo (déterministe depuis une chaîne)
@@ -138,6 +115,145 @@ function waveFooter(doc: any, W: number, H: number) {
     doc.line(gx - gr * 0.85, gy + gr * 0.5, gx + gr * 0.85, gy + gr * 0.5);
 }
 
+// Faux dégradé vertical (empilement de fines bandes) — de c1 (haut) vers c2 (bas).
+function vGradient(doc: any, x: number, y: number, w: number, h: number, c1: number[], c2: number[]) {
+    const steps = 26;
+    for (let i = 0; i < steps; i++) {
+        const t = i / (steps - 1);
+        const r = Math.round(c1[0] + (c2[0] - c1[0]) * t);
+        const g = Math.round(c1[1] + (c2[1] - c1[1]) * t);
+        const b = Math.round(c1[2] + (c2[2] - c1[2]) * t);
+        doc.setFillColor(r, g, b);
+        doc.rect(x, y + (h / steps) * i, w, h / steps + 0.3, 'F');
+    }
+}
+
+// Guilloché : lignes ondulées fines entrecroisées (texture certificat/billet).
+function guilloche(doc: any, x: number, y: number, w: number, h: number, col: number[], lines = 5) {
+    doc.setDrawColor(col[0], col[1], col[2]); doc.setLineWidth(0.12);
+    const steps = 90;
+    for (let l = 0; l < lines; l++) {
+        const phase = (l / lines) * Math.PI * 2;
+        const amp = h * 0.28;
+        const midY = y + h / 2;
+        let px = x, py = midY + Math.sin(phase) * amp;
+        for (let i = 1; i <= steps; i++) {
+            const nx = x + (w / steps) * i;
+            const ny = midY + Math.sin((i / steps) * Math.PI * 6 + phase) * amp * Math.sin((i / steps) * Math.PI);
+            doc.line(px, py, nx, ny); px = nx; py = ny;
+        }
+    }
+}
+
+// Médaillon crest : anneaux concentriques (émeraude + filet doré), logo/monogramme au centre.
+function medallion(doc: any, cx: number, cy: number, r: number, logo: Img | null, initials: string) {
+    // anneau doré extérieur
+    doc.setFillColor(GOLD[0], GOLD[1], GOLD[2]); doc.circle(cx, cy, r, 'F');
+    // disque émeraude
+    doc.setFillColor(GREEN[0], GREEN[1], GREEN[2]); doc.circle(cx, cy, r - 0.9, 'F');
+    // filet doré fin intérieur
+    doc.setDrawColor(GOLD_LT[0], GOLD_LT[1], GOLD_LT[2]); doc.setLineWidth(0.4);
+    doc.circle(cx, cy, r - 2.4, 'S');
+    // petites étoiles cardinales sur l'anneau
+    for (let k = 0; k < 4; k++) {
+        const a = -Math.PI / 2 + k * Math.PI / 2;
+        star(doc, cx + (r - 0.45) * Math.cos(a), cy + (r - 0.45) * Math.sin(a), 0.9, IVORY);
+    }
+    // contenu central
+    const inner = r - 3.4;
+    if (logo) {
+        const h = inner * 1.7, w = Math.min(inner * 1.7, (logo.w / logo.h) * h);
+        try { doc.addImage(logo.data, logo.fmt, cx - w / 2, cy - h / 2, w, h); } catch { /* ignore */ }
+    } else {
+        doc.setFont('times', 'bold'); doc.setFontSize(r * 1.2); doc.setTextColor(IVORY[0], IVORY[1], IVORY[2]);
+        doc.text(initials, cx, cy + r * 0.42, { align: 'center' });
+    }
+}
+
+// Séparateur ornemental : double filet doré avec losange central + petites étoiles.
+function flourish(doc: any, cx: number, y: number, halfW: number, col: number[]) {
+    doc.setDrawColor(col[0], col[1], col[2]); doc.setLineWidth(0.5);
+    doc.line(cx - halfW, y, cx - 5, y);
+    doc.line(cx + 5, y, cx + halfW, y);
+    doc.setLineWidth(0.2);
+    doc.line(cx - halfW, y + 0.9, cx - 5, y + 0.9);
+    doc.line(cx + 5, y + 0.9, cx + halfW, y + 0.9);
+    // losange central
+    doc.setFillColor(col[0], col[1], col[2]);
+    doc.lines([[2.4, 1.6], [-2.4, 1.6], [-2.4, -1.6]], cx, y - 1.6, [1, 1], 'F', true);
+    // petits points aux extrémités
+    doc.circle(cx - halfW, y + 0.45, 0.6, 'F');
+    doc.circle(cx + halfW, y + 0.45, 0.6, 'F');
+}
+
+// En-tête élégant façon certificat (bandeau dégradé, médaillon, typographie serif).
+function renderHeader(doc: any, ctx: BulletinContext, logo: Img | null) {
+    const W = 210, M = 8, x0 = M, x1 = W - M, innerW = x1 - x0;
+    const { school } = ctx;
+    const bandTop = M, bandH = 30;
+
+    // bandeau dégradé émeraude arrondi
+    vGradient(doc, x0, bandTop, innerW, bandH, GREEN_DK, [10, 120, 88]);
+    // texture guilloché dorée discrète
+    guilloche(doc, x0 + 2, bandTop + 2, innerW - 4, bandH - 4, [255, 255, 255], 4);
+    // liseré doré du bandeau
+    doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2]); doc.setLineWidth(0.6);
+    doc.rect(x0, bandTop, innerW, bandH, 'S');
+    doc.setDrawColor(GOLD_LT[0], GOLD_LT[1], GOLD_LT[2]); doc.setLineWidth(0.2);
+    doc.rect(x0 + 1.2, bandTop + 1.2, innerW - 2.4, bandH - 2.4, 'S');
+
+    // textes ministériels bilingues (dans le bandeau, blanc crème)
+    const ty = bandTop + 6;
+    doc.setTextColor(IVORY[0], IVORY[1], IVORY[2]);
+    doc.setFont('times', 'bold'); doc.setFontSize(8);
+    doc.text('République Du Cameroun', x0 + 5, ty);
+    doc.text('Republic of Cameroon', x1 - 5, ty, { align: 'right' });
+    doc.setFont('times', 'italic'); doc.setFontSize(6.6); doc.setTextColor(214, 230, 222);
+    doc.text("Ministère De L'Enseignement Secondaire", x0 + 5, ty + 3.4);
+    doc.text('Ministry of Secondary Education', x1 - 5, ty + 3.4, { align: 'right' });
+    doc.text('Paix — Travail — Patrie', x0 + 5, ty + 6.4);
+    doc.text('Peace — Work — Fatherland', x1 - 5, ty + 6.4, { align: 'right' });
+
+    // médaillon central débordant sous le bandeau
+    const cx = W / 2, cy = bandTop + bandH - 2, r = 12;
+    // halo crème derrière le médaillon
+    doc.setFillColor(IVORY[0], IVORY[1], IVORY[2]); doc.circle(cx, cy, r + 2.2, 'F');
+    const initials = school.nom.split(/\s+/).filter(Boolean).slice(0, 3).map(s => s[0]?.toUpperCase() ?? '').join('');
+    medallion(doc, cx, cy, r, logo, initials || 'GH');
+
+    // nom de l'école — serif espacé, émeraude profond
+    let y = bandTop + bandH + 13;
+    doc.setFont('times', 'bold'); doc.setFontSize(16); doc.setTextColor(GREEN_DK[0], GREEN_DK[1], GREEN_DK[2]);
+    doc.text(school.nom.toUpperCase(), cx, y, { align: 'center', charSpace: 0.6 });
+    y += 2.6;
+
+    // séparateur ornemental doré
+    flourish(doc, cx, y + 1.5, innerW / 2 - 18, GOLD);
+    y += 4.4;
+
+    // devise en italique
+    if (school.devise) {
+        doc.setFont('times', 'italic'); doc.setFontSize(8); doc.setTextColor(GREY[0], GREY[1], GREY[2]);
+        doc.text(`“${school.devise}”`, cx, y, { align: 'center' });
+        y += 3.4;
+    }
+
+    // ligne de contact — puces séparatrices
+    const contact = [
+        school.boite_postale ? `P.O. Box ${school.boite_postale}` : null,
+        school.telephone ? `Tel ${school.telephone}` : null,
+        school.email ? school.email : null,
+        school.numero_contribuable ? `Tax ${school.numero_contribuable}` : null,
+    ].filter(Boolean).join('   •   ');
+    doc.setFont('times', 'normal'); doc.setFontSize(7.4); doc.setTextColor(DARK[0], DARK[1], DARK[2]);
+    doc.text(contact, cx, y, { align: 'center' });
+    y += 2.2;
+    // filet de clôture de l'en-tête
+    doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2]); doc.setLineWidth(0.4);
+    doc.line(x0 + 8, y, x1 - 8, y);
+    return y + 2;
+}
+
 // ── Modèle GHAHS ──────────────────────────────────────────────────────────────
 export function renderGHAHS(doc: any, st: DetailStudent, ctx: BulletinContext, logo: Img | null, photo: Img | null) {
     const W = 210, H = 297, M = 8, x0 = M, x1 = W - M, innerW = x1 - x0;
@@ -145,54 +261,11 @@ export function renderGHAHS(doc: any, st: DetailStudent, ctx: BulletinContext, l
     const setDraw = () => { doc.setDrawColor(LINE[0], LINE[1], LINE[2]); doc.setLineWidth(0.25); };
     const band = (yy: number, hh: number) => { doc.setFillColor(GREEN[0], GREEN[1], GREEN[2]); doc.rect(x0, yy, innerW, hh, 'F'); };
 
-    // ── Décors coins ─────────────────────────────────────────────
-    flagCorner(doc, x0 + 2, M + 2, 1);
-    flagCorner(doc, x1 - 2, M + 2, -1);
-
-    // ── En-tête ministériel (Times) ──────────────────────────────
-    let y = M + 4;
-    const hx = x0 + 32; // décalage pour laisser la place au ruban
-    doc.setFont('times', 'bold'); doc.setFontSize(9); doc.setTextColor(DARK[0], DARK[1], DARK[2]);
-    doc.text('République Du Cameroun', hx, y);
-    doc.text('Republic of Cameroon', x1 - 32, y, { align: 'right' });
-    doc.setFont('times', 'normal'); doc.setFontSize(7.5); doc.setTextColor(GREY[0], GREY[1], GREY[2]);
-    doc.text("Ministère De L'Enseignement Secondaire", hx, y + 3.6);
-    doc.text('Ministry of Secondary Education', x1 - 32, y + 3.6, { align: 'right' });
-    doc.text('Paix — Travail — Patrie', hx, y + 7);
-    doc.text('Peace — Work — Fatherland', x1 - 32, y + 7, { align: 'right' });
-
-    // logo central
-    if (logo) {
-        const h = 18, w = Math.min(20, (logo.w / logo.h) * h);
-        try { doc.addImage(logo.data, logo.fmt, W / 2 - w / 2, y - 1, w, h); } catch { /* ignore */ }
-    } else {
-        // écusson vert de repli
-        doc.setFillColor(GREEN[0], GREEN[1], GREEN[2]);
-        doc.lines([[9, 0], [0, 11], [-9, 5], [-9, -5], [0, -11]], W / 2 - 0, y - 1, [1, 1], 'F', true);
-    }
-    y += 17;
-
-    // ── Encadré contacts ─────────────────────────────────────────
-    setDraw(); doc.rect(x0 + 28, y, innerW - 56, 9);
-    doc.setFont('times', 'normal'); doc.setFontSize(7.6); doc.setTextColor(DARK[0], DARK[1], DARK[2]);
-    const l1 = [
-        school.boite_postale ? `BP/ P.O Box ${school.boite_postale}` : null,
-        school.telephone ? `Tel: ${school.telephone}` : null,
-        school.numero_contribuable ? `Tax: ${school.numero_contribuable}` : null,
-        school.registre_commerce ? school.registre_commerce : null,
-    ].filter(Boolean).join('  ');
-    const l2 = [school.devise ? `Motto: ${school.devise}` : null, school.email ? `E-mail: ${school.email}` : null].filter(Boolean).join('    ');
-    doc.text(l1, W / 2, y + 3.6, { align: 'center' });
-    doc.text(l2, W / 2, y + 7.2, { align: 'center' });
-    y += 11.5;
-
-    // ── Nom école ────────────────────────────────────────────────
-    doc.setFont('times', 'bold'); doc.setFontSize(15); doc.setTextColor(GREEN[0], GREEN[1], GREEN[2]);
-    doc.text(school.nom.toUpperCase(), W / 2, y, { align: 'center' });
-    y += 3;
+    // ── En-tête élégant (bandeau dégradé + médaillon + serif) ─────
+    let y = renderHeader(doc, ctx, logo);
 
     // ── Bandeau identité (4 colonnes) ────────────────────────────
-    y += 1.5;
+    y += 1;
     const bandH = 6.5; band(y, bandH);
     doc.setTextColor(255, 255, 255); doc.setFont('times', 'bold'); doc.setFontSize(8.5);
     const c4 = innerW / 4;
@@ -432,6 +505,16 @@ export async function downloadBulletinDetailed(st: DetailStudent, ctx: BulletinC
     const [logo, photo] = await Promise.all([loadImg(ctx.school.logo_url), loadImg(st.eleve.photo_url)]);
     TEMPLATES[template](doc, st, ctx, logo, photo);
     doc.save(`report_card_${st.eleve.nom}_${st.eleve.prenom}_${ctx.periode.nom.replace(/\s+/g, '_')}.pdf`);
+}
+
+// Rendu d'UN bulletin en URL blob (pour l'aperçu écran dans un <iframe>).
+// Garantit que l'aperçu = le PDF téléchargé = le modèle officiel.
+export async function bulletinPreviewUrl(st: DetailStudent, ctx: BulletinContext, template: TemplateId = ACTIVE_TEMPLATE): Promise<string> {
+    const { default: jsPDF } = await import('jspdf');
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const [logo, photo] = await Promise.all([loadImg(ctx.school.logo_url), loadImg(st.eleve.photo_url)]);
+    TEMPLATES[template](doc, st, ctx, logo, photo);
+    return doc.output('bloburl') as unknown as string;
 }
 
 export async function downloadClassDetailed(students: DetailStudent[], ctx: BulletinContext, template: TemplateId = ACTIVE_TEMPLATE) {

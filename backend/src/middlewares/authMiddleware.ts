@@ -23,7 +23,10 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
 
         jwtLib.verify(token, JWT_SECRET, (err, decoded) => {
             if (err) {
-                return res.status(403).json({ error: 'Token expiré ou invalide' });
+                // Token invalide/expiré ⇒ 401 pour que le frontend déconnecte et
+                // redirige vers /login (le 403 est réservé au rôle insuffisant).
+                const expired = err.name === 'TokenExpiredError';
+                return res.status(401).json({ error: expired ? 'Session expirée, veuillez vous reconnecter.' : 'Token invalide' });
             }
 
             req.user = decoded as any;
