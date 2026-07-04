@@ -122,7 +122,7 @@ export default function TeacherLayout() {
                                 <GraduationCap className="w-4 h-4 text-white" />
                             </div>
                             <div className="leading-tight">
-                                <p className="font-bold text-sm text-white">Sholaris</p>
+                                <p className="font-bold text-sm text-white">Green Hills</p>
                                 <p className="text-[10px] uppercase tracking-widest text-emerald-400 font-semibold">{t('Enseignant')}</p>
                             </div>
                         </div>

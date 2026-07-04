@@ -226,7 +226,7 @@ const SchoolHomeDashboard = () => {
                 <div className="absolute -right-8 -top-8 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
                 <div className="relative z-10">
                     <p className="text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
-                        {stats?.annee_active ? stats.annee_active.libelle : 'Scholaris'}
+                        {stats?.annee_active ? stats.annee_active.libelle : schoolName}
                     </p>
                     <h2 className="text-xl font-bold text-white mb-1">{user?.tenant_name}</h2>
                     <p className="text-slate-400 text-sm">

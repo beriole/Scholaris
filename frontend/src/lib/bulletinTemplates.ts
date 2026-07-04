@@ -271,7 +271,7 @@ export function renderGHAHS(doc: any, st: DetailStudent, ctx: BulletinContext, l
     doc.setFont('helvetica', 'italic'); doc.setFontSize(6); txt([150, 160, 175]);
     doc.text('DISCLAIMER: Any cancellation on the report card is not the hand work of the school.', x0, y + 4);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Édité via Sholaris — ${new Date().toLocaleDateString('fr-FR')}`, x1, y + 4, { align: 'right' });
+    doc.text(`${school.nom} — ${new Date().toLocaleDateString('en-GB')}`, x1, y + 4, { align: 'right' });
 }
 
 // ── Registre des modèles ──────────────────────────────────────────────────────

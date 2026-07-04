@@ -14,7 +14,8 @@ interface I18nContextValue {
 const I18nContext = createContext<I18nContextValue | null>(null);
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-    const [lang, setLangState] = useState<Lang>(() => (localStorage.getItem('scholaris_lang') as Lang) || 'fr');
+    // Établissement anglophone (GHAHS) → anglais par défaut, bascule FR possible.
+    const [lang, setLangState] = useState<Lang>(() => (localStorage.getItem('scholaris_lang') as Lang) || 'en');
 
     useEffect(() => {
         localStorage.setItem('scholaris_lang', lang);

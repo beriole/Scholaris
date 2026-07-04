@@ -24,17 +24,17 @@ export async function main() {
     // 1. École (créée si absente, puis mise à jour → en-tête anglophone) --------
     let ecole = await prisma.ecoles.findFirst({ where: { tenant_id: TENANT_ID } });
     const ecoleData = {
-        nom: 'Sholaris Comprehensive High School',
-        code: 'SCHS',
-        ville: 'Bamenda',
-        region: 'North-West',
-        adresse: 'P.O Box 145, Commercial Avenue, Bamenda',
-        telephone: '(+237) 6 77 00 00 00',
-        email: 'info@sholaris-schs.cm',
-        boite_postale: '145 Bamenda',
-        devise: 'Knowledge · Integrity · Excellence',
-        numero_contribuable: 'M090700055512P',
-        registre_commerce: 'RC/BAM/2020/B/1234',
+        nom: 'Green Hills Academy High School',
+        code: 'GHAHS',
+        ville: 'Yaoundé',
+        region: 'Centre',
+        adresse: 'P.O Box 31743, Yaoundé',
+        telephone: '(+237) 650 509 421',
+        email: 'greenhills37@yahoo.com',
+        boite_postale: '31743 Yaoundé',
+        devise: 'Solid Foundation - Discipline - Success',
+        numero_contribuable: 'M090700023324Y',
+        registre_commerce: 'RC552/TR/46',
         systeme_notation: 'sur_20',
     };
     if (!ecole) {
@@ -45,6 +45,9 @@ export async function main() {
         console.log('• École mise à jour (anglophone):', ecole.nom);
     }
     const ecole_id = ecole.id;
+
+    // Tenant → nom GHAHS (affiché dans la sidebar du dashboard).
+    await prisma.tenants.update({ where: { id: TENANT_ID }, data: { nom: 'Green Hills Academy High School' } }).catch(() => {});
 
     // 2. Année scolaire active -------------------------------------------------
     let annee = await prisma.annees_scolaires.findFirst({ where: { ecole_id, libelle: '2025-2026' } });
@@ -115,22 +118,24 @@ export async function main() {
     // 5. Groupes & matières (anglais) ------------------------------------------
     const groupesData = [
         { nom: 'Science Subjects', matieres: [
-            { nom: 'Mathematics', code: 'MATH', coefficient: 4 },
-            { nom: 'Physics', code: 'PHY', coefficient: 3 },
-            { nom: 'Chemistry', code: 'CHEM', coefficient: 3 },
-            { nom: 'Biology', code: 'BIO', coefficient: 3 },
+            { nom: 'Pure Mathematics', code: 'MATH', coefficient: 5 },
+            { nom: 'Physics', code: 'PHY', coefficient: 4 },
+            { nom: 'Chemistry', code: 'CHEM', coefficient: 4 },
+            { nom: 'Biology', code: 'BIO', coefficient: 4 },
         ]},
-        { nom: 'Arts & Languages', matieres: [
-            { nom: 'English Language', code: 'ENG', coefficient: 4 },
-            { nom: 'Literature in English', code: 'LIT', coefficient: 3 },
-            { nom: 'French', code: 'FRE', coefficient: 2 },
-            { nom: 'History', code: 'HIST', coefficient: 2 },
-            { nom: 'Geography', code: 'GEOG', coefficient: 2 },
-            { nom: 'Economics', code: 'ECON', coefficient: 3 },
+        { nom: 'Arts Subjects', matieres: [
+            { nom: 'Literature in English', code: 'LIT', coefficient: 4 },
+            { nom: 'History', code: 'HIST', coefficient: 4 },
+            { nom: 'Geography', code: 'GEOG', coefficient: 5 },
+            { nom: 'Economics', code: 'ECON', coefficient: 5 },
+            { nom: 'Philosophy', code: 'PHIL', coefficient: 3 },
         ]},
         { nom: 'General Subjects', matieres: [
-            { nom: 'Citizenship Education', code: 'CIT', coefficient: 1 },
-            { nom: 'Computer Science', code: 'ICT', coefficient: 2 },
+            { nom: 'English Language', code: 'ENG', coefficient: 4 },
+            { nom: 'French', code: 'FRE', coefficient: 2 },
+            { nom: 'Citizenship Education', code: 'CIT', coefficient: 2 },
+            { nom: 'ICT / Computer Science', code: 'ICT', coefficient: 3 },
+            { nom: 'Physical Education', code: 'PHY-ED', coefficient: 2 },
         ]},
     ];
     const matiereIds: string[] = [];
@@ -154,10 +159,10 @@ export async function main() {
 
     // 7. Classes (Forms + Lower Sixth séries) ----------------------------------
     const classesData = [
-        { nom: 'Form 1',              niveau: 'Form 1',       serie: null,      frais: 90000 },
-        { nom: 'Form 4',              niveau: 'Form 4',       serie: null,      frais: 110000 },
-        { nom: 'Lower Sixth Science', niveau: 'Lower Sixth',  serie: 'Science', frais: 150000 },
-        { nom: 'Lower Sixth Arts',    niveau: 'Lower Sixth',  serie: 'Arts',    frais: 150000 },
+        { nom: 'Form 1',              niveau: 'Form 1',       serie: null,      frais: 120000 },
+        { nom: 'Form 5',              niveau: 'Form 5',       serie: null,      frais: 145000 },
+        { nom: 'Lower Sixth Science', niveau: 'Lower Sixth',  serie: 'Science', frais: 180000 },
+        { nom: 'Lower Sixth Arts',    niveau: 'Lower Sixth',  serie: 'Arts',    frais: 180000 },
     ];
     const classeIds: string[] = [];
     for (const c of classesData) {
@@ -171,8 +176,8 @@ export async function main() {
     // 8. Enseignants (compte + profil) -----------------------------------------
     const hash = await bcrypt.hash('Prof1234!', 10);
     const profsData = [
-        { email: 'prof.math@sholaris.demo', nom: 'Ako', prenom: 'Peter', specialite: 'Mathematics' },
-        { email: 'prof.eng@sholaris.demo',  nom: 'Ngwa', prenom: 'Grace', specialite: 'English Language' },
+        { email: 'prof.math@sholaris.demo', nom: 'Ekukole', prenom: 'Epie R.', specialite: 'Mathematics' },
+        { email: 'prof.eng@sholaris.demo',  nom: 'Kimbeng', prenom: 'A.', specialite: 'English Language' },
     ];
     const profIds: string[] = [];
     for (let i = 0; i < profsData.length; i++) {
@@ -198,7 +203,7 @@ export async function main() {
     for (let ci = 0; ci < classeIds.length; ci++) {
         const classe_id = classeIds[ci];
         for (let k = 0; k < 5; k++) {
-            const matricule = `SCHS26${(ci * 10 + k + 1).toString().padStart(4, '0')}`;
+            const matricule = `GHA26${(ci * 10 + k + 1).toString().padStart(4, '0')}`;
             const el = await prisma.profils_eleves.create({
                 data: {
                     ecole_id, matricule,

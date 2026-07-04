@@ -96,7 +96,7 @@ const LoginPage = () => {
                             <BookOpen className="h-7 w-7 text-emerald-600" />
                         </div>
                         <span className="font-extrabold text-3xl tracking-tight text-white drop-shadow-md">
-                            Scholaris<span className="text-emerald-400">.</span>
+                            Green Hills<span className="text-emerald-400">.</span>
                         </span>
                     </Link>
                 </motion.div>
