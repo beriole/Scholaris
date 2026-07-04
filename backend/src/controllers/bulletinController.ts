@@ -53,7 +53,7 @@ export const generateClassBulletins = async (req: Request, res: Response) => {
         const [periode, classe] = await Promise.all([
             prisma.periodes_evaluation.findUnique({
                 where: { id: periode_id },
-                select: { annee_id: true, nom: true, type: true, ordre: true },
+                select: { annee_id: true, nom: true, type: true, ordre: true, date_debut: true, date_fin: true },
             }),
             prisma.classes.findUnique({
                 where: { id: classe_id },
@@ -63,8 +63,9 @@ export const generateClassBulletins = async (req: Request, res: Response) => {
         if (!periode) return res.status(404).json({ error: 'Séquence introuvable.' });
         if (!classe)  return res.status(404).json({ error: 'Classe introuvable.' });
 
-        // Bulletin trimestriel : on agrège les notes des séquences du trimestre
-        // (Trimestre t = Séquences 2t-1 et 2t). Sinon, on lit la période elle-même.
+        // Bulletin de trimestre/term : on agrège les séquences dont la date tombe
+        // dans l'intervalle du trimestre (fonctionne quel que soit le nombre de
+        // séquences par trimestre : 2 francophone, 3 anglophone…). Sinon, la période elle-même.
         let notePeriodeIds: string[] = [periode_id];
         if (periode.type === 'trimestre') {
             const seqs = await prisma.periodes_evaluation.findMany({
@@ -72,7 +73,7 @@ export const generateClassBulletins = async (req: Request, res: Response) => {
                     ecole_id: classe.ecole_id,
                     annee_id: periode.annee_id,
                     type: 'sequence',
-                    ordre: { in: [periode.ordre * 2 - 1, periode.ordre * 2] },
+                    date_debut: { gte: periode.date_debut, lte: periode.date_fin },
                 },
                 select: { id: true },
             });
@@ -280,19 +281,20 @@ export const getClassBulletinsDetailed = async (req: Request, res: Response) => 
         const [periode, classe] = await Promise.all([
             prisma.periodes_evaluation.findUnique({
                 where: { id: periode_id },
-                select: { annee_id: true, nom: true, type: true, ordre: true },
+                select: { annee_id: true, nom: true, type: true, ordre: true, date_debut: true, date_fin: true },
             }),
             prisma.classes.findUnique({ where: { id: classe_id }, select: { ecole_id: true, nom: true, niveau: true } }),
         ]);
         if (!periode) return res.status(404).json({ error: 'Période introuvable.' });
         if (!classe)  return res.status(404).json({ error: 'Classe introuvable.' });
 
-        // Séquences composant la période (colonnes T1/T2/T3)
+        // Séquences composant la période (colonnes T1/T2/T3), regroupées par date
+        // → nombre de séquences/term variable (2 francophone, 3 anglophone…).
         let seqPeriodes: { id: string; nom: string; ordre: number }[] = [];
         if (periode.type === 'trimestre') {
             seqPeriodes = await prisma.periodes_evaluation.findMany({
                 where: { ecole_id: classe.ecole_id, annee_id: periode.annee_id, type: 'sequence',
-                    ordre: { in: [periode.ordre * 2 - 1, periode.ordre * 2] } },
+                    date_debut: { gte: periode.date_debut, lte: periode.date_fin } },
                 select: { id: true, nom: true, ordre: true },
                 orderBy: { ordre: 'asc' },
             });

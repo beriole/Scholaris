@@ -27,12 +27,12 @@ async function run() {
     console.log('\n▶  Enrichissement (seed_full)\n' + '─'.repeat(48));
     await seedFull();
 
-    console.log('\n✅ Seed complet terminé — l\'école démo est prête à être testée.');
-    console.log('───────── COMPTES DE TEST ─────────');
+    console.log('\n✅ Seed complet (anglophone) terminé — l\'école démo est prête à être testée.');
+    console.log('───────── TEST ACCOUNTS ─────────');
     console.log('Super Admin  : berioletsague@gmail.com   / Admin1234!');
     console.log('Admin École  : admin.demo@sholaris.demo   / Admin1234!');
-    console.log('Enseignant 1 : prof.math@sholaris.demo    / Prof1234!');
-    console.log('Enseignant 2 : prof.fr@sholaris.demo      / Prof1234!');
+    console.log('Teacher 1    : prof.math@sholaris.demo    / Prof1234!  (Mathematics)');
+    console.log('Teacher 2    : prof.eng@sholaris.demo     / Prof1234!  (English)');
 }
 
 run()
