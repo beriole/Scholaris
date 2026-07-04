@@ -20,6 +20,7 @@ export interface DetailStudent {
     total_coef: number; total_points: number;
     no_papers_passed: number; rang: number | null;
     admission_no?: string; repeater?: boolean; absences?: number;
+    annual_av?: number | null; annual_rank?: number | null;
 }
 export interface SchoolFull {
     nom: string; logo_url?: string | null; ville?: string | null; telephone?: string | null;
@@ -35,6 +36,8 @@ export interface BulletinContext {
     sequences: { id: string; nom: string; label: string }[];
     class_av: number | null;
     anneeLabel: string;
+    is_last_term?: boolean;
+    annual_class_av?: number | null;
 }
 interface Img { data: string; fmt: 'PNG' | 'JPEG'; w: number; h: number; }
 
@@ -289,7 +292,10 @@ export function renderGHAHS(doc: any, st: DetailStudent, ctx: BulletinContext, l
     doc.setFont('times', 'bold'); doc.setTextColor(DARK[0], DARK[1], DARK[2]); doc.setFontSize(7.2);
     doc.text(f2(st.total_coef), cAlignX(base + 1), y + 3.8, { align: 'center' });
     doc.text(f2(st.total_points), cAlignX(base + 2), y + 3.8, { align: 'center' });
-    doc.setFontSize(7); doc.text(`Terms Position: ${st.rang ?? '—'}/${ctx.effectif}`, xs[base + 4] + 1.6, y + 3.8);
+    doc.setFontSize(7);
+    const posStr = `Terms Position: ${st.rang ?? '—'}/${ctx.effectif}`
+        + (ctx.is_last_term && st.annual_rank != null ? `    Annual Position: ${st.annual_rank}/${ctx.effectif}` : '');
+    doc.text(posStr, xs[base + 4] + 1.6, y + 3.8);
     y += rowH;
     const tblBottom = y;
 
@@ -304,10 +310,12 @@ export function renderGHAHS(doc: any, st: DetailStudent, ctx: BulletinContext, l
     // ── Bandeau synthèse ─────────────────────────────────────────
     band(y, headH);
     doc.setTextColor(255, 255, 255); doc.setFont('times', 'bold'); doc.setFontSize(8);
-    const c3 = innerW / 3;
+    const seg = (ctx.is_last_term && st.annual_av != null) ? 4 : 3;
+    const cs = innerW / seg;
     doc.text(`No Papers Passed: ${st.no_papers_passed}`, x0 + 3, y + 4);
-    doc.text(`Terms Av: ${f2(st.moyenne_generale) || '—'}`, x0 + c3 + 3, y + 4);
-    doc.text(`Class Av: ${ctx.class_av != null ? f2(ctx.class_av) : '—'}`, x0 + 2 * c3 + 3, y + 4);
+    doc.text(`Terms Av: ${f2(st.moyenne_generale) || '—'}`, x0 + cs + 3, y + 4);
+    doc.text(`Class Av: ${ctx.class_av != null ? f2(ctx.class_av) : '—'}`, x0 + 2 * cs + 3, y + 4);
+    if (seg === 4) doc.text(`Annual Av: ${f2(st.annual_av)}`, x0 + 3 * cs + 3, y + 4);
     y += headH;
 
     // ── General Conduct  +  Class Council Decision ───────────────

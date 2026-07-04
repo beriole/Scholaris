@@ -20,6 +20,8 @@ interface DetailedResponse {
     effectif: number;
     sequences: { id: string; nom: string; label: string }[];
     class_av: number | null;
+    is_last_term?: boolean;
+    annual_class_av?: number | null;
     students: DetailStudent[];
 }
 
@@ -119,6 +121,8 @@ const BulletinsPage = () => {
             sequences: detailed.sequences,
             class_av: detailed.class_av,
             anneeLabel: anneeLabel,
+            is_last_term: detailed.is_last_term,
+            annual_class_av: detailed.annual_class_av,
         };
     };
 

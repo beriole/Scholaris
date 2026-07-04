@@ -408,6 +408,8 @@ export const getClassBulletinsDetailed = async (req: Request, res: Response) => 
                 total_points: Math.round(ps.totalW * 100) / 100,
                 no_papers_passed,
                 rang: null as number | null,
+                annual_av: null as number | null,
+                annual_rank: null as number | null,
             };
         });
         const ranked = students.filter(s => s.moyenne_generale !== null)
@@ -420,6 +422,70 @@ export const getClassBulletinsDetailed = async (req: Request, res: Response) => 
         const moys = ranked.map(s => s.moyenne_generale as number);
         const class_av = moys.length ? Math.round((moys.reduce((a, b) => a + b, 0) / moys.length) * 100) / 100 : null;
 
+        // ── Annuel : uniquement sur le dernier trimestre (Annual Position / Annual Av) ──
+        let isLastTerm = false;
+        let annual_class_av: number | null = null;
+        if (periode.type === 'trimestre') {
+            const allTerms = await prisma.periodes_evaluation.findMany({
+                where: { ecole_id: classe.ecole_id, annee_id: periode.annee_id, type: 'trimestre' },
+                select: { id: true, ordre: true, date_debut: true, date_fin: true }, orderBy: { ordre: 'asc' },
+            });
+            isLastTerm = allTerms.length > 1 && allTerms[allTerms.length - 1].ordre === periode.ordre;
+            if (isLastTerm) {
+                const allSeqs = await prisma.periodes_evaluation.findMany({
+                    where: { ecole_id: classe.ecole_id, annee_id: periode.annee_id, type: 'sequence' },
+                    select: { id: true, date_debut: true },
+                });
+                const termOfSeq: Record<string, number> = {};
+                for (const s of allSeqs) {
+                    const t = allTerms.find(tt => s.date_debut >= tt.date_debut && s.date_debut <= tt.date_fin);
+                    if (t) termOfSeq[s.id] = t.ordre;
+                }
+                const yearNotes = await prisma.notes.findMany({
+                    where: { eleve_id: { in: eleveIds }, classe_id, periode_id: { in: allSeqs.map(s => s.id) } },
+                    include: { type_evaluation: { select: { ponderation: true } } },
+                });
+                // eleve -> term -> matiere -> notes
+                const gm: Record<string, Record<number, Record<string, typeof yearNotes>>> = {};
+                for (const n of yearNotes) {
+                    const term = termOfSeq[n.periode_id]; if (!term) continue;
+                    (((gm[n.eleve_id] ??= {})[term] ??= {})[n.matiere_id] ??= []).push(n);
+                }
+                const annualByEleve: Record<string, number | null> = {};
+                for (const insc of inscriptions) {
+                    const byTerm = gm[insc.eleve_id] ?? {};
+                    const termAvgs: number[] = [];
+                    for (const term of allTerms) {
+                        const byMat = byTerm[term.ordre]; if (!byMat) continue;
+                        let tw = 0, tc = 0;
+                        for (const m of matieres) {
+                            const ns = byMat[m.id]; if (!ns) continue;
+                            const av = calcSubjectAvg(ns.map(n => ({ valeur: n.valeur, statut: n.statut, type_evaluation: n.type_evaluation })));
+                            if (av === null) continue;
+                            const coef = coefOf(m); tw += av * coef; tc += coef;
+                        }
+                        if (tc > 0) termAvgs.push(tw / tc);
+                    }
+                    annualByEleve[insc.eleve_id] = termAvgs.length
+                        ? Math.round((termAvgs.reduce((a, b) => a + b, 0) / termAvgs.length) * 100) / 100 : null;
+                }
+                const annualRanked = inscriptions.map(i => ({ id: i.eleve_id, av: annualByEleve[i.eleve_id] }))
+                    .filter(x => x.av !== null).sort((a, b) => (b.av ?? 0) - (a.av ?? 0));
+                const annualRankMap: Record<string, number> = {};
+                let ar = 1;
+                for (let i = 0; i < annualRanked.length; i++) {
+                    if (i > 0 && annualRanked[i].av !== annualRanked[i - 1].av) ar = i + 1;
+                    annualRankMap[annualRanked[i].id] = ar;
+                }
+                const avs = annualRanked.map(x => x.av as number);
+                annual_class_av = avs.length ? Math.round((avs.reduce((a, b) => a + b, 0) / avs.length) * 100) / 100 : null;
+                for (const s of students) {
+                    s.annual_av = annualByEleve[s.eleve.id] ?? null;
+                    s.annual_rank = annualRankMap[s.eleve.id] ?? null;
+                }
+            }
+        }
+
         res.json({
             periode: { nom: periode.nom, ordre: periode.ordre, type: periode.type,
                 term_label: periode.type === 'trimestre' ? (TERM_LABELS[periode.ordre] ?? periode.nom.toUpperCase()) : periode.nom.toUpperCase() },
@@ -427,6 +493,8 @@ export const getClassBulletinsDetailed = async (req: Request, res: Response) => 
             effectif: inscriptions.length,
             sequences: seqPeriodes.map((s, i) => ({ id: s.id, nom: s.nom, label: `T${i + 1}` })),
             class_av,
+            is_last_term: isLastTerm,
+            annual_class_av,
             students,
         });
     } catch (error) {
