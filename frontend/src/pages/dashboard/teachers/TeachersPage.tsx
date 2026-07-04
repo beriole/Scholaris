@@ -170,12 +170,12 @@ const TeachersPage = () => {
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="border-b border-slate-100 bg-slate-50/60">
-                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Enseignant')}</th>
-                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Matricule')}</th>
-                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Spécialité')}</th>
-                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Matières assignées')}</th>
-                                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Compte')}</th>
+                                <tr className="border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-emerald-50/40">
+                                    <th className="text-left px-5 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Enseignant')}</th>
+                                    <th className="text-left px-5 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Matricule')}</th>
+                                    <th className="text-left px-5 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Spécialité')}</th>
+                                    <th className="text-left px-5 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Matières assignées')}</th>
+                                    <th className="text-left px-5 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Compte')}</th>
                                     <th className="px-5 py-3" />
                                 </tr>
                             </thead>
@@ -183,14 +183,14 @@ const TeachersPage = () => {
                                 {displayed.map((teacher, i) => (
                                     <motion.tr
                                         key={teacher.id}
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ delay: i * 0.03 }}
-                                        className="hover:bg-slate-50/60 transition-colors"
+                                        initial={{ opacity: 0, y: 6 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.025, duration: 0.3 }}
+                                        className={`${i % 2 ? 'bg-slate-50/40' : ''} hover:bg-emerald-50/50 transition-colors`}
                                     >
                                         <td className="px-5 py-3.5">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-xs font-bold text-blue-600 shrink-0">
+                                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-sm shadow-emerald-600/20">
                                                     {teacher.nom.charAt(0)}{teacher.prenom.charAt(0)}
                                                 </div>
                                                 <div>

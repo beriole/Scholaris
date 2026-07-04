@@ -258,13 +258,13 @@ const FinancePage = () => {
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
                                     <thead>
-                                        <tr className="border-b border-slate-100 bg-slate-50/60">
-                                            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Élève')}</th>
-                                            <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Total dû')}</th>
-                                            <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Payé')}</th>
-                                            <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Solde')}</th>
-                                            <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Statut')}</th>
-                                            <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Dernier paiement')}</th>
+                                        <tr className="border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-emerald-50/40">
+                                            <th className="text-left px-5 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Élève')}</th>
+                                            <th className="text-right px-4 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Total dû')}</th>
+                                            <th className="text-right px-4 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Payé')}</th>
+                                            <th className="text-right px-4 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Solde')}</th>
+                                            <th className="text-left px-4 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Statut')}</th>
+                                            <th className="text-left px-4 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Dernier paiement')}</th>
                                             <th className="px-4 py-3" />
                                         </tr>
                                     </thead>
@@ -272,7 +272,7 @@ const FinancePage = () => {
                                         {displayed.length === 0 ? (
                                             <tr><td colSpan={7} className="py-12 text-center text-sm text-slate-400">{t('Aucun résultat.')}</td></tr>
                                         ) : displayed.map((r, i) => (
-                                            <motion.tr key={r.inscription_id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }} className="hover:bg-slate-50/50">
+                                            <motion.tr key={r.inscription_id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02, duration: 0.3 }} className={`${i % 2 ? 'bg-slate-50/40' : ''} hover:bg-emerald-50/50 transition-colors`}>
                                                 <td className="px-5 py-3.5">
                                                     <p className="font-semibold text-slate-900">{r.eleve.nom} {r.eleve.prenom}</p>
                                                     <p className="text-xs text-slate-400 font-mono">{r.eleve.matricule}</p>
@@ -342,18 +342,18 @@ const FinancePage = () => {
                         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="border-b border-slate-100 bg-slate-50/60">
-                                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">#</th>
-                                        <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Nom')}</th>
-                                        <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Montant')}</th>
-                                        <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Échéance')}</th>
-                                        <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('Classe')}</th>
+                                    <tr className="border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-emerald-50/40">
+                                        <th className="text-left px-5 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">#</th>
+                                        <th className="text-left px-5 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Nom')}</th>
+                                        <th className="text-right px-4 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Montant')}</th>
+                                        <th className="text-left px-4 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Échéance')}</th>
+                                        <th className="text-left px-4 py-3 text-xs font-bold text-emerald-700 uppercase tracking-wider">{t('Classe')}</th>
                                         <th className="px-4 py-3" />
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {tranches.map(tr => (
-                                        <tr key={tr.id} className="hover:bg-slate-50/50">
+                                        <tr key={tr.id} className="odd:bg-slate-50/40 hover:bg-emerald-50/50 transition-colors">
                                             <td className="px-5 py-3.5 text-slate-400 font-mono text-xs">{tr.ordre}</td>
                                             <td className="px-5 py-3.5">
                                                 <p className="font-semibold text-slate-900">{tr.nom}</p>

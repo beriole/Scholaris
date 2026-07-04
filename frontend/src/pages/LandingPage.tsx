@@ -14,18 +14,23 @@ const LandingPage = () => {
         <div className="min-h-screen bg-white font-sans text-slate-900 antialiased">
 
             {/* ── Navbar ─────────────────────────────────────────────────────────── */}
-            <header className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-sm border-b border-slate-100">
+            <header className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-100">
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <Link to="/" className="flex items-center gap-2.5 group">
-                        <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center group-hover:bg-emerald-700 transition-colors">
-                            <BookOpen className="w-4 h-4 text-white" />
+                    <Link to="/" className="flex items-center gap-3 group">
+                        <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-amber-300 to-amber-500 p-[2px] shadow-sm group-hover:scale-105 transition-transform">
+                            <div className="w-full h-full rounded-[10px] bg-emerald-800 flex items-center justify-center">
+                                <span className="text-amber-300 font-black text-xs tracking-tight">GH</span>
+                            </div>
                         </div>
-                        <span className="font-bold text-[17px] tracking-tight text-slate-900">Scholaris</span>
+                        <div className="leading-tight">
+                            <span className="block font-extrabold text-[16px] tracking-tight text-slate-900">Green Hills Academy</span>
+                            <span className="block text-[9px] uppercase tracking-[0.2em] text-emerald-600 font-bold">High School · Yaoundé</span>
+                        </div>
                     </Link>
 
                     <nav className="hidden md:flex items-center gap-1">
-                        {['Fonctionnalités', 'Modules', 'Tarifs', 'Contact'].map(item => (
-                            <a key={item} href="#" className="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all">
+                        {['Accueil', 'Programmes', 'Vie scolaire', 'Contact'].map(item => (
+                            <a key={item} href="#" className="px-4 py-2 text-sm font-medium text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-all">
                                 {t(item)}
                             </a>
                         ))}
@@ -33,11 +38,8 @@ const LandingPage = () => {
 
                     <div className="flex items-center gap-2">
                         <LanguageToggle />
-                        <Link to="/login" className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all">
-                            {t('Connexion')}
-                        </Link>
-                        <Link to="/login" className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded-lg hover:bg-slate-800 transition-all shadow-sm">
-                            {t('Demander une démo')} <ArrowRight className="w-3.5 h-3.5" />
+                        <Link to="/login" className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white text-sm font-semibold rounded-lg hover:from-emerald-500 hover:to-emerald-600 transition-all shadow-sm shadow-emerald-600/20">
+                            {t('Portail — Se connecter')} <ArrowRight className="w-3.5 h-3.5" />
                         </Link>
                     </div>
                 </div>
@@ -48,31 +50,28 @@ const LandingPage = () => {
                 <div className="max-w-7xl mx-auto grid lg:grid-cols-[1fr_1.15fr] gap-16 items-center">
 
                     <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 text-xs font-semibold mb-8">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            {t('Conçu pour les écoles africaines')}
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-200 bg-amber-50 text-amber-700 text-xs font-bold mb-8">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            {t('Solid Foundation · Discipline · Success')}
                         </div>
 
-                        <h1 className="text-[3.25rem] lg:text-[3.75rem] font-bold leading-[1.1] tracking-tight text-slate-900 mb-6">
-                            {t('Pilotez votre école')}<br />
-                            <span className="text-emerald-600">{t('avec précision.')}</span>
+                        <h1 className="text-[3.25rem] lg:text-[3.75rem] font-extrabold leading-[1.08] tracking-tight text-slate-900 mb-6">
+                            {t('Green Hills Academy')}<br />
+                            <span className="bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent">{t('Portail scolaire.')}</span>
                         </h1>
 
                         <p className="text-lg text-slate-500 leading-relaxed mb-10 max-w-[500px]">
-                            {t('La suite complète pour gérer élèves, notes, finances et communications depuis une seule interface unifiée.')}
+                            {t('Notes & bulletins, cartes d\'étudiant, emplois du temps, finances et présences — la plateforme officielle de Green Hills Academy High School.')}
                         </p>
 
                         <div className="flex flex-wrap gap-3 mb-10">
-                            <Link to="/login" className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 hover:-translate-y-0.5">
-                                {t('Demander une démo')} <ArrowRight className="w-4 h-4" />
-                            </Link>
-                            <Link to="/login" className="inline-flex items-center gap-2 px-5 py-3 bg-white text-slate-700 text-sm font-semibold rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all">
-                                {t('Se connecter')}
+                            <Link to="/login" className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white text-sm font-bold rounded-xl hover:from-emerald-500 hover:to-emerald-600 transition-all shadow-lg shadow-emerald-600/25 hover:-translate-y-0.5">
+                                {t('Accéder au portail')} <ArrowRight className="w-4 h-4" />
                             </Link>
                         </div>
 
                         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-400">
-                            {['Déploiement en 24h', 'Support francophone', 'Paiements XAF & Mobile Money'].map((item, i) => (
+                            {['Bulletins officiels & cartes', 'Emplois du temps de classe', 'Anglophone GCE system'].map((item, i) => (
                                 <div key={i} className="flex items-center gap-1.5">
                                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                                     {t(item)}
@@ -227,13 +226,13 @@ const LandingPage = () => {
                         <TrendingUp className="w-3.5 h-3.5" /> {t('+34% de productivité administrative moyenne')}
                     </div>
                     <h2 className="text-4xl lg:text-5xl font-bold text-white tracking-tight mb-6">
-                        {t("Modernisez votre école dès aujourd'hui.")}
+                        {t('Bienvenue à Green Hills Academy.')}
                     </h2>
                     <p className="text-slate-400 text-lg mb-10 leading-relaxed">
-                        {t('Rejoignez les 120+ établissements qui ont confié leur gestion à Scholaris.')}
+                        {t('Administrateurs et enseignants : accédez au portail pour gérer notes, bulletins, cartes et emplois du temps.')}
                     </p>
-                    <Link to="/login" className="inline-flex items-center gap-2 px-8 py-4 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-500 transition-all shadow-xl shadow-emerald-600/20 text-base">
-                        {t('Contacter notre équipe')} <ArrowRight className="w-4 h-4" />
+                    <Link to="/login" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-bold rounded-xl hover:from-emerald-500 hover:to-emerald-600 transition-all shadow-xl shadow-emerald-600/25 text-base">
+                        {t('Accéder au portail')} <ArrowRight className="w-4 h-4" />
                     </Link>
                 </div>
             </section>
@@ -244,12 +243,12 @@ const LandingPage = () => {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
                         <div>
                             <Link to="/" className="flex items-center gap-2 mb-4">
-                                <div className="w-7 h-7 bg-emerald-600 rounded-md flex items-center justify-center">
-                                    <BookOpen className="w-3.5 h-3.5 text-white" />
+                                <div className="w-7 h-7 rounded-md bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center">
+                                    <span className="text-emerald-900 font-black text-[10px]">GH</span>
                                 </div>
-                                <span className="font-bold text-white text-sm">Scholaris</span>
+                                <span className="font-bold text-white text-sm">Green Hills Academy</span>
                             </Link>
-                            <p className="text-slate-500 text-sm leading-relaxed">{t('La référence de la gestion scolaire en Afrique Centrale.')}</p>
+                            <p className="text-slate-500 text-sm leading-relaxed">{t('Solid Foundation · Discipline · Success — Yaoundé, Cameroon.')}</p>
                         </div>
 
                         {[
@@ -271,7 +270,7 @@ const LandingPage = () => {
                     </div>
 
                     <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
-                        <p className="text-slate-600 text-sm">{t("© 2026 Scholaris. Développé pour l'éducation africaine.")}</p>
+                        <p className="text-slate-600 text-sm">© {new Date().getFullYear()} Green Hills Academy High School · Yaoundé, Cameroon.</p>
                         <div className="flex gap-6">
                             <a href="#" className="text-slate-600 text-sm hover:text-white transition-colors">{t('Confidentialité')}</a>
                             <a href="#" className="text-slate-600 text-sm hover:text-white transition-colors">{t('CGU')}</a>
@@ -307,8 +306,8 @@ const DashboardMockup = () => (
                 {/* Sidebar */}
                 <div className="w-44 border-r border-slate-100 bg-slate-50/80 p-3 flex flex-col gap-0.5 shrink-0">
                     <div className="flex items-center gap-2 px-2 py-2 mb-2">
-                        <div className="w-5 h-5 bg-emerald-600 rounded-md shrink-0" />
-                        <span className="text-[11px] font-bold text-slate-900">Scholaris</span>
+                        <div className="w-5 h-5 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-md shrink-0" />
+                        <span className="text-[11px] font-bold text-slate-900">Green Hills</span>
                     </div>
                     {[
                         { label: 'Tableau de bord', active: true },

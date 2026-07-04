@@ -259,7 +259,11 @@ export function renderGHAHS(doc: any, st: DetailStudent, ctx: BulletinContext, l
     const W = 210, H = 297, M = 8, x0 = M, x1 = W - M, innerW = x1 - x0;
     const { school } = ctx;
     const setDraw = () => { doc.setDrawColor(LINE[0], LINE[1], LINE[2]); doc.setLineWidth(0.25); };
-    const band = (yy: number, hh: number) => { doc.setFillColor(GREEN[0], GREEN[1], GREEN[2]); doc.rect(x0, yy, innerW, hh, 'F'); };
+    const band = (yy: number, hh: number) => {
+        doc.setFillColor(GREEN[0], GREEN[1], GREEN[2]); doc.rect(x0, yy, innerW, hh, 'F');
+        // filet doré de finition sous la bande (cohérence avec l'en-tête)
+        doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2]); doc.setLineWidth(0.3); doc.line(x0, yy + hh, x1, yy + hh);
+    };
 
     // ── En-tête élégant (bandeau dégradé + médaillon + serif) ─────
     let y = renderHeader(doc, ctx, logo);
@@ -478,12 +482,45 @@ export function renderGHAHS(doc: any, st: DetailStudent, ctx: BulletinContext, l
     doc.line(colDiscV, blockTop + titleH, colDiscV, blockBottom); // sépar. disc value
     doc.line(colHealth, blockTop + titleH, colHealth, leftBottom); // sépar. health
     doc.line(decCol - 2, blockTop + titleH, decCol - 2, ry2);      // sépar. décisions
-    y = blockBottom;
+    y = blockBottom + 2.5;
 
-    // ── Bandeau disclaimer ───────────────────────────────────────
-    band(y, 5.5);
+    // ── Bande KEY / barème (finition + comble le vide) ───────────
+    const keyH = 13;
+    doc.setFillColor(GREEN_LT[0], GREEN_LT[1], GREEN_LT[2]); doc.rect(x0, y, innerW, keyH, 'F');
+    setDraw(); doc.rect(x0, y, innerW, keyH);
+    doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2]); doc.setLineWidth(0.4); doc.line(x0, y, x1, y);
+    doc.setFont('times', 'bold'); doc.setFontSize(7); doc.setTextColor(GREEN[0], GREEN[1], GREEN[2]);
+    doc.text('KEY TO COMPETENCE REMARKS', x0 + 3, y + 4.2);
+    doc.setFont('times', 'normal'); doc.setFontSize(6.4); doc.setTextColor(DARK[0], DARK[1], DARK[2]);
+    doc.text('FULLY ACQUIRED: 16–20    ·    ACQUIRED: 12–15.9    ·    COURSE OF ACQ: 10–11.9    ·    NOT ACQUIRED: below 10', x0 + 3, y + 8.4);
+    doc.setFont('times', 'italic'); doc.setFontSize(6.2); doc.setTextColor(GREY[0], GREY[1], GREY[2]);
+    doc.text('All marks are out of 20. Pass mark: 10/20.', x0 + 3, y + 11.6);
+    // date d'édition (droite)
+    doc.setFont('times', 'bold'); doc.setFontSize(6.6); doc.setTextColor(GREEN[0], GREEN[1], GREEN[2]);
+    doc.text(`Issued: ${new Date().toLocaleDateString('en-GB')}`, x1 - 3, y + 4.2, { align: 'right' });
+    doc.setFont('times', 'normal'); doc.setFontSize(6.2); doc.setTextColor(GREY[0], GREY[1], GREY[2]);
+    doc.text(`Class Master/Mistress: ______________`, x1 - 3, y + 8.6, { align: 'right' });
+    doc.text(`Parent/Guardian: ______________`, x1 - 3, y + 11.8, { align: 'right' });
+    y += keyH;
+
+    // ── Filigrane médaillon (comble l'espace, aspect authentifié) ─
+    const dyTop = y, dyBottom = H - 20;
+    if (dyBottom - dyTop > 14) {
+        const wcx = W / 2, wcy = (dyTop + dyBottom) / 2, wr = Math.min(15, (dyBottom - dyTop) / 2 - 2);
+        doc.setDrawColor(210, 228, 220); doc.setLineWidth(0.5);
+        doc.circle(wcx, wcy, wr, 'S'); doc.circle(wcx, wcy, wr - 2, 'S');
+        for (let k = 0; k < 12; k++) { const a = (k / 12) * Math.PI * 2; star(doc, wcx + (wr - 1) * Math.cos(a), wcy + (wr - 1) * Math.sin(a), 0.8, [216, 232, 224]); }
+        doc.setFont('times', 'bold'); doc.setFontSize(11); doc.setTextColor(214, 230, 222);
+        const initials = school.nom.split(/\s+/).filter(Boolean).slice(0, 3).map(s => s[0]?.toUpperCase() ?? '').join('') || 'GH';
+        doc.text(initials, wcx, wcy + 3.6, { align: 'center' });
+        doc.setFontSize(5.6); doc.text('OFFICIAL DOCUMENT', wcx, wcy + wr + 3, { align: 'center' });
+    }
+
+    // ── Bandeau disclaimer (ancré au-dessus du pied) ─────────────
+    const discY = H - 20.5;
+    band(discY, 5.5);
     doc.setTextColor(255, 255, 255); doc.setFont('times', 'italic'); doc.setFontSize(6.8);
-    doc.text('DISCLAIMER: Any cancellation on the report card is not the hand work of the school.', x0 + 2, y + 3.7);
+    doc.text('DISCLAIMER: Any cancellation on the report card is not the hand work of the school.', W / 2, discY + 3.7, { align: 'center' });
 
     // ── Pied : vague + globe ─────────────────────────────────────
     waveFooter(doc, W, H);
