@@ -45,12 +45,13 @@ export async function main() {
         throw new Error('Données de base manquantes — lancez seed_demo.ts d\'abord.');
     }
 
-    // First Term + ses 3 séquences (regroupées par date)
-    const term1 = periodes.find(p => p.type === 'trimestre' && p.ordre === 1) ?? periodes.find(p => p.type === 'trimestre');
-    if (!term1) throw new Error('Aucun trimestre trouvé.');
-    const seqs1 = periodes.filter(p => p.type === 'sequence' && p.date_debut >= term1.date_debut && p.date_debut <= term1.date_fin)
+    // Tous les Terms + leurs séquences (regroupées par date).
+    const terms = periodes.filter(p => p.type === 'trimestre').sort((a, b) => a.ordre - b.ordre);
+    if (!terms.length) throw new Error('Aucun trimestre trouvé.');
+    const seqsOfTerm = (t: typeof terms[0]) => periodes
+        .filter(p => p.type === 'sequence' && p.date_debut >= t.date_debut && p.date_debut <= t.date_fin)
         .sort((a, b) => a.ordre - b.ordre);
-    console.log(`• Term ciblé: "${term1.nom}" — ${seqs1.length} séquences (${seqs1.map(s => s.nom).join(', ')})`);
+    console.log(`• Terms: ${terms.map(t => `${t.nom} (${seqsOfTerm(t).length} séq.)`).join(', ')}`);
 
     // Prof "science" / "arts" selon groupe de matières
     const profSci  = profs.find(p => /math/i.test(p.specialite ?? '')) ?? profs[0];
@@ -99,33 +100,31 @@ export async function main() {
     }
     console.log(`✓ Emploi du temps: +${edtCount}`);
 
-    // ── 3. Notes sur les 3 séquences du First Term (T1/T2/T3) ─────────────────
+    // ── 3. Notes : UNE note par séquence, sur les 3 Terms (T1/T2/T3) ──────────
     const inscriptions = await prisma.inscriptions.findMany({
         where: { annee_id, statut: 'actif', classe: { ecole_id } },
         include: { eleve: true },
     });
-    const [caType, testType] = [
-        evalTypes.find(e => /ca/i.test(e.code)) ?? evalTypes[0],
-        evalTypes.find(e => /test/i.test(e.code)) ?? evalTypes[evalTypes.length - 1],
-    ];
+    const seqType = evalTypes[0]; // type unique (Sequence Mark)
     let noteCount = 0; let s = 1;
-    for (const insc of inscriptions) {
-        for (const m of matieres) {
-            const ens = affByClasseMat[`${insc.classe_id}:${m.id}`];
-            if (!ens) continue;
-            for (let si = 0; si < seqs1.length; si++) {
-                const seq = seqs1[si];
-                for (const et of [caType, testType]) {
+    for (const term of terms) {
+        const seqs = seqsOfTerm(term);
+        for (const insc of inscriptions) {
+            for (const m of matieres) {
+                const ens = affByClasseMat[`${insc.classe_id}:${m.id}`];
+                if (!ens) continue;
+                for (let si = 0; si < seqs.length; si++) {
+                    const seq = seqs[si];
                     s++;
                     const exist = await prisma.notes.findFirst({
-                        where: { eleve_id: insc.eleve_id, matiere_id: m.id, type_evaluation_id: et.id, periode_id: seq.id },
+                        where: { eleve_id: insc.eleve_id, matiere_id: m.id, type_evaluation_id: seqType.id, periode_id: seq.id },
                     });
                     if (!exist) {
                         await prisma.notes.create({
                             data: {
                                 eleve_id: insc.eleve_id, classe_id: insc.classe_id, matiere_id: m.id,
-                                type_evaluation_id: et.id, periode_id: seq.id, enseignant_id: ens,
-                                valeur: note(s + si * 3), note_max: 20, est_absent: false, statut: 'saisi',
+                                type_evaluation_id: seqType.id, periode_id: seq.id, enseignant_id: ens,
+                                valeur: note(s + term.ordre * 11 + si * 3), note_max: 20, est_absent: false, statut: 'saisi',
                             },
                         });
                         noteCount++;
@@ -190,51 +189,53 @@ export async function main() {
     }
     console.log(`✓ Paiements: +${payCount}`);
 
-    // ── 6. Bulletins de Term (agrégation des 3 séquences) ─────────────────────
-    const seqIds = seqs1.map(s => s.id);
+    // ── 6. Bulletins pour les 3 Terms (agrégation des séquences de chaque term) ─
     let bulCount = 0;
-    for (const c of classes) {
-        const inscC = inscriptions.filter(i => i.classe_id === c.id);
-        const studentData: { eleve_id: string; moy: number; details: { matiere_id: string; moy: number }[] }[] = [];
-        for (const insc of inscC) {
-            const notes = await prisma.notes.findMany({
-                where: { eleve_id: insc.eleve_id, classe_id: c.id, periode_id: { in: seqIds } },
-                include: { type_evaluation: true },
-            });
-            const byMat: Record<string, { v: number; p: number }[]> = {};
-            for (const n of notes) {
-                if ((n.statut ?? 'saisi') !== 'saisi') continue;
-                (byMat[n.matiere_id] ??= []).push({ v: toNum(n.valeur), p: toNum(n.type_evaluation?.ponderation) || 1 });
+    for (const term of terms) {
+        const seqIds = seqsOfTerm(term).map(s => s.id);
+        for (const c of classes) {
+            const inscC = inscriptions.filter(i => i.classe_id === c.id);
+            const studentData: { eleve_id: string; moy: number; details: { matiere_id: string; moy: number }[] }[] = [];
+            for (const insc of inscC) {
+                const notes = await prisma.notes.findMany({
+                    where: { eleve_id: insc.eleve_id, classe_id: c.id, periode_id: { in: seqIds } },
+                    include: { type_evaluation: true },
+                });
+                const byMat: Record<string, { v: number; p: number }[]> = {};
+                for (const n of notes) {
+                    if ((n.statut ?? 'saisi') !== 'saisi') continue;
+                    (byMat[n.matiere_id] ??= []).push({ v: toNum(n.valeur), p: toNum(n.type_evaluation?.ponderation) || 1 });
+                }
+                let totW = 0, totC = 0; const details: { matiere_id: string; moy: number }[] = [];
+                for (const m of matieres) {
+                    const ns = byMat[m.id]; if (!ns) continue;
+                    const sw = ns.reduce((a, x) => a + x.v * x.p, 0), sc = ns.reduce((a, x) => a + x.p, 0);
+                    const moyM = sc ? Math.round((sw / sc) * 100) / 100 : 0;
+                    const coef = toNum(m.coefficient); totW += moyM * coef; totC += coef;
+                    details.push({ matiere_id: m.id, moy: moyM });
+                }
+                studentData.push({ eleve_id: insc.eleve_id, moy: totC ? Math.round((totW / totC) * 100) / 100 : 0, details });
             }
-            let totW = 0, totC = 0; const details: { matiere_id: string; moy: number }[] = [];
-            for (const m of matieres) {
-                const ns = byMat[m.id]; if (!ns) continue;
-                const sw = ns.reduce((a, x) => a + x.v * x.p, 0), sc = ns.reduce((a, x) => a + x.p, 0);
-                const moyM = sc ? Math.round((sw / sc) * 100) / 100 : 0;
-                const coef = toNum(m.coefficient); totW += moyM * coef; totC += coef;
-                details.push({ matiere_id: m.id, moy: moyM });
+            const ranked = [...studentData].sort((a, b) => b.moy - a.moy);
+            for (const sd of studentData) {
+                const rang = ranked.findIndex(r => r.eleve_id === sd.eleve_id) + 1;
+                const bul = await prisma.bulletins.upsert({
+                    where: { eleve_id_periode_id: { eleve_id: sd.eleve_id, periode_id: term.id } },
+                    create: { eleve_id: sd.eleve_id, classe_id: c.id, periode_id: term.id,
+                        moyenne_generale: sd.moy, rang, effectif_classe: inscC.length,
+                        appreciation_generale: appr(sd.moy), version: 1, statut_generation: 'genere',
+                        genere_par: admin?.id ?? null, generated_at: new Date() },
+                    update: { moyenne_generale: sd.moy, rang, effectif_classe: inscC.length, appreciation_generale: appr(sd.moy) },
+                });
+                await prisma.details_bulletin.deleteMany({ where: { bulletin_id: bul.id } });
+                await prisma.details_bulletin.createMany({
+                    data: sd.details.map(dd => ({ bulletin_id: bul.id, matiere_id: dd.matiere_id, moyenne_matiere: dd.moy, appreciation_matiere: appr(dd.moy) })),
+                });
+                bulCount++;
             }
-            studentData.push({ eleve_id: insc.eleve_id, moy: totC ? Math.round((totW / totC) * 100) / 100 : 0, details });
-        }
-        const ranked = [...studentData].sort((a, b) => b.moy - a.moy);
-        for (const sd of studentData) {
-            const rang = ranked.findIndex(r => r.eleve_id === sd.eleve_id) + 1;
-            const bul = await prisma.bulletins.upsert({
-                where: { eleve_id_periode_id: { eleve_id: sd.eleve_id, periode_id: term1.id } },
-                create: { eleve_id: sd.eleve_id, classe_id: c.id, periode_id: term1.id,
-                    moyenne_generale: sd.moy, rang, effectif_classe: inscC.length,
-                    appreciation_generale: appr(sd.moy), version: 1, statut_generation: 'genere',
-                    genere_par: admin?.id ?? null, generated_at: new Date() },
-                update: { moyenne_generale: sd.moy, rang, effectif_classe: inscC.length, appreciation_generale: appr(sd.moy) },
-            });
-            await prisma.details_bulletin.deleteMany({ where: { bulletin_id: bul.id } });
-            await prisma.details_bulletin.createMany({
-                data: sd.details.map(dd => ({ bulletin_id: bul.id, matiere_id: dd.matiere_id, moyenne_matiere: dd.moy, appreciation_matiere: appr(dd.moy) })),
-            });
-            bulCount++;
         }
     }
-    console.log(`✓ Bulletins (${term1.nom}): ${bulCount}`);
+    console.log(`✓ Bulletins (3 Terms): ${bulCount}`);
 
     // ── 7. Compte admin_ecole de test ─────────────────────────────────────────
     const adminEmail = 'admin.demo@sholaris.demo';

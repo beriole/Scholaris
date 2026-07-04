@@ -117,10 +117,10 @@ export async function main() {
     }
     console.log('✓ Périodes: 3 Terms + 9 séquences');
 
-    // 4. Types d'évaluation (continuous assessment anglophone) -----------------
+    // 4. Type d'évaluation — UNE seule note par séquence (secondaire anglophone,
+    //    pas deux comme à l'université). T1/T2/T3 = la note de chaque séquence.
     const typesData = [
-        { nom: 'Continuous Assessment', code: 'CA',   ponderation: 0.4 },
-        { nom: 'Sequence Test',         code: 'TEST', ponderation: 0.6 },
+        { nom: 'Sequence Mark', code: 'SEQ', ponderation: 1 },
     ];
     for (const t of typesData) {
         await prisma.types_evaluation.create({ data: { ecole_id, nom: t.nom, code: t.code, ponderation: t.ponderation } });
