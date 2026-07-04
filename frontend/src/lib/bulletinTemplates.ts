@@ -43,8 +43,8 @@ const N = (n: any) => (n == null ? null : Number(n));
 const f2 = (n: any) => (n == null ? '' : Number(n).toFixed(2));
 const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '');
 
-// Palette GHAHS
-const BLUE: [number, number, number] = [31, 78, 140];
+// Palette GHAHS (charte verte)
+const BLUE: [number, number, number] = [6, 95, 70];   // vert institutionnel (emerald-800)
 const DARK: [number, number, number] = [17, 24, 39];
 const GREY: [number, number, number] = [90, 100, 115];
 
