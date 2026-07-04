@@ -19,6 +19,8 @@ interface Student {
     sexe: string | null;
     statut: string;
     date_naissance: string;
+    lieu_naissance?: string | null;
+    nationalite?: string | null;
     photo_url?: string | null;
     numero_admission?: string | null;
     redoublant?: boolean;
@@ -135,7 +137,8 @@ const StudentsPage = () => {
     });
     const toCard = (s: Student): CardStudent => ({
         matricule: s.matricule, nom: s.nom, prenom: s.prenom, sexe: s.sexe,
-        date_naissance: s.date_naissance, photo_url: s.photo_url,
+        date_naissance: s.date_naissance, lieu_naissance: s.lieu_naissance,
+        nationalite: s.nationalite, photo_url: s.photo_url,
         numero_admission: s.numero_admission,
         classe: s.inscriptions[0]?.classe?.nom, niveau: s.inscriptions[0]?.classe?.niveau,
     });
