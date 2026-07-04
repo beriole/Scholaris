@@ -19,6 +19,8 @@ interface Student {
     statut: string;
     date_naissance: string;
     photo_url?: string | null;
+    numero_admission?: string | null;
+    redoublant?: boolean;
     inscriptions: {
         id: string;
         classe: { id: string; nom: string; niveau: string } | null;
@@ -33,6 +35,8 @@ const EMPTY_FORM = {
     lieu_naissance: '',
     sexe: '',
     nationalite: 'Camerounaise',
+    numero_admission: '',
+    redoublant: false,
     classe_id: '',
     annee_id: '',
     photo_url: '',
@@ -155,6 +159,8 @@ const StudentsPage = () => {
             lieu_naissance: '',
             sexe: s.sexe ?? '',
             nationalite: 'Camerounaise',
+            numero_admission: s.numero_admission ?? '',
+            redoublant: s.redoublant ?? false,
             classe_id: s.inscriptions[0]?.classe?.id ?? '',
             annee_id: s.inscriptions[0]?.annee?.id ?? '',
             photo_url: s.photo_url ?? '',
@@ -448,13 +454,25 @@ const StudentsPage = () => {
                                     <span className="text-xs text-emerald-700 font-medium">🎫 {t('Matricule généré automatiquement à la création')}</span>
                                 </div>
 
-                                <Field label={t('Sexe')}>
-                                    <select className={INPUT} value={form.sexe} onChange={e => setForm(f => ({ ...f, sexe: e.target.value }))}>
-                                        <option value="">—</option>
-                                        <option value="M">{t('Masculin')}</option>
-                                        <option value="F">{t('Féminin')}</option>
-                                    </select>
-                                </Field>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Field label={t('Sexe')}>
+                                        <select className={INPUT} value={form.sexe} onChange={e => setForm(f => ({ ...f, sexe: e.target.value }))}>
+                                            <option value="">—</option>
+                                            <option value="M">{t('Masculin')}</option>
+                                            <option value="F">{t('Féminin')}</option>
+                                        </select>
+                                    </Field>
+                                    <Field label={t('N° admission')}>
+                                        <input className={INPUT} placeholder="ADM/25/001" value={form.numero_admission}
+                                            onChange={e => setForm(f => ({ ...f, numero_admission: e.target.value }))} />
+                                    </Field>
+                                </div>
+
+                                <label className="flex items-center gap-2 cursor-pointer select-none">
+                                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-400"
+                                        checked={form.redoublant} onChange={e => setForm(f => ({ ...f, redoublant: e.target.checked }))} />
+                                    <span className="text-sm font-medium text-slate-700">{t('Redoublant (Repeater)')}</span>
+                                </label>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <Field label={t('Date de naissance')} required>

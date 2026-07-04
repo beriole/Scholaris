@@ -313,10 +313,21 @@ export const getClassBulletinsDetailed = async (req: Request, res: Response) => 
             }),
             prisma.inscriptions.findMany({
                 where: { classe_id, annee_id: periode.annee_id, statut: 'actif' },
-                include: { eleve: { select: { id: true, nom: true, prenom: true, matricule: true, sexe: true, date_naissance: true, lieu_naissance: true, nationalite: true, photo_url: true } } },
+                include: { eleve: { select: { id: true, nom: true, prenom: true, matricule: true, sexe: true, date_naissance: true, lieu_naissance: true, nationalite: true, photo_url: true, numero_admission: true, redoublant: true } } },
                 orderBy: { eleve: { nom: 'asc' } },
             }),
         ]);
+
+        // Absences du term (séances absent/exclu dans l'intervalle de la période)
+        const eleveIdsAll = inscriptions.map(i => i.eleve_id);
+        const presAbs = await prisma.presences.groupBy({
+            by: ['eleve_id'],
+            where: { classe_id, eleve_id: { in: eleveIdsAll }, statut: { in: ['absent', 'exclu'] },
+                date_seance: { gte: periode.date_debut, lte: periode.date_fin } },
+            _count: { _all: true },
+        });
+        const absByEleve: Record<string, number> = {};
+        for (const p of presAbs) absByEleve[p.eleve_id] = p._count._all;
 
         const coeffOverride: Record<string, number> = {};
         const teacherByMat: Record<string, string> = {};
@@ -388,6 +399,9 @@ export const getClassBulletinsDetailed = async (req: Request, res: Response) => 
             const no_papers_passed = ps.subjects.filter(s => s.test_av !== null && s.test_av >= 10).length;
             return {
                 eleve: ps.insc.eleve,
+                admission_no: ps.insc.eleve.numero_admission ?? '',
+                repeater: ps.insc.eleve.redoublant ?? false,
+                absences: absByEleve[ps.insc.eleve_id] ?? 0,
                 subjects: ps.subjects,
                 moyenne_generale,
                 total_coef: Math.round(ps.totalC * 100) / 100,

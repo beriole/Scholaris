@@ -266,6 +266,8 @@ export const EN: Record<string, string> = {
     'Archiver cet élève ?': 'Archive this student?',
     'élève(s) inscrit(s)': 'enrolled student(s)',
     'Ajouter un élève': 'Add a student',
+    'N° admission': 'Admission No',
+    'Redoublant (Repeater)': 'Repeater',
     'Télécharger la liste': 'Download list',
     'Tous les élèves': 'All students',
     'Rechercher par nom ou matricule…': 'Search by name or ID…',

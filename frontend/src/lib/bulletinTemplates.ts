@@ -20,6 +20,7 @@ export interface DetailStudent {
     moyenne_generale: number | null;
     total_coef: number; total_points: number;
     no_papers_passed: number; rang: number | null;
+    admission_no?: string; repeater?: boolean; absences?: number;
 }
 export interface SchoolFull {
     nom: string; logo_url?: string | null; ville?: string | null; telephone?: string | null;
@@ -129,10 +130,10 @@ export function renderGHAHS(doc: any, st: DetailStudent, ctx: BulletinContext, l
     // ligne 2
     field(colL, rowY + 5, 'Born On:', fmtDate(st.eleve.date_naissance), 16);
     field(colL + 60, rowY + 5, 'At:', st.eleve.lieu_naissance ?? '', 8);
-    field(colM, rowY + 5, 'Repeater:', '', 18);
+    field(colM, rowY + 5, 'Repeater:', st.repeater ? 'Yes' : 'No', 18);
     // ligne 3
     field(colL, rowY + 10, 'ID:', st.eleve.matricule, 8);
-    field(colM, rowY + 10, 'Admission No:', '', 24);
+    field(colM, rowY + 10, 'Admission No:', st.admission_no ?? '', 24);
     // ligne 4
     field(colL, rowY + 15, "Parent's / Guardian's Address:", school.adresse ?? '', 52);
     doc.line(x0, rowY + 1.5, rightLim, rowY + 1.5); // séparateur sous ligne 1
@@ -225,9 +226,16 @@ export function renderGHAHS(doc: any, st: DetailStudent, ctx: BulletinContext, l
 
     // Gauche : discipline / santé
     doc.setFont('helvetica', 'normal'); doc.setFontSize(6.8); txt(DARK);
-    const leftRows = ['Absences', 'Punishment', 'Warning', 'Suspension in Days', 'Parent/Guardian', 'Re-opening Date', 'Fees Owing'];
+    const leftRows: [string, string][] = [
+        ['Absences', String(st.absences ?? 0)], ['Punishment', ''], ['Warning', ''],
+        ['Suspension in Days', ''], ['Parent/Guardian', ''], ['Re-opening Date', ''], ['Fees Owing', ''],
+    ];
     let ly = y + 9;
-    leftRows.forEach(r => { doc.text(r + ' :', x0 + 2, ly); doc.line(x0 + 2, ly + 1.4, midX - 2, ly + 1.4); ly += 4.4; });
+    leftRows.forEach(([r, v]) => {
+        doc.text(r + ' :', x0 + 2, ly);
+        if (v) { doc.setFont('helvetica', 'bold'); doc.text(v, x0 + 42, ly); doc.setFont('helvetica', 'normal'); }
+        doc.line(x0 + 2, ly + 1.4, midX - 2, ly + 1.4); ly += 4.4;
+    });
     doc.setFont('helvetica', 'bold'); doc.text('Class Master/Mistress :', x0 + 2, ly + 0.3);
 
     // Droite : décision

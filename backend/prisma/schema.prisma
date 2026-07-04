@@ -154,10 +154,12 @@ model profils_eleves {
   prenom         String   @db.VarChar
   date_naissance DateTime @db.Date
   lieu_naissance String   @db.VarChar
-  sexe           String?  @db.VarChar
-  nationalite    String?  @db.VarChar
-  photo_url      String?  @db.VarChar
-  statut         String   @default("actif") @db.VarChar // actif | diplome | exclu | transfere
+  sexe             String?  @db.VarChar
+  nationalite      String?  @db.VarChar
+  photo_url        String?  @db.VarChar
+  numero_admission String?  @db.VarChar // Admission No (systeme anglophone)
+  redoublant       Boolean  @default(false) // Repeater
+  statut           String   @default("actif") @db.VarChar // actif | diplome | exclu | transfere
 
   utilisateur  utilisateurs?  @relation(fields: [utilisateur_id], references: [id], onDelete: SetNull)
   ecole        ecoles         @relation(fields: [ecole_id], references: [id], onDelete: Cascade)

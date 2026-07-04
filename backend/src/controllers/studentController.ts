@@ -29,6 +29,7 @@ export const createStudent = async (req: Request, res: Response) => {
     const {
         nom, prenom, date_naissance, lieu_naissance,
         sexe, nationalite, classe_id, annee_id, photo_url,
+        numero_admission, redoublant,
     } = req.body;
 
     if (!nom || !prenom || !date_naissance || !lieu_naissance) {
@@ -53,6 +54,8 @@ export const createStudent = async (req: Request, res: Response) => {
                     sexe: sexe || null,
                     nationalite: nationalite || 'Camerounaise',
                     photo_url: photo_url || null,
+                    numero_admission: numero_admission || null,
+                    redoublant: !!redoublant,
                     statut: 'actif',
                 },
             });
@@ -155,7 +158,8 @@ export const getStudentById = async (req: Request, res: Response) => {
 
 export const updateStudent = async (req: Request, res: Response) => {
     const id = pStr(req.params.id);
-    const { nom, prenom, date_naissance, lieu_naissance, sexe, nationalite, statut, photo_url } = req.body;
+    const { nom, prenom, date_naissance, lieu_naissance, sexe, nationalite, statut, photo_url,
+            numero_admission, redoublant } = req.body;
 
     try {
         const updated = await prisma.profils_eleves.update({
@@ -169,6 +173,8 @@ export const updateStudent = async (req: Request, res: Response) => {
                 nationalite,
                 statut,
                 photo_url: photo_url !== undefined ? photo_url : undefined,
+                numero_admission: numero_admission !== undefined ? (numero_admission || null) : undefined,
+                redoublant: redoublant !== undefined ? !!redoublant : undefined,
             },
         });
         res.json(updated);

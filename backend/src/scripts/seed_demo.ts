@@ -208,6 +208,8 @@ export async function main() {
                     lieu_naissance: 'Bamenda',
                     nationalite: 'Cameroonian',
                     sexe: k % 2 === 0 ? 'M' : 'F',
+                    numero_admission: `ADM/${25 - ci}/${(ci * 10 + k + 1).toString().padStart(3, '0')}`,
+                    redoublant: k === 0, // 1er élève de chaque classe = redoublant (démo)
                     statut: 'actif',
                 },
             });
