@@ -222,9 +222,9 @@ const SchoolHomeDashboard = () => {
 
     const kpiCards = stats ? [
         { label: 'Élèves inscrits',   value: fmt(stats.kpis.total_eleves),      icon: <Users size={20} />,         color: 'text-emerald-600', bg: 'bg-emerald-50',   path: '/ecole-dashboard/students' },
-        { label: 'Classes actives',   value: fmt(stats.kpis.total_classes),      icon: <Layers size={20} />,        color: 'text-blue-600',    bg: 'bg-blue-50',      path: '/ecole-dashboard/classes' },
-        { label: 'Enseignants',       value: fmt(stats.kpis.total_enseignants),  icon: <GraduationCap size={20} />, color: 'text-purple-600',  bg: 'bg-purple-50',    path: '/ecole-dashboard/teachers' },
-        { label: 'Matières',          value: fmt(stats.kpis.total_matieres),     icon: <BookOpen size={20} />,      color: 'text-amber-600',   bg: 'bg-amber-50',     path: '/ecole-dashboard/academic' },
+        { label: 'Classes actives',   value: fmt(stats.kpis.total_classes),      icon: <Layers size={20} />,        color: 'text-teal-600',    bg: 'bg-teal-50',      path: '/ecole-dashboard/classes' },
+        { label: 'Enseignants',       value: fmt(stats.kpis.total_enseignants),  icon: <GraduationCap size={20} />, color: 'text-green-700',   bg: 'bg-green-50',     path: '/ecole-dashboard/teachers' },
+        { label: 'Matières',          value: fmt(stats.kpis.total_matieres),     icon: <BookOpen size={20} />,      color: 'text-emerald-700', bg: 'bg-emerald-50',   path: '/ecole-dashboard/academic' },
         { label: 'Recouvré (total)',  value: `${fmt(stats.finance.total_recouvre)} XAF`, icon: <TrendingUp size={20} />, color: 'text-emerald-600', bg: 'bg-emerald-50', path: '/ecole-dashboard/finances' },
         { label: 'Absences auj.',     value: fmt(stats.presences.absences_aujourd_hui), icon: <AlertCircle size={20} />, color: 'text-red-600', bg: 'bg-red-50',       path: '/ecole-dashboard/attendance' },
     ] : [];

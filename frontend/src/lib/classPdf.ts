@@ -50,7 +50,7 @@ function drawHeader(doc: any, W: number, M: number, school: SchoolInfo, logo: an
     }
     // Bandeau titre
     y += 1.5;
-    doc.setFillColor(15, 23, 42); doc.rect(lx, y, rx - lx, 8, 'F');
+    doc.setFillColor(6, 95, 70); doc.rect(lx, y, rx - lx, 8, 'F');
     doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
     doc.text(title.toUpperCase(), W / 2, y + 5.4, { align: 'center' });
     if (subtitle) {
@@ -60,9 +60,9 @@ function drawHeader(doc: any, W: number, M: number, school: SchoolInfo, logo: an
     return y + 8;
 }
 
-function footer(doc: any, W: number, H: number, M: number) {
+function footer(doc: any, W: number, H: number, M: number, label = 'Green Hills Academy High School') {
     doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(150, 160, 175);
-    doc.text(`Édité via Sholaris — ${new Date().toLocaleDateString('fr-FR')}`, W / 2, H - M + 2, { align: 'center' });
+    doc.text(`${label} — ${new Date().toLocaleDateString('en-GB')}`, W / 2, H - M + 2, { align: 'center' });
 }
 
 // ── 1. Liste des élèves (portrait A4) ─────────────────────────────────────────
@@ -73,35 +73,35 @@ export async function downloadClassRoster(students: RosterStudent[], school: Sch
     const logo = await loadImg(school.logo_url);
 
     const cols = [
-        { t: 'N°',                 x: M,        w: 12, a: 'center' as const },
-        { t: 'Matricule',          x: M + 12,   w: 34, a: 'left'   as const },
-        { t: 'Nom & Prénoms',      x: M + 46,   w: 78, a: 'left'   as const },
-        { t: 'Sexe',               x: M + 124,  w: 16, a: 'center' as const },
-        { t: 'Date de naissance',  x: M + 140,  w: 46, a: 'center' as const },
+        { t: 'No',             x: M,        w: 12, a: 'center' as const },
+        { t: 'Reg. No',        x: M + 12,   w: 34, a: 'left'   as const },
+        { t: 'Name',           x: M + 46,   w: 78, a: 'left'   as const },
+        { t: 'Sex',            x: M + 124,  w: 16, a: 'center' as const },
+        { t: 'Date of Birth',  x: M + 140,  w: 46, a: 'center' as const },
     ];
     const tblX = M, tblW = W - 2 * M, rowH = 7;
 
     const drawTableHeader = (y: number): number => {
-        doc.setFillColor(15, 23, 42); doc.rect(tblX, y, tblW, rowH, 'F');
+        doc.setFillColor(6, 95, 70); doc.rect(tblX, y, tblW, rowH, 'F');
         doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
         cols.forEach(c => doc.text(c.t, c.a === 'center' ? c.x + c.w / 2 : c.x + 2, y + 4.7, { align: c.a === 'center' ? 'center' : 'left' }));
         return y + rowH;
     };
 
-    let y = drawHeader(doc, W, M, school, logo, 'Liste des élèves', '');
+    let y = drawHeader(doc, W, M, school, logo, 'Students List', '');
     // Ligne classe / effectif
     doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
-    doc.text(`Classe : ${classeName}`, M, y + 6);
+    doc.text(`Class: ${classeName}`, M, y + 6);
     doc.setFont('helvetica', 'normal'); doc.setTextColor(90, 100, 115);
-    if (anneeLabel) doc.text(`Année scolaire : ${anneeLabel}`, W / 2, y + 6, { align: 'center' });
-    doc.text(`Effectif : ${students.length}`, W - M, y + 6, { align: 'right' });
+    if (anneeLabel) doc.text(`Academic Year: ${anneeLabel}`, W / 2, y + 6, { align: 'center' });
+    doc.text(`Enrolment: ${students.length}`, W - M, y + 6, { align: 'right' });
     y += 10;
 
     y = drawTableHeader(y);
     doc.setFont('helvetica', 'normal');
     const sorted = [...students].sort((a, b) => (a.nom + a.prenom).localeCompare(b.nom + b.prenom));
     sorted.forEach((s, i) => {
-        if (y + rowH > H - M - 6) { footer(doc, W, H, M); doc.addPage(); y = M; y = drawTableHeader(y); }
+        if (y + rowH > H - M - 6) { footer(doc, W, H, M, school.nom); doc.addPage(); y = M; y = drawTableHeader(y); }
         if (i % 2 === 1) { doc.setFillColor(248, 250, 252); doc.rect(tblX, y, tblW, rowH, 'F'); }
         doc.setTextColor(30, 41, 59); doc.setFontSize(8.5);
         doc.text(String(i + 1), cols[0].x + cols[0].w / 2, y + 4.7, { align: 'center' });
@@ -117,7 +117,7 @@ export async function downloadClassRoster(students: RosterStudent[], school: Sch
     // Cadre + lignes verticales
     doc.setDrawColor(150, 160, 175); doc.setLineWidth(0.2);
 
-    footer(doc, W, H, M);
+    footer(doc, W, H, M, school.nom);
     doc.save(`liste_eleves_${classeName.replace(/\s+/g, '_')}.pdf`);
 }
 
@@ -146,11 +146,11 @@ export async function downloadGradeSheet(bulletins: SheetBulletin[], school: Sch
     const rowH = 6.5;
 
     const drawTableHeader = (y: number): number => {
-        doc.setFillColor(15, 23, 42); doc.rect(tblX, y, tblW, rowH + 2, 'F');
+        doc.setFillColor(6, 95, 70); doc.rect(tblX, y, tblW, rowH + 2, 'F');
         doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(7);
-        doc.text('N°', xNum + wNum / 2, y + 5, { align: 'center' });
-        doc.text('Matricule', xMat + 2, y + 5);
-        doc.text('Nom & Prénoms', xName + 2, y + 5);
+        doc.text('No', xNum + wNum / 2, y + 5, { align: 'center' });
+        doc.text('Reg. No', xMat + 2, y + 5);
+        doc.text('Name', xName + 2, y + 5);
         subjects.forEach(([code], i) => {
             const cx = xSubj0 + subjW * i + subjW / 2;
             doc.setFontSize(6.5);
@@ -160,17 +160,17 @@ export async function downloadGradeSheet(bulletins: SheetBulletin[], school: Sch
             doc.setTextColor(255, 255, 255);
         });
         doc.setFontSize(7);
-        doc.text('Moy.', xMoy + wMoy / 2, y + 5, { align: 'center' });
-        doc.text('Rang', xRang + wRang / 2, y + 5, { align: 'center' });
+        doc.text('Avg.', xMoy + wMoy / 2, y + 5, { align: 'center' });
+        doc.text('Rank', xRang + wRang / 2, y + 5, { align: 'center' });
         return y + rowH + 2;
     };
 
-    let y = drawHeader(doc, W, M, school, logo, 'Bordereau de notes', anneeLabel ? `Année ${anneeLabel}` : '');
+    let y = drawHeader(doc, W, M, school, logo, 'Grade Sheet', anneeLabel ? `Year ${anneeLabel}` : '');
     doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
-    doc.text(`Classe : ${classeName}`, M, y + 6);
+    doc.text(`Class: ${classeName}`, M, y + 6);
     doc.setFont('helvetica', 'normal'); doc.setTextColor(90, 100, 115);
-    doc.text(`Période : ${periodeName}`, W / 2, y + 6, { align: 'center' });
-    doc.text(`Effectif : ${bulletins.length}`, W - M, y + 6, { align: 'right' });
+    doc.text(`Term: ${periodeName}`, W / 2, y + 6, { align: 'center' });
+    doc.text(`Enrolment: ${bulletins.length}`, W - M, y + 6, { align: 'right' });
     y += 10;
 
     y = drawTableHeader(y);
@@ -179,7 +179,7 @@ export async function downloadGradeSheet(bulletins: SheetBulletin[], school: Sch
     const subjSum: Record<string, { s: number; n: number }> = {};
 
     ranked.forEach((b, i) => {
-        if (y + rowH > H - M - 12) { footer(doc, W, H, M); doc.addPage(); y = M; y = drawTableHeader(y); }
+        if (y + rowH > H - M - 12) { footer(doc, W, H, M, school.nom); doc.addPage(); y = M; y = drawTableHeader(y); }
         if (i % 2 === 1) { doc.setFillColor(248, 250, 252); doc.rect(tblX, y, tblW, rowH, 'F'); }
         doc.setTextColor(30, 41, 59); doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
         doc.text(String(i + 1), xNum + wNum / 2, y + 4.4, { align: 'center' });
@@ -208,7 +208,7 @@ export async function downloadGradeSheet(bulletins: SheetBulletin[], school: Sch
     // Ligne moyenne de classe par matière
     doc.setFillColor(224, 242, 235); doc.rect(tblX, y, tblW, rowH, 'F');
     doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(4, 120, 87);
-    doc.text('MOYENNE CLASSE', xMat + 2, y + 4.4);
+    doc.text('CLASS AVERAGE', xMat + 2, y + 4.4);
     subjects.forEach(([code], si) => {
         const cx = xSubj0 + subjW * si + subjW / 2;
         const agg = subjSum[code];
@@ -221,8 +221,8 @@ export async function downloadGradeSheet(bulletins: SheetBulletin[], school: Sch
     // Légende codes → matières
     doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(90, 100, 115);
     const legend = subjects.map(([code, m]) => `${code} = ${m.nom}`).join('   •   ');
-    doc.splitTextToSize(`Légende : ${legend}`, tblW).slice(0, 3).forEach((ln: string, i: number) => doc.text(ln, M, y + i * 3.4));
+    doc.splitTextToSize(`Legend: ${legend}`, tblW).slice(0, 3).forEach((ln: string, i: number) => doc.text(ln, M, y + i * 3.4));
 
-    footer(doc, W, H, M);
+    footer(doc, W, H, M, school.nom);
     doc.save(`bordereau_notes_${classeName.replace(/\s+/g, '_')}_${periodeName.replace(/\s+/g, '_')}.pdf`);
 }

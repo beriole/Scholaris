@@ -70,7 +70,7 @@ const LoginPage = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 1 }}
-                className="hidden lg:flex w-[45%] relative overflow-hidden bg-slate-900 flex-col justify-between p-12"
+                className="hidden lg:flex w-[45%] relative overflow-hidden bg-emerald-950 flex-col justify-between p-12"
             >
                 <motion.img
                     initial={{ scale: 1.1 }}
@@ -80,8 +80,8 @@ const LoginPage = () => {
                     alt="Élèves en classe"
                     className="absolute inset-0 w-full h-full object-cover opacity-60"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-slate-900/10 mix-blend-multiply"></div>
-                <div className="absolute inset-0 bg-emerald-900/20 mix-blend-overlay"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-emerald-950/70 to-emerald-900/20 mix-blend-multiply"></div>
+                <div className="absolute inset-0 bg-emerald-700/25 mix-blend-overlay"></div>
 
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
@@ -105,13 +105,13 @@ const LoginPage = () => {
                     className="relative z-10 max-w-lg mb-10"
                 >
                     <div className="inline-block px-3 py-1 mb-6 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] font-extrabold uppercase tracking-widest shadow-sm">
-                        Espace Sécurisé
+                        Secure Portal
                     </div>
                     <h1 className="text-4xl lg:text-[2.75rem] font-extrabold text-white leading-[1.1] mb-6 drop-shadow-lg tracking-tight">
-                        L'excellence académique à portée de clic.
+                        Solid Foundation · Discipline · Success.
                     </h1>
-                    <p className="text-slate-200/90 text-lg font-medium leading-relaxed drop-shadow-md max-w-md">
-                        Identifiez-vous pour administrer les notes, la comptabilité et le suivi rigoureux de vos apprenants.
+                    <p className="text-emerald-50/90 text-lg font-medium leading-relaxed drop-shadow-md max-w-md">
+                        Sign in to manage grades, finances and student records for Green Hills Academy.
                     </p>
                 </motion.div>
             </motion.div>
