@@ -15,8 +15,6 @@
 import { prisma } from '../lib/prisma';
 import bcrypt from 'bcrypt';
 
-const TENANT_ID = 'a04c0c79-f850-4ba2-b324-6fe3fb030b61';
-
 const T = (hhmm: string): Date => {
     const [h, m] = hhmm.split(':').map(Number);
     const d = new Date(2025, 0, 1); d.setHours(h, m, 0, 0); return d;
@@ -27,7 +25,7 @@ const note = (seed: number) => Math.round((8 + (Math.sin(seed) + 1) * 5) * 4) / 
 const appr = (a: number) => a >= 16 ? 'Very Good' : a >= 14 ? 'Good' : a >= 12 ? 'Fair' : a >= 10 ? 'Average' : 'Weak';
 
 export async function main() {
-    const ecole = await prisma.ecoles.findFirst({ where: { tenant_id: TENANT_ID } });
+    const ecole = await prisma.ecoles.findFirst();
     if (!ecole) throw new Error('École démo introuvable — lancez d\'abord seed_demo.ts');
     const ecole_id = ecole.id;
     const annee = await prisma.annees_scolaires.findFirst({ where: { ecole_id, est_active: true } });
@@ -166,7 +164,7 @@ export async function main() {
     console.log(`✓ Présences: +${presCount}`);
 
     // ── 5. Paiements espèces ──────────────────────────────────────────────────
-    const admin = await prisma.utilisateurs.findFirst({ where: { tenant_id: TENANT_ID, role: 'super_admin' } });
+    const admin = await prisma.utilisateurs.findFirst({ where: { role: 'admin_ecole' } });
     const totalTranches = tranches.reduce((a, t) => a + Number(t.montant_xaf), 0) || 100000;
     let payCount = 0;
     for (let i = 0; i < inscriptions.length; i++) {
@@ -180,7 +178,7 @@ export async function main() {
             const exist = await prisma.paiements.findFirst({ where: { numero_recu: numero } });
             if (!exist) {
                 await prisma.paiements.create({
-                    data: { tenant_id: TENANT_ID, ecole_id, inscription_id: insc.id,
+                    data: { ecole_id, inscription_id: insc.id,
                         montant_xaf: tr.montant_xaf, montant_total_xaf: totalTranches,
                         solde_restant_xaf: Math.max(0, totalTranches - cumul),
                         methode_paiement: 'especes', statut: 'confirme',
@@ -240,10 +238,10 @@ export async function main() {
 
     // ── 7. Compte admin_ecole de test ─────────────────────────────────────────
     const adminEmail = 'admin.demo@sholaris.demo';
-    let adminEcole = await prisma.utilisateurs.findFirst({ where: { tenant_id: TENANT_ID, email: adminEmail } });
+    let adminEcole = await prisma.utilisateurs.findFirst({ where: { email: adminEmail } });
     if (!adminEcole) {
         adminEcole = await prisma.utilisateurs.create({
-            data: { tenant_id: TENANT_ID, email: adminEmail, role: 'admin_ecole', mot_de_passe: await bcrypt.hash('Admin1234!', 10), est_actif: true },
+            data: { email: adminEmail, role: 'admin_ecole', mot_de_passe: await bcrypt.hash('Admin1234!', 10), est_actif: true },
         });
         console.log('✓ Compte admin_ecole créé');
     }

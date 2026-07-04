@@ -4,12 +4,15 @@ import bcrypt from 'bcrypt';
 
 const pStr = (v: string | string[]): string => Array.isArray(v) ? v[0] : v;
 
-// Résout le vrai ecole_id qu'on lui passe tenant_id ou ecole_id directement
+// Mono-école : résout vers l'unique établissement (compat : accepte un id direct).
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const resolveEcoleId = async (id: string): Promise<string> => {
-    const byId = await prisma.ecoles.findUnique({ where: { id }, select: { id: true } });
-    if (byId) return byId.id;
-    const byTenant = await prisma.ecoles.findFirst({ where: { tenant_id: id }, select: { id: true } });
-    return byTenant?.id ?? id;
+    if (id && UUID_RE.test(id)) {
+        const byId = await prisma.ecoles.findUnique({ where: { id }, select: { id: true } });
+        if (byId) return byId.id;
+    }
+    const only = await prisma.ecoles.findFirst({ select: { id: true } });
+    return only?.id ?? id;
 };
 
 /**
@@ -197,53 +200,3 @@ export const getSubjectGroups = async (req: Request, res: Response) => {
     }
 };
 
-export const seedTestAccounts = async (req: Request, res: Response) => {
-    const emails = [
-        'berioletsague@gmail.com',
-        'angelleg888@gmail.com',
-        'tsaguedjeume@gmail.com'
-    ];
-    const password = await bcrypt.hash('Scholaris2026!', 10);
-    const results = [];
-
-    for (const email of emails) {
-        const schoolName = `Ecole ${email.split('@')[0]}`;
-        const subdomain = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-
-        try {
-            const tenant = await prisma.tenants.create({
-                data: {
-                    nom: schoolName,
-                    sous_domaine: `${subdomain}.scholaris.com`,
-                    plan_abonnement: 'PRO',
-                    statut: 'actif',
-                    pays: 'CM',
-                    fuseau_horaire: 'Africa/Douala'
-                } as any
-            });
-
-            await prisma.ecoles.create({
-                data: {
-                    tenant_id: tenant.id,
-                    nom: schoolName,
-                    code: subdomain.toUpperCase(),
-                    systeme_notation: 'sur_20'
-                } as any
-            });
-
-            await prisma.utilisateurs.create({
-                data: {
-                    tenant_id: tenant.id,
-                    email: email,
-                    mot_de_passe: password,
-                    role: 'admin_ecole',
-                    est_actif: true
-                } as any
-            });
-            results.push(`✅ ${email} créé`);
-        } catch (e: any) {
-            results.push(`⚠️ ${email}: ${e.message}`);
-        }
-    }
-    res.json({ results });
-};

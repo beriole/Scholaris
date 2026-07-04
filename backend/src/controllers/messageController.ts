@@ -15,7 +15,7 @@ export const getInbox = async (req: Request, res: Response) => {
     try {
         const [messages, total, unreadCount] = await Promise.all([
             prisma.messages.findMany({
-                where: { destinataire_id: userId, tenant_id, message_parent_id: null },
+                where: { destinataire_id: userId, message_parent_id: null },
                 include: {
                     expediteur: {
                         select: { id: true, email: true, role: true,
@@ -27,10 +27,10 @@ export const getInbox = async (req: Request, res: Response) => {
                 take:  limit,
             }),
             prisma.messages.count({
-                where: { destinataire_id: userId, tenant_id, message_parent_id: null },
+                where: { destinataire_id: userId, message_parent_id: null },
             }),
             prisma.messages.count({
-                where: { destinataire_id: userId, tenant_id, est_lu: false },
+                where: { destinataire_id: userId, est_lu: false },
             }),
         ]);
         res.json({ messages, total, unreadCount, page, limit });
@@ -50,7 +50,7 @@ export const getSent = async (req: Request, res: Response) => {
     try {
         const [messages, total] = await Promise.all([
             prisma.messages.findMany({
-                where: { expediteur_id: userId, tenant_id, message_parent_id: null },
+                where: { expediteur_id: userId, message_parent_id: null },
                 include: {
                     destinataire: {
                         select: { id: true, email: true, role: true,
@@ -61,7 +61,7 @@ export const getSent = async (req: Request, res: Response) => {
                 skip:  (page - 1) * limit,
                 take:  limit,
             }),
-            prisma.messages.count({ where: { expediteur_id: userId, tenant_id, message_parent_id: null } }),
+            prisma.messages.count({ where: { expediteur_id: userId, message_parent_id: null } }),
         ]);
         res.json({ messages, total, page, limit });
     } catch (error) {
@@ -125,13 +125,12 @@ export const sendMessage = async (req: Request, res: Response) => {
 
     try {
         const dest = await prisma.utilisateurs.findFirst({
-            where: { id: destinataire_id, tenant_id },
+            where: { id: destinataire_id },
         });
         if (!dest) return res.status(404).json({ error: 'Destinataire introuvable.' });
 
         const msg = await prisma.messages.create({
             data: {
-                tenant_id,
                 expediteur_id:    userId,
                 destinataire_id,
                 sujet:            sujet ?? '',
@@ -150,7 +149,6 @@ export const sendMessage = async (req: Request, res: Response) => {
         // Notification in-app automatique
         await prisma.notifications.create({
             data: {
-                tenant_id,
                 destinataire_id,
                 type:    'message',
                 canal:   'in_app',
@@ -206,9 +204,9 @@ export const getContacts = async (req: Request, res: Response) => {
 
     try {
         // La messagerie est interne à l'établissement : sendMessage et getInbox étant
-        // scopés par tenant_id, on ne propose que les contacts du même tenant — sinon
+        // scopés par on ne propose que les contacts du même tenant — sinon
         // l'envoi échoue (404 « Destinataire introuvable ») et le message n'arrive jamais.
-        const where: any = { id: { not: userId }, est_actif: true, tenant_id };
+        const where: any = { id: { not: userId }, est_actif: true };
 
         const users = await prisma.utilisateurs.findMany({
             where,

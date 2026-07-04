@@ -11,7 +11,7 @@ const qStr = (v: unknown): string | undefined =>
     typeof v === 'string' ? v : Array.isArray(v) ? String(v[0]) : undefined;
 
 const getEcoleId = async (tenant_id: string) => {
-    const e = await prisma.ecoles.findFirst({ where: { tenant_id }, select: { id: true } });
+    const e = await prisma.ecoles.findFirst({ select: { id: true } });
     return e?.id ?? null;
 };
 

@@ -8,7 +8,7 @@ const toNum = (v: Decimal | number | null | undefined): number => {
 };
 
 const getEcoleId = async (tenant_id: string): Promise<string | null> => {
-    const e = await prisma.ecoles.findFirst({ where: { tenant_id }, select: { id: true } });
+    const e = await prisma.ecoles.findFirst({ select: { id: true } });
     return e?.id ?? null;
 };
 
@@ -119,7 +119,7 @@ export const recordPayment = async (req: Request, res: Response) => {
 
     try {
         const ecole = await prisma.ecoles.findFirst({
-            where: { tenant_id },
+            where: {},
             select: { id: true, nom: true },
         });
         if (!ecole) return res.status(404).json({ error: 'École introuvable.' });
@@ -160,7 +160,6 @@ export const recordPayment = async (req: Request, res: Response) => {
 
         const paiement = await prisma.paiements.create({
             data: {
-                tenant_id,
                 ecole_id,
                 inscription_id,
                 montant_xaf: montant,

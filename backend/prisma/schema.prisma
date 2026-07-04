@@ -7,34 +7,11 @@ datasource db {
 }
 
 // -----------------------------------------------------------------------------
-// DOMAINE MULTI-TENANT
+// DOMAINE ÉTABLISSEMENT (mono-école)
 // -----------------------------------------------------------------------------
-
-model tenants {
-  id                      String    @id @default(uuid()) @db.Uuid
-  nom                     String    @db.VarChar
-  sous_domaine            String    @unique @db.VarChar
-  plan_abonnement         String    @db.VarChar // gratuit | standard | premium
-  statut                  String    @db.VarChar // actif | suspendu | expire
-  pays                    String    @db.VarChar(2)
-  fuseau_horaire          String    @db.VarChar
-  devise                  String    @default("XAF") @db.VarChar(3)
-  langue_defaut           String    @default("fr") @db.VarChar(5)
-  date_expiration         DateTime? @db.Date
-  config_personnalisation Json?     @db.JsonB
-  created_at              DateTime  @default(now()) @db.Timestamp(6)
-
-  ecoles         ecoles[]
-  utilisateurs   utilisateurs[]
-  paiements      paiements[]
-  messages       messages[]
-  notifications  notifications[]
-  logs_activites logs_activites[]
-}
 
 model ecoles {
   id               String   @id @default(uuid()) @db.Uuid
-  tenant_id        String   @db.Uuid
   nom              String   @db.VarChar
   code             String   @unique @db.VarChar
   adresse          String?  @db.Text
@@ -51,7 +28,6 @@ model ecoles {
   systeme_notation String   @db.VarChar // sur_20 | sur_10
   created_at       DateTime @default(now()) @db.Timestamp(6)
 
-  tenant           tenants            @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
   annees_scolaires annees_scolaires[] @relation("EcoleAnnees")
   annee_active     annees_scolaires?  @relation("EcoleAnneeActive", fields: [annee_active_id], references: [id])
 
@@ -95,8 +71,7 @@ model annees_scolaires {
 
 model utilisateurs {
   id                 String    @id @default(uuid()) @db.Uuid
-  tenant_id          String    @db.Uuid
-  email              String    @db.VarChar
+  email              String    @unique @db.VarChar
   role               String    @db.VarChar // super_admin | admin_ecole | enseignant | parent | eleve
   mot_de_passe       String?   @db.VarChar
   otp_code           String?   @db.VarChar
@@ -106,7 +81,6 @@ model utilisateurs {
   derniere_connexion DateTime? @db.Timestamp(6)
   created_at         DateTime  @default(now()) @db.Timestamp(6)
 
-  tenant            tenants              @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
   profil_enseignant profils_enseignants?
   profil_parent     profils_parents?
   profil_eleve      profils_eleves?
@@ -119,8 +93,6 @@ model utilisateurs {
   bulletins_generes   bulletins[]               @relation("BulletinGenerateur")
   paiements_encaisses paiements[]               @relation("PaiementEncaisseur")
   absences_validees   justifications_absences[] @relation("JustificationValideur")
-
-  @@unique([tenant_id, email])
 }
 
 model profils_enseignants {
@@ -451,7 +423,6 @@ model details_bulletin {
 
 model paiements {
   id                    String   @id @default(uuid()) @db.Uuid
-  tenant_id             String   @db.Uuid
   ecole_id              String   @db.Uuid
   inscription_id        String   @db.Uuid
   parent_id             String?  @db.Uuid
@@ -468,7 +439,6 @@ model paiements {
   notes_interne         String?  @db.Text
   created_at            DateTime @default(now()) @db.Timestamp(6)
 
-  tenant           tenants          @relation(fields: [tenant_id], references: [id])
   ecole            ecoles           @relation(fields: [ecole_id], references: [id])
   inscription      inscriptions     @relation(fields: [inscription_id], references: [id])
   parent           profils_parents? @relation(fields: [parent_id], references: [id])
@@ -541,7 +511,6 @@ model justifications_absences {
 
 model messages {
   id                String    @id @default(uuid()) @db.Uuid
-  tenant_id         String    @db.Uuid
   expediteur_id     String    @db.Uuid
   destinataire_id   String    @db.Uuid
   sujet             String    @db.VarChar
@@ -552,7 +521,6 @@ model messages {
   message_parent_id String?   @db.Uuid
   created_at        DateTime  @default(now()) @db.Timestamp(6)
 
-  tenant         tenants      @relation(fields: [tenant_id], references: [id])
   expediteur     utilisateurs @relation("MessageExpediteur", fields: [expediteur_id], references: [id])
   destinataire   utilisateurs @relation("MessageDestinataire", fields: [destinataire_id], references: [id])
   message_parent messages?    @relation("FilDiscussion", fields: [message_parent_id], references: [id])
@@ -561,7 +529,6 @@ model messages {
 
 model notifications {
   id              String    @id @default(uuid()) @db.Uuid
-  tenant_id       String    @db.Uuid
   destinataire_id String    @db.Uuid
   type            String    @db.VarChar // bulletin_publie | absence | note ...
   canal           String    @db.VarChar // in_app | email | sms
@@ -571,14 +538,12 @@ model notifications {
   created_at      DateTime  @default(now()) @db.Timestamp(6)
   lue_at          DateTime? @db.Timestamp(6)
 
-  tenant       tenants      @relation(fields: [tenant_id], references: [id])
   destinataire utilisateurs @relation(fields: [destinataire_id], references: [id])
 }
 
 model logs_activites {
   id             String   @id @default(uuid()) @db.Uuid
   utilisateur_id String   @db.Uuid
-  tenant_id      String   @db.Uuid
   action         String   @db.VarChar // CREATE | UPDATE | etc.
   entite         String   @db.VarChar
   entite_id      String?  @db.Uuid
@@ -587,5 +552,4 @@ model logs_activites {
   created_at     DateTime @default(now()) @db.Timestamp(6)
 
   utilisateur utilisateurs @relation(fields: [utilisateur_id], references: [id])
-  tenant      tenants      @relation(fields: [tenant_id], references: [id])
 }

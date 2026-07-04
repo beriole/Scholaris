@@ -7,7 +7,7 @@ export const getSchoolSettings = async (req: Request, res: Response) => {
     const tenant_id = req.user!.tenant_id;
     try {
         const ecole = await prisma.ecoles.findFirst({
-            where: { tenant_id },
+            where: {},
             select: {
                 id: true, nom: true, code: true, adresse: true, ville: true,
                 region: true, telephone: true, email: true, boite_postale: true,
@@ -19,10 +19,8 @@ export const getSchoolSettings = async (req: Request, res: Response) => {
         });
         if (!ecole) return res.status(404).json({ error: 'École introuvable.' });
 
-        const tenant = await prisma.tenants.findUnique({
-            where: { id: tenant_id },
-            select: { nom: true, sous_domaine: true, plan_abonnement: true, devise: true, langue_defaut: true, date_expiration: true },
-        });
+        // Mono-école : plus de tenant. Stub minimal pour compat de l'UI.
+        const tenant = { nom: ecole.nom, devise: 'XAF', langue_defaut: 'en' };
 
         res.json({ ecole, tenant });
     } catch (error) {
@@ -38,7 +36,7 @@ export const updateSchoolSettings = async (req: Request, res: Response) => {
             numero_contribuable, registre_commerce, logo_url, systeme_notation } = req.body;
 
     try {
-        const ecole = await prisma.ecoles.findFirst({ where: { tenant_id }, select: { id: true } });
+        const ecole = await prisma.ecoles.findFirst({ select: { id: true } });
         if (!ecole) return res.status(404).json({ error: 'École introuvable.' });
 
         const data: Record<string, string> = {};
@@ -70,7 +68,7 @@ export const setActiveYear = async (req: Request, res: Response) => {
     if (!annee_id) return res.status(400).json({ error: 'annee_id requis.' });
 
     try {
-        const ecole = await prisma.ecoles.findFirst({ where: { tenant_id }, select: { id: true } });
+        const ecole = await prisma.ecoles.findFirst({ select: { id: true } });
         if (!ecole) return res.status(404).json({ error: 'École introuvable.' });
 
         const annee = await prisma.annees_scolaires.findFirst({

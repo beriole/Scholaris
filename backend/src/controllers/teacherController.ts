@@ -6,7 +6,7 @@ const pStr = (v: string | string[]): string => Array.isArray(v) ? v[0] : v;
 
 const getEcoleId = async (tenant_id: string): Promise<string | null> => {
     const ecole = await prisma.ecoles.findFirst({
-        where: { tenant_id },
+        where: {},
         select: { id: true },
     });
     return ecole?.id ?? null;
@@ -29,7 +29,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
         if (!profil) return res.status(404).json({ error: 'Aucun profil enseignant associé à ce compte.' });
 
         const ecole = await prisma.ecoles.findFirst({
-            where: { tenant_id },
+            where: {},
             select: {
                 id: true, nom: true, annee_active_id: true,
                 annee_active: { select: { id: true, libelle: true } },
@@ -87,7 +87,7 @@ export const createTeacher = async (req: Request, res: Response) => {
         if (!ecole_id) return res.status(404).json({ error: 'École introuvable pour ce tenant.' });
 
         const existingUser = await prisma.utilisateurs.findFirst({
-            where: { tenant_id, email },
+            where: { email },
         });
         if (existingUser) {
             return res.status(409).json({ error: 'Un compte avec cet email existe déjà.' });
@@ -101,7 +101,6 @@ export const createTeacher = async (req: Request, res: Response) => {
         const result = await prisma.$transaction(async (tx: any) => {
             const utilisateur = await tx.utilisateurs.create({
                 data: {
-                    tenant_id,
                     email,
                     mot_de_passe: hashedPassword,
                     role: 'enseignant',

@@ -10,17 +10,14 @@ import {
     createSubject,
     updateSubject,
     deleteSubject,
-    seedTestAccounts
 } from '../controllers/academicController';
 import { authenticateJWT, requireRole } from '../middlewares/authMiddleware';
 
 const router = Router();
 
-// Toutes les routes académiques requièrent une session admin (sauf le seed de test).
+// Toutes les routes académiques requièrent une session admin.
 router.use(authenticateJWT);
 router.use(requireRole(['super_admin', 'admin_ecole']));
-
-router.get('/seed-test-accounts', seedTestAccounts);
 
 // Années Scolaires
 router.post('/years', createSchoolYear);

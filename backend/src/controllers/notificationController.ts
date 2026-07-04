@@ -68,14 +68,13 @@ export const broadcastNotification = async (req: Request, res: Response) => {
     if (!titre || !contenu) return res.status(400).json({ error: 'titre et contenu requis.' });
 
     try {
-        const where: any = { tenant_id, est_actif: true };
+        const where: any = { est_actif: true };
         if (roles && Array.isArray(roles) && roles.length > 0) where.role = { in: roles };
 
         const users = await prisma.utilisateurs.findMany({ where, select: { id: true } });
 
         await prisma.notifications.createMany({
             data: users.map(u => ({
-                tenant_id,
                 destinataire_id: u.id,
                 type:    type ?? 'annonce',
                 canal:   'in_app',

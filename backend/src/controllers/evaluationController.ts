@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 
 const getEcoleId = async (tenant_id: string): Promise<string | null> => {
-    const ecole = await prisma.ecoles.findFirst({ where: { tenant_id }, select: { id: true } });
+    const ecole = await prisma.ecoles.findFirst({ select: { id: true } });
     return ecole?.id ?? null;
 };
 

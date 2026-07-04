@@ -3,7 +3,6 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import SetupSuperAdmin from './pages/SetupSuperAdmin';
-import SuperAdminDashboard from './pages/dashboard/SuperAdminDashboard';
 import SchoolDashboard from './pages/dashboard/SchoolDashboard';
 import SchoolYearManager from './pages/dashboard/academic/SchoolYearManager';
 import ClassManager from './pages/dashboard/academic/ClassManager';
@@ -42,12 +41,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/setup-superadmin" element={<SetupSuperAdmin />} />
 
-          {/* Super Admin */}
-          <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
-            <Route path="/dashboard" element={<SuperAdminDashboard />} />
-          </Route>
-
-          {/* Admin École + Super Admin */}
+          {/* Admin École (mono-école) */}
           <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin_ecole']} />}>
             <Route path="/ecole-dashboard" element={<SchoolDashboard />}>
               <Route path="years"    element={<SchoolYearManager />} />

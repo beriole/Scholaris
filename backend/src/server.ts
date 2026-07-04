@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { prisma } from './lib/prisma';
 import authRoutes from './routes/authRoutes';
-import tenantRoutes from './routes/tenantRoutes';
 import academicRoutes from './routes/academicRoutes';
 import studentRoutes from './routes/studentRoutes';
 import teacherRoutes from './routes/teacherRoutes';
@@ -36,7 +35,6 @@ app.use('/uploads', express.static(UPLOAD_DIR));
 
 // Auth & Security Core
 app.use('/api/auth', authRoutes);
-app.use('/api/tenants', tenantRoutes);
 app.use('/api/academic', academicRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/teachers', teacherRoutes);

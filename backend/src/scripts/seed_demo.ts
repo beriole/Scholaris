@@ -16,13 +16,11 @@
 import { prisma } from '../lib/prisma';
 import bcrypt from 'bcrypt';
 
-const TENANT_ID = 'a04c0c79-f850-4ba2-b324-6fe3fb030b61'; // tenant de berioletsague@gmail.com
-
 const d = (s: string) => new Date(s);
 
 export async function main() {
     // 1. École (créée si absente, puis mise à jour → en-tête anglophone) --------
-    let ecole = await prisma.ecoles.findFirst({ where: { tenant_id: TENANT_ID } });
+    let ecole = await prisma.ecoles.findFirst();
     const ecoleData = {
         nom: 'Green Hills Academy High School',
         code: 'GHAHS',
@@ -38,7 +36,7 @@ export async function main() {
         systeme_notation: 'sur_20',
     };
     if (!ecole) {
-        ecole = await prisma.ecoles.create({ data: { tenant_id: TENANT_ID, ...ecoleData } });
+        ecole = await prisma.ecoles.create({ data: { ...ecoleData } });
         console.log('✓ École créée:', ecole.nom);
     } else {
         ecole = await prisma.ecoles.update({ where: { id: ecole.id }, data: ecoleData });
@@ -46,8 +44,18 @@ export async function main() {
     }
     const ecole_id = ecole.id;
 
-    // Tenant → nom GHAHS (affiché dans la sidebar du dashboard).
-    await prisma.tenants.update({ where: { id: TENANT_ID }, data: { nom: 'Green Hills Academy High School' } }).catch(() => {});
+    // Mono-école : plus de super_admin, les comptes existants deviennent admin_ecole.
+    await prisma.utilisateurs.updateMany({ where: { role: 'super_admin' }, data: { role: 'admin_ecole' } });
+
+    // Compte administrateur principal (Green Hills).
+    const primaryEmail = 'berioletsague@gmail.com';
+    const primary = await prisma.utilisateurs.findFirst({ where: { email: primaryEmail } });
+    if (!primary) {
+        await prisma.utilisateurs.create({
+            data: { email: primaryEmail, mot_de_passe: await bcrypt.hash('Admin1234!', 10), role: 'admin_ecole', est_actif: true },
+        });
+        console.log('✓ Admin principal créé:', primaryEmail);
+    }
 
     // 2. Année scolaire active -------------------------------------------------
     let annee = await prisma.annees_scolaires.findFirst({ where: { ecole_id, libelle: '2025-2026' } });
@@ -72,6 +80,10 @@ export async function main() {
     await prisma.emplois_du_temps.deleteMany({ where: { classe_id: { in: classeIdsOld } } });
     await prisma.paiements.deleteMany({ where: { ecole_id } });
     await prisma.inscriptions.deleteMany({ where: { classe_id: { in: classeIdsOld } } });
+    const oldEleves = await prisma.profils_eleves.findMany({ where: { ecole_id }, select: { id: true } });
+    const eleveIdsOld = oldEleves.map(e => e.id);
+    await prisma.eleve_parent.deleteMany({ where: { eleve_id: { in: eleveIdsOld } } });
+    await prisma.profils_eleves.deleteMany({ where: { ecole_id } });
     await prisma.affectations_matieres.deleteMany({ where: { classe_id: { in: classeIdsOld } } });
     await prisma.tranches_paiement.deleteMany({ where: { ecole_id } });
     await prisma.periodes_evaluation.deleteMany({ where: { ecole_id } });
@@ -182,8 +194,8 @@ export async function main() {
     const profIds: string[] = [];
     for (let i = 0; i < profsData.length; i++) {
         const p = profsData[i];
-        let u = await prisma.utilisateurs.findFirst({ where: { tenant_id: TENANT_ID, email: p.email } });
-        if (!u) u = await prisma.utilisateurs.create({ data: { tenant_id: TENANT_ID, email: p.email, role: 'enseignant', mot_de_passe: hash } });
+        let u = await prisma.utilisateurs.findFirst({ where: { email: p.email } });
+        if (!u) u = await prisma.utilisateurs.create({ data: { email: p.email, role: 'enseignant', mot_de_passe: hash } });
         let prof = await prisma.profils_enseignants.findFirst({ where: { utilisateur_id: u.id } });
         if (!prof) {
             prof = await prisma.profils_enseignants.create({

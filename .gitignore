@@ -40,3 +40,6 @@ Thumbs.db
 
 # Scratch
 *.tmp
+
+# Bulletin officiel scanne (PII eleve) - ne pas versionner
+Reports card.pdf

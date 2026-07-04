@@ -5,7 +5,7 @@ interface User {
     id: string;
     email: string;
     role: string;
-    tenant_id: string;
+    tenant_id?: string; // vestige mono-école (non utilisé)
     tenant_name?: string;
 }
 

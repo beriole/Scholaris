@@ -13,46 +13,23 @@ const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Crée un nouvel établissement + compte admin_ecole (appelé par le Super Admin)
+// Crée l'établissement (mono-école) + compte admin, si l'école n'existe pas encore.
 export const register = async (req: Request, res: Response) => {
     try {
-        const { nom_tenant, sous_domaine, pays, email, mot_de_passe } = req.body;
-
-        if (!nom_tenant || !sous_domaine || !email || !mot_de_passe) {
-            return res.status(400).json({ error: 'Tous les champs obligatoires doivent être remplis.' });
-        }
-
-        const existingTenant = await prisma.tenants.findUnique({ where: { sous_domaine } });
-        if (existingTenant) {
-            return res.status(400).json({ error: 'Ce sous-domaine est déjà indisponible.' });
+        const { nom_tenant, email, mot_de_passe } = req.body;
+        if (!nom_tenant || !email || !mot_de_passe) {
+            return res.status(400).json({ error: 'Nom de l\'établissement, email et mot de passe requis.' });
         }
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(mot_de_passe, salt);
 
         const result = await prisma.$transaction(async (tx: any) => {
-            const newTenant = await tx.tenants.create({
-                data: {
-                    nom: nom_tenant,
-                    sous_domaine,
-                    pays: pays || 'CM',
-                    fuseau_horaire: 'Africa/Douala',
-                    plan_abonnement: 'gratuit',
-                    statut: 'actif'
-                }
-            });
-
-            const code = sous_domaine.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 10);
+            const code = (nom_tenant as string).toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 10) || 'SCH';
             const newEcole = await tx.ecoles.create({
-                data: {
-                    tenant_id: newTenant.id,
-                    nom: nom_tenant,
-                    code,
-                    systeme_notation: 'sur_20',
-                }
+                data: { nom: nom_tenant, code, systeme_notation: 'sur_20' },
             });
 
-            // Année scolaire active par défaut (rentrée en septembre, calendrier camerounais).
             const now = new Date();
             const startYear = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
             const newYear = await tx.annees_scolaires.create({
@@ -62,30 +39,19 @@ export const register = async (req: Request, res: Response) => {
                     date_debut: new Date(`${startYear}-09-01`),
                     date_fin:   new Date(`${startYear + 1}-07-15`),
                     est_active: true,
-                }
+                },
             });
-
-            // Lier l'année active à l'école (évite les 404 « École/année introuvable »).
-            await tx.ecoles.update({
-                where: { id: newEcole.id },
-                data:  { annee_active_id: newYear.id },
-            });
+            await tx.ecoles.update({ where: { id: newEcole.id }, data: { annee_active_id: newYear.id } });
 
             const newAdmin = await tx.utilisateurs.create({
-                data: {
-                    tenant_id: newTenant.id,
-                    email,
-                    mot_de_passe: hashedPassword,
-                    role: 'admin_ecole'
-                }
+                data: { email, mot_de_passe: hashedPassword, role: 'admin_ecole' },
             });
 
-            return { newTenant, newEcole, newAdmin, newYear };
+            return { newEcole, newAdmin, newYear };
         });
 
         res.status(201).json({
             message: 'Établissement créé avec succès.',
-            tenant: result.newTenant,
             ecole: { ...result.newEcole, annee_active_id: result.newYear.id },
             annee_active: result.newYear,
         });
@@ -95,63 +61,34 @@ export const register = async (req: Request, res: Response) => {
     }
 };
 
-// Configuration initiale — crée le Super Admin de la plateforme (une seule fois)
+// Configuration initiale — crée le premier administrateur (une seule fois).
 export const setupSuperAdmin = async (req: Request, res: Response) => {
     try {
         const existingAdmin = await prisma.utilisateurs.findFirst({
-            where: { role: 'super_admin' }
+            where: { role: { in: ['super_admin', 'admin_ecole'] } },
         });
         if (existingAdmin) {
             return res.status(403).json({ error: 'La configuration initiale a déjà été effectuée.' });
         }
 
-        const { nom_tenant, sous_domaine, pays, email, mot_de_passe } = req.body;
-
-        if (!nom_tenant || !sous_domaine || !email || !mot_de_passe) {
-            return res.status(400).json({ error: 'Tous les champs sont requis.' });
+        const { nom_tenant, email, mot_de_passe } = req.body;
+        if (!email || !mot_de_passe) {
+            return res.status(400).json({ error: 'Email et mot de passe requis.' });
         }
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(mot_de_passe, salt);
 
-        const result = await prisma.$transaction(async (tx: any) => {
-            const newTenant = await tx.tenants.create({
-                data: {
-                    nom: nom_tenant,
-                    sous_domaine,
-                    pays: pays || 'CM',
-                    fuseau_horaire: 'Africa/Douala',
-                    plan_abonnement: 'enterprise',
-                    statut: 'actif'
-                }
-            });
-
-            const code = sous_domaine.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 10);
-            await tx.ecoles.create({
-                data: {
-                    tenant_id: newTenant.id,
-                    nom: nom_tenant,
-                    code,
-                    systeme_notation: 'sur_20',
-                }
-            });
-
-            const newAdmin = await tx.utilisateurs.create({
-                data: {
-                    tenant_id: newTenant.id,
-                    email,
-                    mot_de_passe: hashedPassword,
-                    role: 'super_admin'
-                }
-            });
-
-            return { newTenant, newAdmin };
+        let ecole = await prisma.ecoles.findFirst({ select: { id: true } });
+        if (!ecole) {
+            const code = ((nom_tenant as string) || 'School').toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 10) || 'SCH';
+            ecole = await prisma.ecoles.create({ data: { nom: nom_tenant || 'School', code, systeme_notation: 'sur_20' }, select: { id: true } });
+        }
+        await prisma.utilisateurs.create({
+            data: { email, mot_de_passe: hashedPassword, role: 'admin_ecole' },
         });
 
-        res.status(201).json({
-            message: 'Super Admin créé avec succès.',
-            tenant: result.newTenant
-        });
+        res.status(201).json({ message: 'Administrateur créé avec succès.' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Erreur lors de la configuration initiale.' });
@@ -168,7 +105,6 @@ export const login = async (req: Request, res: Response) => {
 
         const utilisateur = await prisma.utilisateurs.findFirst({
             where: { email },
-            include: { tenant: true },
         });
 
         if (!utilisateur || !utilisateur.est_actif) {
@@ -190,10 +126,12 @@ export const login = async (req: Request, res: Response) => {
             data: { derniere_connexion: new Date() },
         });
 
-        // Générer le token JWT
+        // Mono-école : l'unique établissement. On expose son id (champ tenant_id
+        // conservé côté client pour compat) + son nom pour l'affichage.
+        const ecole = await prisma.ecoles.findFirst({ select: { id: true, nom: true } });
+
         const payload = {
             id: utilisateur.id,
-            tenant_id: utilisateur.tenant_id,
             role: utilisateur.role,
             email: utilisateur.email,
         };
@@ -207,8 +145,8 @@ export const login = async (req: Request, res: Response) => {
                 id: utilisateur.id,
                 email: utilisateur.email,
                 role: utilisateur.role,
-                tenant_id: utilisateur.tenant_id,
-                tenant_name: utilisateur.tenant.nom,
+                tenant_id: ecole?.id ?? null,
+                tenant_name: ecole?.nom ?? 'School',
             },
         });
     } catch (error) {

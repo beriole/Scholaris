@@ -32,9 +32,7 @@ const LoginPage = () => {
     // Redirige dès que isAuthenticated passe à true (après setToken asynchrone)
     React.useEffect(() => {
         if (isAuthenticated && user) {
-            const dest = user.role === 'super_admin' ? '/dashboard'
-                       : user.role === 'enseignant'  ? '/prof'
-                       : '/ecole-dashboard';
+            const dest = user.role === 'enseignant' ? '/prof' : '/ecole-dashboard';
             navigate(dest, { replace: true });
         }
     }, [isAuthenticated, user]);
@@ -55,8 +53,7 @@ const LoginPage = () => {
             // La navigation se fait via le useEffect ci-dessus.
             // Fallback direct si React Router ne répond pas (bug extension navigateur).
             setTimeout(() => {
-                if (userData.role === 'super_admin') window.location.href = '/dashboard';
-                else if (userData.role === 'enseignant') window.location.href = '/prof';
+                if (userData.role === 'enseignant') window.location.href = '/prof';
                 else window.location.href = '/ecole-dashboard';
             }, 300);
         } catch (err: any) {
