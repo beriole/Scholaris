@@ -43,3 +43,11 @@ Thumbs.db
 
 # Bulletin officiel scanne (PII eleve) - ne pas versionner
 Reports card.pdf
+
+# Exports PDF generes (contiennent des donnees eleves - PII) - ne pas versionner
+report_card*.pdf
+report_cards*.pdf
+student_card*.pdf
+student_cards*.pdf
+timetable_*.pdf
+frontend/*.pdf

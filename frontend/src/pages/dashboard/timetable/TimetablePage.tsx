@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Clock, Plus, Trash2, Loader2, X, ChevronDown,
-    Edit2, AlertCircle, Building2,
+    Edit2, AlertCircle, Building2, Download,
 } from 'lucide-react';
 import api from '../../../lib/api';
+import { downloadClassTimetable } from '../../../lib/timetablePdf';
 import { useAuth } from '../../../context/AuthContext';
 import { useI18n } from '../../../i18n/i18n';
 
@@ -68,6 +69,8 @@ export default function TimetablePage() {
     const [selectedClass, setSelectedClass] = useState('');
     const [slots,         setSlots]         = useState<Slot[]>([]);
     const [loading,       setLoading]       = useState(false);
+    const [school,        setSchool]        = useState<{ nom: string; logo_url?: string | null; devise?: string | null }>({ nom: 'Green Hills Academy High School' });
+    const [ttDownloading, setTtDownloading] = useState(false);
 
     // Modale ajout
     const [showModal,   setShowModal]   = useState(false);
@@ -130,6 +133,27 @@ export default function TimetablePage() {
             .catch(() => setSlots([]))
             .finally(() => setLoading(false));
     }, [selectedClass, selectedYear]);
+
+    useEffect(() => {
+        api.get('/api/settings/school')
+            .then(r => setSchool({ nom: r.data.ecole?.nom ?? 'Green Hills Academy High School', logo_url: r.data.ecole?.logo_url ?? null, devise: r.data.ecole?.devise ?? null }))
+            .catch(() => {});
+    }, []);
+
+    const handleDownloadTimetable = async () => {
+        if (!selectedClass || !slots.length) return;
+        setTtDownloading(true);
+        try {
+            const cls = classes.find(c => c.id === selectedClass);
+            const yr = years.find(y => y.id === selectedYear);
+            await downloadClassTimetable(slots as any, {
+                school,
+                classeName: cls?.nom ?? 'Class',
+                anneeLabel: yr?.libelle ?? '',
+            });
+        } catch (e) { console.error(e); }
+        finally { setTtDownloading(false); }
+    };
 
     // ── Couleurs matière ──────────────────────────────────────────────────────
 
@@ -250,6 +274,10 @@ export default function TimetablePage() {
                     <button onClick={() => setShowSalleModal(true)}
                         className="flex items-center gap-2 px-3 py-2 border border-slate-200 text-slate-600 rounded-xl text-sm hover:bg-slate-50 font-medium">
                         <Building2 size={15} /> {t('Salles')}
+                    </button>
+                    <button onClick={handleDownloadTimetable} disabled={!selectedClass || slots.length === 0 || ttDownloading}
+                        className="flex items-center gap-2 px-3 py-2 border border-slate-200 text-slate-700 rounded-xl text-sm hover:bg-slate-50 font-medium disabled:opacity-50">
+                        {ttDownloading ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />} {t('Télécharger le PDF')}
                     </button>
                     <button onClick={openCreate} disabled={!selectedClass}
                         className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm hover:bg-emerald-700 font-medium disabled:opacity-50">

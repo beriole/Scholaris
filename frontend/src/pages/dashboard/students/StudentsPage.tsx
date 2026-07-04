@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, Plus, Search, X, Loader2, ChevronDown,
-    GraduationCap, AlertCircle, UserX, MoreHorizontal, Upload, User, Download
+    GraduationCap, AlertCircle, UserX, MoreHorizontal, Upload, User, Download, CreditCard
 } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
 import { uploadImageFile } from '../../../lib/uploadImage';
 import { downloadClassRoster } from '../../../lib/classPdf';
+import { downloadStudentCard, downloadClassCards, type CardStudent, type CardContext } from '../../../lib/studentCardPdf';
 import { useI18n } from '../../../i18n/i18n';
 
 interface Student {
@@ -60,6 +61,7 @@ const StudentsPage = () => {
     const [photoUploading, setPhotoUploading] = useState(false);
     const [school, setSchool] = useState<{ nom: string; logo_url?: string | null; ville?: string | null; telephone?: string | null }>({ nom: 'Mon Établissement' });
     const [downloading, setDownloading] = useState(false);
+    const [cardsLoading, setCardsLoading] = useState(false);
 
     const handlePhotoFile = async (file?: File) => {
         if (!file) return;
@@ -125,6 +127,34 @@ const StudentsPage = () => {
             );
         } catch (e) { console.error(e); }
         finally { setDownloading(false); }
+    };
+
+    const cardCtx = (): CardContext => ({
+        school: { nom: school.nom, logo_url: school.logo_url, ville: school.ville, telephone: school.telephone },
+        anneeLabel: activeYear?.libelle ?? '',
+    });
+    const toCard = (s: Student): CardStudent => ({
+        matricule: s.matricule, nom: s.nom, prenom: s.prenom, sexe: s.sexe,
+        date_naissance: s.date_naissance, photo_url: s.photo_url,
+        numero_admission: s.numero_admission,
+        classe: s.inscriptions[0]?.classe?.nom, niveau: s.inscriptions[0]?.classe?.niveau,
+    });
+
+    const handleDownloadCards = async () => {
+        if (!displayed.length) return;
+        setCardsLoading(true);
+        try {
+            const classeName = filterClasse
+                ? (classes.find(c => c.id === filterClasse)?.nom ?? 'Class')
+                : 'All-Students';
+            await downloadClassCards(displayed.map(toCard), cardCtx(), classeName);
+        } catch (e) { console.error(e); }
+        finally { setCardsLoading(false); }
+    };
+
+    const handleDownloadOneCard = async (s: Student) => {
+        try { await downloadStudentCard(toCard(s), cardCtx()); }
+        catch (e) { console.error(e); }
     };
 
     const handleYearChange = async (yearId: string) => {
@@ -221,6 +251,14 @@ const StudentsPage = () => {
                     </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                    <button
+                        onClick={handleDownloadCards}
+                        disabled={cardsLoading || displayed.length === 0}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-50 transition-all shadow-sm disabled:opacity-50"
+                    >
+                        {cardsLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                        {t('Cartes de la classe')}
+                    </button>
                     <button
                         onClick={handleDownloadRoster}
                         disabled={downloading || displayed.length === 0}
@@ -353,6 +391,13 @@ const StudentsPage = () => {
                                             </td>
                                             <td className="px-5 py-3.5 text-right">
                                                 <div className="flex items-center justify-end gap-1">
+                                                    <button
+                                                        onClick={() => handleDownloadOneCard(s)}
+                                                        title={t('Carte d\'étudiant')}
+                                                        className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                                    >
+                                                        <CreditCard className="w-3.5 h-3.5" />
+                                                    </button>
                                                     <button
                                                         onClick={() => openEdit(s)}
                                                         className="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all"
