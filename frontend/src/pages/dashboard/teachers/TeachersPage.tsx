@@ -274,16 +274,18 @@ const TeachersPage = () => {
                             exit={{ opacity: 0, scale: 0.97 }}
                             className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
                         >
-                            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
-                                        <GraduationCap className="w-4 h-4 text-blue-600" />
+                            <div className="relative flex items-center justify-between px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-800 overflow-hidden">
+                                <div className="absolute -right-6 -top-8 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+                                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-amber-300 to-amber-500" />
+                                <div className="relative z-10 flex items-center gap-3">
+                                    <div className="w-9 h-9 bg-white/15 border border-white/20 rounded-xl flex items-center justify-center">
+                                        <GraduationCap className="w-4 h-4 text-white" />
                                     </div>
-                                    <h3 className="text-base font-bold text-slate-900">
+                                    <h3 className="text-base font-bold text-white">
                                         {editTarget ? t('Modifier l\'enseignant') : t('Nouvel enseignant')}
                                     </h3>
                                 </div>
-                                <button onClick={() => setIsModalOpen(false)} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-all">
+                                <button onClick={() => setIsModalOpen(false)} className="relative z-10 p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all">
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>

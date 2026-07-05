@@ -102,7 +102,12 @@ const SchoolYearManager = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             className="bg-white p-10 rounded-[2.5rem] w-full max-w-md shadow-2xl"
                         >
-                            <h2 className="text-2xl font-black text-slate-900 mb-6">{t('Ajouter une année')}</h2>
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-sm shadow-emerald-600/25">
+                                    <Calendar className="w-5 h-5 text-white" />
+                                </div>
+                                <h2 className="text-2xl font-black text-slate-900">{t('Ajouter une année')}</h2>
+                            </div>
                             <div className="space-y-4">
                                 <input
                                     className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-emerald-500 font-bold"

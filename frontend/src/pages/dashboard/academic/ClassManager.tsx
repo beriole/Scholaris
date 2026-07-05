@@ -158,7 +158,12 @@ const ClassManager = () => {
                             className="bg-white p-10 rounded-[3rem] w-full max-w-lg shadow-2xl overflow-hidden"
                         >
                             <div className="flex justify-between items-center mb-8">
-                                <h2 className="text-2xl font-black text-slate-900 leading-tight">{t('Ajouter une classe')}</h2>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-sm shadow-emerald-600/25">
+                                        <Layers className="w-5 h-5 text-white" />
+                                    </div>
+                                    <h2 className="text-2xl font-black text-slate-900 leading-tight">{t('Ajouter une classe')}</h2>
+                                </div>
                                 <button type="button" onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X /></button>
                             </div>
 

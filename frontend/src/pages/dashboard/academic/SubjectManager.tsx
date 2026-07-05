@@ -330,8 +330,13 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
                 className="bg-white p-8 rounded-[2rem] w-full max-w-md shadow-2xl">
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-black text-slate-900">{title}</h2>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-sm shadow-emerald-600/25">
+                            <Layers size={17} className="text-white" />
+                        </div>
+                        <h2 className="text-xl font-black text-slate-900">{title}</h2>
+                    </div>
+                    <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all">
                         <X size={18} />
                     </button>
                 </div>

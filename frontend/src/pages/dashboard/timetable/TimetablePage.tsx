@@ -390,11 +390,16 @@ export default function TimetablePage() {
                         className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                         <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                             className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-bold text-slate-800">
-                                    {editSlot ? t('Modifier le créneau') : t('Nouveau créneau')}
-                                </h2>
-                                <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
+                            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-sm shadow-emerald-600/20">
+                                        <Clock size={16} className="text-white" />
+                                    </div>
+                                    <h2 className="text-lg font-bold text-slate-900">
+                                        {editSlot ? t('Modifier le créneau') : t('Nouveau créneau')}
+                                    </h2>
+                                </div>
+                                <button onClick={() => setShowModal(false)} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all">
                                     <X size={18} />
                                 </button>
                             </div>
@@ -452,9 +457,14 @@ export default function TimetablePage() {
                         className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                         <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                             className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-bold text-slate-800">{t('Gestion des salles')}</h2>
-                                <button onClick={() => setShowSalleModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={18} /></button>
+                            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-sm shadow-emerald-600/20">
+                                        <Building2 size={16} className="text-white" />
+                                    </div>
+                                    <h2 className="text-lg font-bold text-slate-900">{t('Gestion des salles')}</h2>
+                                </div>
+                                <button onClick={() => setShowSalleModal(false)} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-all"><X size={18} /></button>
                             </div>
 
                             {/* Liste existante */}
