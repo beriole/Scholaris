@@ -17,52 +17,76 @@ export interface SheetBulletin {
 
 const N = (n: any) => Number(n) || 0;
 const f2 = (n: any) => N(n).toFixed(2);
-const fmtDate = (d?: string | null) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
+const fmtDate = (d?: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 const sexeLbl = (s?: string | null) => s === 'F' ? 'F' : s === 'M' ? 'M' : '—';
 const rgbFor = (a: number): [number, number, number] =>
     a >= 14 ? [4, 120, 87] : a >= 10 ? [37, 99, 235] : [220, 38, 38];
 
-// En-tête commun (bilingue + établissement + bandeau titre). Renvoie le y courant.
-function drawHeader(doc: any, W: number, M: number, school: SchoolInfo, logo: any, title: string, subtitle: string): number {
-    const lx = M, rx = W - M;
-    let y = M + 4;
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(15, 23, 42);
-    doc.text('RÉPUBLIQUE DU CAMEROUN', lx, y);
-    doc.text('REPUBLIC OF CAMEROON', rx, y, { align: 'right' });
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(90, 100, 115);
-    doc.text('Paix — Travail — Patrie', lx, y + 3.6);
-    doc.text('Peace — Work — Fatherland', rx, y + 3.6, { align: 'right' });
-    doc.text('MINESEC', lx, y + 7.2);
-    doc.text('MINSEC', rx, y + 7.2, { align: 'right' });
+// Charte GHAHS
+const GREEN: [number, number, number] = [6, 95, 70];
+const GREEN_DK: [number, number, number] = [4, 66, 48];
+const GOLD: [number, number, number] = [176, 141, 63];
+const IVORY: [number, number, number] = [250, 250, 246];
 
+function vGradient(doc: any, x: number, y: number, w: number, h: number, c1: number[], c2: number[]) {
+    const steps = 24;
+    for (let i = 0; i < steps; i++) {
+        const t = i / (steps - 1);
+        doc.setFillColor(Math.round(c1[0] + (c2[0] - c1[0]) * t), Math.round(c1[1] + (c2[1] - c1[1]) * t), Math.round(c1[2] + (c2[2] - c1[2]) * t));
+        doc.rect(x, y + (h / steps) * i, w, h / steps + 0.3, 'F');
+    }
+}
+
+function medallion(doc: any, cx: number, cy: number, r: number, logo: any, initials: string) {
+    doc.setFillColor(GOLD[0], GOLD[1], GOLD[2]); doc.circle(cx, cy, r, 'F');
+    doc.setFillColor(IVORY[0], IVORY[1], IVORY[2]); doc.circle(cx, cy, r - 0.9, 'F');
     if (logo) {
-        const h = 15, w = Math.min(16, (logo.w / logo.h) * h);
-        try { doc.addImage(logo.data, logo.fmt, W / 2 - w / 2, y - 2, w, h); } catch { /* ignore */ }
+        const h = (r - 1.6) * 2, w = Math.min(h, (logo.w / logo.h) * h);
+        try { doc.addImage(logo.data, logo.fmt, cx - w / 2, cy - h / 2, w, h); } catch { /* ignore */ }
+    } else {
+        doc.setFont('times', 'bold'); doc.setFontSize(r * 1.05); doc.setTextColor(GREEN[0], GREEN[1], GREEN[2]);
+        doc.text(initials, cx, cy + r * 0.4, { align: 'center' });
     }
-    y += 15;
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(4, 120, 87);
-    doc.text(school.nom.toUpperCase(), W / 2, y, { align: 'center' });
-    y += 4.4;
-    const sub = [school.ville, school.telephone].filter(Boolean).join('  •  ');
-    if (sub) {
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(90, 100, 115);
-        doc.text(sub, W / 2, y, { align: 'center' }); y += 3.6;
-    }
-    // Bandeau titre
-    y += 1.5;
-    doc.setFillColor(6, 95, 70); doc.rect(lx, y, rx - lx, 8, 'F');
-    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
-    doc.text(title.toUpperCase(), W / 2, y + 5.4, { align: 'center' });
-    if (subtitle) {
-        doc.setFontSize(7.5); doc.setFont('helvetica', 'normal');
-        doc.text(subtitle, rx - 2, y + 5.4, { align: 'right' });
-    }
-    return y + 8;
+}
+
+// En-tête commun premium (bandeau dégradé émeraude + médaillon doré + liseré). Renvoie le y courant.
+function drawHeader(doc: any, W: number, M: number, school: SchoolInfo, logo: any, title: string, subtitle: string): number {
+    const bandH = 24;
+    vGradient(doc, 0, 0, W, bandH, GREEN_DK, [10, 120, 88]);
+    doc.setFillColor(GREEN_DK[0], GREEN_DK[1], GREEN_DK[2]);
+    doc.triangle(W, 0, W, bandH, W - 55, bandH, 'F');
+    doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2]); doc.setLineWidth(0.8); doc.line(0, bandH, W, bandH);
+
+    const initials = school.nom.split(/\s+/).filter(Boolean).slice(0, 3).map(s => s[0]?.toUpperCase() ?? '').join('') || 'GH';
+    const mcx = M + 9, mcy = bandH / 2;
+    medallion(doc, mcx, mcy, 8, logo, initials);
+
+    const hx = mcx + 13;
+    doc.setTextColor(255, 255, 255); doc.setFont('times', 'bold'); doc.setFontSize(13);
+    doc.text(school.nom.toUpperCase(), hx, 10);
+    doc.setFont('times', 'normal'); doc.setFontSize(7.5); doc.setTextColor(200, 228, 216);
+    doc.text('Republic of Cameroon · Ministry of Secondary Education', hx, 15.4);
+    const sub = [school.ville, school.telephone].filter(Boolean).join('  ·  ');
+    if (sub) doc.text(sub, hx, 19.6);
+
+    // drapeau + titre à droite
+    const fbw = 2.4, fbh = 3.4, fb = W - M - 3 * fbw, fbt = 3;
+    doc.setFillColor(16, 122, 74); doc.rect(fb, fbt, fbw, fbh, 'F');
+    doc.setFillColor(206, 32, 42); doc.rect(fb + fbw, fbt, fbw, fbh, 'F');
+    doc.setFillColor(244, 196, 48); doc.rect(fb + 2 * fbw, fbt, fbw, fbh, 'F');
+    doc.setFont('times', 'bold'); doc.setFontSize(12); doc.setTextColor(255, 255, 255);
+    doc.text(title.toUpperCase(), W - M, 14, { align: 'right' });
+    if (subtitle) { doc.setFont('times', 'normal'); doc.setFontSize(8); doc.setTextColor(200, 228, 216); doc.text(subtitle, W - M, 19.5, { align: 'right' }); }
+
+    return bandH + 6;
 }
 
 function footer(doc: any, W: number, H: number, M: number, label = 'Green Hills Academy High School') {
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(150, 160, 175);
-    doc.text(`${label} — ${new Date().toLocaleDateString('en-GB')}`, W / 2, H - M + 2, { align: 'center' });
+    doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2]); doc.setLineWidth(0.3); doc.line(M, H - M + 0.5, W - M, H - M + 0.5);
+    doc.setFont('times', 'italic'); doc.setFontSize(6.5); doc.setTextColor(120, 130, 145);
+    doc.text(`${label} · Solid Foundation — Discipline — Success`, M, H - M + 4);
+    doc.setFont('times', 'normal'); doc.setTextColor(150, 160, 175);
+    doc.text(`Generated ${new Date().toLocaleDateString('en-GB')}`, W - M, H - M + 4, { align: 'right' });
 }
 
 // ── 1. Liste des élèves (portrait A4) ─────────────────────────────────────────
@@ -82,7 +106,8 @@ export async function downloadClassRoster(students: RosterStudent[], school: Sch
     const tblX = M, tblW = W - 2 * M, rowH = 7;
 
     const drawTableHeader = (y: number): number => {
-        doc.setFillColor(6, 95, 70); doc.rect(tblX, y, tblW, rowH, 'F');
+        doc.setFillColor(GREEN[0], GREEN[1], GREEN[2]); doc.rect(tblX, y, tblW, rowH, 'F');
+        doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2]); doc.setLineWidth(0.3); doc.line(tblX, y + rowH, tblX + tblW, y + rowH);
         doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
         cols.forEach(c => doc.text(c.t, c.a === 'center' ? c.x + c.w / 2 : c.x + 2, y + 4.7, { align: c.a === 'center' ? 'center' : 'left' }));
         return y + rowH;
@@ -146,7 +171,8 @@ export async function downloadGradeSheet(bulletins: SheetBulletin[], school: Sch
     const rowH = 6.5;
 
     const drawTableHeader = (y: number): number => {
-        doc.setFillColor(6, 95, 70); doc.rect(tblX, y, tblW, rowH + 2, 'F');
+        doc.setFillColor(GREEN[0], GREEN[1], GREEN[2]); doc.rect(tblX, y, tblW, rowH + 2, 'F');
+        doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2]); doc.setLineWidth(0.3); doc.line(tblX, y + rowH + 2, tblX + tblW, y + rowH + 2);
         doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(7);
         doc.text('No', xNum + wNum / 2, y + 5, { align: 'center' });
         doc.text('Reg. No', xMat + 2, y + 5);
