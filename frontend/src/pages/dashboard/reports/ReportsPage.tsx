@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
+import SectionBanner from '../../../components/SectionBanner';
 import { useI18n } from '../../../i18n/i18n';
 
 interface Year    { id: string; libelle: string; est_active: boolean; }
@@ -92,10 +93,9 @@ export default function ReportsPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold text-slate-800">{t('Rapports & Statistiques')}</h1>
-                <p className="text-slate-500 text-sm mt-1">{t('Analyse des performances académiques, présences et finances')}</p>
-            </div>
+            <SectionBanner icon={<TrendingUp className="w-6 h-6" />}
+                title={t('Rapports & Statistiques')}
+                subtitle={t('Analyse des performances académiques, présences et finances')} />
 
             {/* Onglets */}
             <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit">

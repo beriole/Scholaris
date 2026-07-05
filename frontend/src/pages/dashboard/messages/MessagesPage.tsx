@@ -5,6 +5,7 @@ import {
     ChevronDown, AlertCircle, Search, Clock,
 } from 'lucide-react';
 import api from '../../../lib/api';
+import SectionBanner from '../../../components/SectionBanner';
 import { useI18n } from '../../../i18n/i18n';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -162,16 +163,15 @@ export default function MessagesPage() {
     return (
         <div className="h-[calc(100vh-8rem)] flex flex-col gap-4">
             {/* En-tête */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-800">{t('Messagerie')}</h1>
-                    <p className="text-sm text-slate-500 mt-0.5">{t('Communication interne')}</p>
-                </div>
-                <button onClick={() => { setShowCompose(true); setSendErr(''); }}
-                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700">
-                    <Plus size={15} /> {t('Nouveau message')}
-                </button>
-            </div>
+            <SectionBanner icon={<Send className="w-6 h-6" />}
+                title={t('Messagerie')}
+                subtitle={t('Communication interne')}
+                right={
+                    <button onClick={() => { setShowCompose(true); setSendErr(''); }}
+                        className="flex items-center gap-2 px-4 py-2 bg-white text-emerald-700 text-sm font-bold rounded-xl hover:bg-emerald-50 transition-colors shadow-sm">
+                        <Plus size={15} /> {t('Nouveau message')}
+                    </button>
+                } />
 
             <div className="flex flex-1 min-h-0 gap-4">
                 {/* Panneau gauche */}

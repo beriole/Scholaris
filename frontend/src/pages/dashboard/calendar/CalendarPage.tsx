@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
+import SectionBanner from '../../../components/SectionBanner';
 import { useI18n } from '../../../i18n/i18n';
 
 interface Year  { id: string; libelle: string; est_active: boolean; }
@@ -127,22 +128,19 @@ export default function CalendarPage() {
 
     return (
         <div className="space-y-5">
-            <div className="flex items-center justify-between flex-wrap gap-3">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-800">{t('Calendrier scolaire')}</h1>
-                    <p className="text-slate-500 text-sm mt-1">{t('Jours fériés, vacances, examens et événements')}</p>
-                </div>
-                <div className="flex items-center gap-2">
+            <SectionBanner icon={<CalendarDays className="w-6 h-6" />}
+                title={t('Calendrier scolaire')}
+                subtitle={t('Jours fériés, vacances, examens et événements')}
+                right={
                     <div className="relative">
                         <select value={selYear} onChange={e => setSelYear(e.target.value)}
-                            className="appearance-none border border-slate-200 rounded-lg px-3 py-2 pr-7 text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                            className="appearance-none bg-white/15 border border-white/25 text-white rounded-lg px-3 py-2 pr-7 text-sm font-semibold outline-none focus:bg-white/25 [&>option]:text-slate-800">
                             <option value="">{t('-- Année --')}</option>
                             {years.map(y => <option key={y.id} value={y.id}>{y.libelle}</option>)}
                         </select>
-                        <ChevronRight size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none rotate-90" />
+                        <ChevronRight size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/70 pointer-events-none rotate-90" />
                     </div>
-                </div>
-            </div>
+                } />
 
             {/* Légende */}
             <div className="flex flex-wrap gap-2">
