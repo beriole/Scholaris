@@ -3,7 +3,7 @@ import { Printer, Download, Loader2, CheckCircle2 } from 'lucide-react';
 import api from '../../../lib/api';
 
 interface SchoolInfo {
-    logo_url?: string | null; ville?: string | null; telephone?: string | null;
+    nom?: string | null; logo_url?: string | null; ville?: string | null; telephone?: string | null;
     email?: string | null; boite_postale?: string | null; devise?: string | null;
     numero_contribuable?: string | null;
 }
@@ -214,6 +214,20 @@ function renderReceipt(doc: any, recu: RecuData, school: SchoolInfo, logo: any) 
     if (contact) { doc.setFont('helvetica', 'normal'); doc.setFontSize(6.6); doc.setTextColor(215, 233, 225); doc.text(contact, W / 2, H - 9, { align: 'center' }); }
     doc.setFont('times', 'italic'); doc.setFontSize(6); doc.setTextColor(167, 205, 191);
     doc.text(`${recu.ecole} · Keep this document as proof of payment.`, W / 2, H - 4.5, { align: 'center' });
+}
+
+// Télécharge un reçu (jsPDF vectoriel) — utilisable hors composant, pour un
+// paiement déjà enregistré. Récupère les infos école pour l'en-tête/pied.
+export async function downloadReceipt(recu: RecuData) {
+    const { default: jsPDF } = await import('jspdf');
+    const { loadImg } = await import('../../../lib/bulletinPdf');
+    let school: SchoolInfo = {};
+    try { const r = await api.get('/api/settings/school'); school = r.data.ecole ?? {}; } catch { /* ignore */ }
+    const data: RecuData = { ...recu, ecole: recu.ecole || (school.nom ?? 'Green Hills Academy') };
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a5' });
+    const logo = await loadImg(school.logo_url);
+    renderReceipt(doc, data, school, logo);
+    doc.save(`recu_${data.numero_recu}_${data.eleve.nom}.pdf`.replace(/\s+/g, '_'));
 }
 
 export default function ReceiptPDF({ recu }: { recu: RecuData }) {

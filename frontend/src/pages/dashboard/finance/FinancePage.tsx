@@ -3,12 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     CreditCard, TrendingUp, AlertCircle, CheckCircle2,
     Plus, Trash2, Loader2, X, Search, Users,
-    Clock, Banknote,
+    Clock, Banknote, Download,
 } from 'lucide-react';
 import api from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
 import { useI18n } from '../../../i18n/i18n';
-import ReceiptPDF, { type RecuData } from './ReceiptPDF';
+import ReceiptPDF, { downloadReceipt, type RecuData } from './ReceiptPDF';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -58,6 +58,36 @@ const FinancePage = () => {
     const [filterStatut, setFilterStatut] = useState('');
     const [payTarget, setPayTarget] = useState<EleveRow | null>(null);
     const [trancheModal, setTrancheModal] = useState(false);
+    const [dlRecuId, setDlRecuId] = useState<string | null>(null);
+
+    // Télécharge le reçu du dernier paiement d'un élève (paiement déjà enregistré).
+    const handleDownloadReceipt = async (r: EleveRow) => {
+        setDlRecuId(r.inscription_id);
+        try {
+            const res = await api.get(`/api/finance/payments/student/${r.inscription_id}`);
+            const ps = (res.data as any[]) ?? [];
+            if (!ps.length) return;
+            const p = ps[0]; // le plus récent
+            const total = Number(p.montant_total_xaf) || (r as any).total_du || 0;
+            const solde = Number(p.solde_restant_xaf) || 0;
+            const recu: RecuData = {
+                numero_recu:   p.numero_recu,
+                date_paiement: p.date_paiement,
+                montant_xaf:   Number(p.montant_xaf) || 0,
+                montant_total: total,
+                deja_paye:     Math.max(0, total - solde),
+                solde_restant: solde,
+                methode:       p.methode_paiement,
+                reference:     p.reference ?? null,
+                ecole:         '',
+                eleve:         { nom: r.eleve.nom, prenom: r.eleve.prenom, matricule: r.eleve.matricule },
+                classe:        classes.find(c => c.id === selClasse)?.nom ?? '',
+                encaisse_par:  p.genere_par ?? '',
+            };
+            await downloadReceipt(recu);
+        } catch (e) { console.error(e); }
+        finally { setDlRecuId(null); }
+    };
 
     // Init
     useEffect(() => {
@@ -303,12 +333,25 @@ const FinancePage = () => {
                                                     ) : <span className="text-slate-300 text-xs">—</span>}
                                                 </td>
                                                 <td className="px-4 py-3.5 text-right">
-                                                    <button
-                                                        onClick={() => setPayTarget(r)}
-                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all"
-                                                    >
-                                                        <Plus className="w-3 h-3" /> {t('Paiement')}
-                                                    </button>
+                                                    <div className="inline-flex items-center gap-1.5">
+                                                        {r.dernier_paiement && (
+                                                            <button
+                                                                onClick={() => handleDownloadReceipt(r)}
+                                                                disabled={dlRecuId === r.inscription_id}
+                                                                title={t('Télécharger le reçu')}
+                                                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 rounded-lg transition-all disabled:opacity-60"
+                                                            >
+                                                                {dlRecuId === r.inscription_id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
+                                                                {t('Reçu')}
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => setPayTarget(r)}
+                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all"
+                                                        >
+                                                            <Plus className="w-3 h-3" /> {t('Paiement')}
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </motion.tr>
                                         ))}
