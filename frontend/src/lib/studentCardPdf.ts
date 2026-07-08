@@ -35,18 +35,6 @@ const DARK: [number, number, number] = [17, 24, 39];
 const GREY: [number, number, number] = [100, 110, 122];
 const IVORY: [number, number, number] = [250, 250, 246];
 
-// Petite étoile pleine.
-function star(doc: any, cx: number, cy: number, r: number, color: number[]) {
-    const pts: [number, number][] = [];
-    for (let i = 0; i < 10; i++) {
-        const ang = -Math.PI / 2 + (i * Math.PI) / 5;
-        const rad = i % 2 ? r * 0.42 : r;
-        pts.push([cx + rad * Math.cos(ang), cy + rad * Math.sin(ang)]);
-    }
-    const rel = pts.slice(1).map((p, i) => [p[0] - pts[i][0], p[1] - pts[i][1]]);
-    doc.setFillColor(color[0], color[1], color[2]);
-    doc.lines(rel, pts[0][0], pts[0][1], [1, 1], 'F', true);
-}
 
 const fmtDate = (d?: string | null) =>
     d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -98,16 +86,6 @@ function silhouette(doc: any, cx: number, cy: number, s: number) {
     doc.setFillColor(198, 208, 216);
     doc.circle(cx, cy - s * 0.55, s * 0.42, 'F');                                  // tête
     doc.ellipse(cx, cy + s * 0.75, s * 0.85, s * 0.6, 'F');                        // épaules
-}
-
-// Sceau doré « OFFICIAL » (anneaux + étoiles + texte).
-function seal(doc: any, cx: number, cy: number, r: number) {
-    doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2]); doc.setLineWidth(0.5); doc.circle(cx, cy, r, 'S');
-    doc.setLineWidth(0.25); doc.circle(cx, cy, r - 1.2, 'S');
-    for (let k = 0; k < 12; k++) { const a = (k / 12) * Math.PI * 2; star(doc, cx + (r - 0.6) * Math.cos(a), cy + (r - 0.6) * Math.sin(a), 0.5, GOLD); }
-    doc.setFont('times', 'bold'); doc.setFontSize(3.2); doc.setTextColor(GOLD[0], GOLD[1], GOLD[2]);
-    doc.text('OFFICIAL', cx, cy - 0.4, { align: 'center' });
-    doc.setFontSize(2.6); doc.text('GHAHS', cx, cy + 2, { align: 'center' });
 }
 
 // Dessine UNE carte (recto unique) dans le rectangle (X,Y,w,h). Exporté pour test/réutilisation.
@@ -174,13 +152,20 @@ export function drawCard(doc: any, X: number, Y: number, w: number, h: number, s
     doc.setFillColor(206, 32, 42); doc.rect(fb + fbw, fbt, fbw, fbh, 'F');
     doc.setFillColor(244, 196, 48); doc.rect(fb + 2 * fbw, fbt, fbw, fbh, 'F');
 
-    // nom école (serif) + sous-titre
-    doc.setFont('times', 'bold'); doc.setFontSize(8.4); doc.setTextColor(GREEN[0], GREEN[1], GREEN[2]);
-    const sName = doc.splitTextToSize(school.nom.toUpperCase(), (rRight - rx) - 10);
+    // nom école (serif) — taille ajustée pour tenir en 2 lignes (jamais tronqué)
+    let sFs = 8.6, sName: string[] = [];
+    doc.setFont('times', 'bold');
+    for (; sFs >= 5.6; sFs -= 0.3) {
+        doc.setFontSize(sFs);
+        sName = doc.splitTextToSize(school.nom.toUpperCase(), (rRight - rx) - 8);
+        if (sName.length <= 2) break;
+    }
+    doc.setFontSize(sFs); doc.setTextColor(GREEN[0], GREEN[1], GREEN[2]);
     doc.text(sName.slice(0, 2), rx, Y + 5.2);
+    const twoLines = sName.length > 1;
     doc.setFont('helvetica', 'bold'); doc.setFontSize(5.2); doc.setTextColor(GOLD[0], GOLD[1], GOLD[2]);
-    doc.text('STUDENT IDENTITY CARD', rx, Y + (sName.length > 1 ? 12.4 : 8.8), { charSpace: 0.4 });
-    const ruleY = Y + (sName.length > 1 ? 14 : 10.4);
+    doc.text('STUDENT IDENTITY CARD', rx, Y + (twoLines ? 12.4 : 8.8), { charSpace: 0.4 });
+    const ruleY = Y + (twoLines ? 14 : 10.4);
     doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2]); doc.setLineWidth(0.5); doc.line(rx, ruleY, rRight, ruleY);
     doc.setDrawColor(GOLD_LT[0], GOLD_LT[1], GOLD_LT[2]); doc.setLineWidth(0.2); doc.line(rx, ruleY + 0.7, rRight, ruleY + 0.7);
 
@@ -207,19 +192,14 @@ export function drawCard(doc: any, X: number, Y: number, w: number, h: number, s
     field(rx, gTop + 2 * rowH, 'Place of Birth', st.lieu_naissance ?? '—');
     field(rx + colGap, gTop + 2 * rowH, 'Nationality', st.nationalite ?? '—');
 
-    // ── Pied droite : code-barres + année/validité + sceau + signature ───
+    // ── Pied : code-barres + année/validité ──────────────────────────────
     const footY = Y + h - 9;
     doc.setDrawColor(228, 233, 238); doc.setLineWidth(0.2); doc.line(rx, footY - 1.4, rRight, footY - 1.4);
-    barcode(doc, rx, footY, 28, 4, st.matricule + (st.numero_admission ?? ''));
+    barcode(doc, rx, footY, 30, 4.2, st.matricule + (st.numero_admission ?? ''));
     doc.setFont('helvetica', 'bold'); doc.setFontSize(5.4); doc.setTextColor(GREEN[0], GREEN[1], GREEN[2]);
-    doc.text(`A.Y ${ctx.anneeLabel}`, rx, footY + 7.4);
+    doc.text(`A.Y ${ctx.anneeLabel}`, rx, footY + 7);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(4.8); doc.setTextColor(GREY[0], GREY[1], GREY[2]);
-    doc.text(`Valid till ${ctx.validTill ?? '31 Aug ' + (ctx.anneeLabel.split(/[-/]/)[1] || '')}`, rx + 20, footY + 7.4);
-    // sceau doré (coin bas-droit, sur la signature — usage officiel)
-    seal(doc, rRight - 9, footY + 2.4, 5);
-    doc.setDrawColor(150, 158, 168); doc.setLineWidth(0.2); doc.line(rRight - 20, footY + 6.2, rRight, footY + 6.2);
-    doc.setFont('times', 'italic'); doc.setFontSize(4.8); doc.setTextColor(GREY[0], GREY[1], GREY[2]);
-    doc.text('Principal', rRight, footY + 8.4, { align: 'right' });
+    doc.text(`·  Valid till ${ctx.validTill ?? '31 Aug ' + (ctx.anneeLabel.split(/[-/]/)[1] || '')}`, rx + 17, footY + 7);
 }
 
 // Une seule carte, centrée sur une petite page.
