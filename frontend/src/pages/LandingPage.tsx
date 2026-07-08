@@ -2,10 +2,10 @@ import { motion, useInView } from 'framer-motion';
 import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-    GraduationCap, ArrowRight, CheckCircle2, BookOpen, Award, Trophy,
+    GraduationCap, ArrowRight, CheckCircle2, BookOpen, Award, Trophy, Users,
     Building2, Baby, FlaskConical, Library, Dumbbell, Music, Palette,
     MapPin, Phone, Mail, Clock, Star, Sparkles, Quote, ChevronRight,
-    ShieldCheck, Globe, HeartHandshake, Menu, School,
+    ShieldCheck, Globe, HeartHandshake, Menu, School, Calendar, ArrowUpRight,
 } from 'lucide-react';
 import { useI18n } from '../i18n/i18n';
 import LanguageToggle from '../components/LanguageToggle';
@@ -61,11 +61,14 @@ const NAV = [
     { label: 'Programmes', href: '#programmes' },
     { label: 'Why us', href: '#why' },
     { label: 'About', href: '#about' },
+    { label: 'News', href: '#news' },
     { label: 'Contact', href: '#contact' },
 ];
 
 const LandingPage = () => {
-    const { t } = useI18n();
+    // Landing anglophone avec traduction FR locale (clé anglaise → français).
+    const { lang } = useI18n();
+    const t = (s: string) => (lang === 'fr' ? (FR[s] ?? s) : s);
     const [menuOpen, setMenuOpen] = useState(false);
 
     return (
@@ -294,6 +297,40 @@ const LandingPage = () => {
                 </div>
             </section>
 
+            {/* ── Actualités ────────────────────────────────────────────────────── */}
+            <section id="news" className="py-24 px-6">
+                <div className="max-w-7xl mx-auto">
+                    <Reveal className="flex flex-wrap items-end justify-between gap-4 mb-12">
+                        <div className="max-w-xl">
+                            <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-3">{t('Latest news')}</p>
+                            <h2 className="text-4xl font-bold text-slate-900 tracking-tight">{t('What’s happening on campus')}</h2>
+                        </div>
+                        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600">
+                            {t('View all news')} <ArrowUpRight className="w-4 h-4" />
+                        </span>
+                    </Reveal>
+                    <div className="grid md:grid-cols-3 gap-6">
+                        {NEWS.map((a, i) => (
+                            <Reveal key={i} delay={i * 0.08}>
+                                <article className="group h-full flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden hover:border-emerald-300 hover:shadow-xl hover:shadow-emerald-900/5 transition-all hover:-translate-y-1">
+                                    <div className={`relative h-36 bg-gradient-to-br ${a.grad} flex items-center justify-center`}>
+                                        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '18px 18px' }} />
+                                        <div className="relative text-white/90">{a.icon}</div>
+                                        <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/90 text-[10px] font-bold text-emerald-800 uppercase tracking-wide">{t(a.cat)}</span>
+                                    </div>
+                                    <div className="p-6 flex flex-col flex-1">
+                                        <p className="flex items-center gap-1.5 text-xs text-slate-400 mb-2"><Calendar className="w-3.5 h-3.5" /> {a.date}</p>
+                                        <h3 className="font-bold text-slate-900 leading-snug mb-2 group-hover:text-emerald-700 transition-colors">{t(a.title)}</h3>
+                                        <p className="text-slate-500 text-sm leading-relaxed flex-1">{t(a.excerpt)}</p>
+                                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 mt-4">{t('Read more')} <ChevronRight className="w-3.5 h-3.5" /></span>
+                                    </div>
+                                </article>
+                            </Reveal>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
             {/* ── Contact ───────────────────────────────────────────────────────── */}
             <section id="contact" className="py-24 px-6">
                 <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 items-stretch">
@@ -464,5 +501,113 @@ const CONTACTS = [
     { icon: <Mail className="w-5 h-5" />, label: 'Email', value: 'info@greenhills.com' },
     { icon: <Clock className="w-5 h-5" />, label: 'Office hours', value: 'Mon – Fri · 7:30 – 16:00' },
 ];
+
+const NEWS = [
+    { date: 'December 2025', cat: 'Examinations', grad: 'from-emerald-600 to-emerald-800', icon: <Award className="w-9 h-9" />,
+      title: 'Cameroon G.C.E. registration now open', excerpt: 'Registration for the 2025 Ordinary & Advanced Level examinations is ongoing at our accredited centre.' },
+    { date: 'This term', cat: 'School life', grad: 'from-teal-600 to-emerald-800', icon: <Users className="w-9 h-9" />,
+      title: 'Staff development meeting', excerpt: 'A visionary address by founder Mama Julie Kwende and Principal Mr. Tsanka Clinton Ndi set the tone for the year.' },
+    { date: 'This term', cat: 'Culture', grad: 'from-amber-600 to-orange-700', icon: <Music className="w-9 h-9" />,
+      title: 'Cultural & sports day', excerpt: 'Students celebrated talent, teamwork and heritage across a lively day of activities and performances.' },
+];
+
+// ── Traductions françaises locales (clé anglaise → français) ──────────────────
+const FR: Record<string, string> = {
+    // Nav & CTA
+    'Home': 'Accueil', 'Programmes': 'Programmes', 'Why us': 'Pourquoi nous', 'About': 'À propos',
+    'News': 'Actualités', 'Contact': 'Contact', 'Portal': 'Portail', 'Staff portal': 'Portail du personnel',
+    'Explore programmes': 'Découvrir les programmes', 'Access the school portal': 'Accéder au portail de l’école',
+    // Hero
+    'Solid Foundation · Discipline · Success': 'Solid Foundation · Discipline · Success',
+    'Where every child builds a': 'Où chaque enfant bâtit un',
+    'solid future': 'avenir solide',
+    'A bilingual English–French academy in Yaoundé — from Nursery to Sixth Form and GCE. Nurturing academic excellence, discipline and character since 2004.':
+        'Une académie bilingue anglais–français à Yaoundé — de la maternelle à la Sixth Form et au GCE. Excellence académique, discipline et caractère depuis 2004.',
+    'Cameroon GCE Centre': 'Centre GCE Cameroun', '95%+ pass rate': '95%+ de réussite', 'Bilingual learning': 'Apprentissage bilingue',
+    'Nursery · Primary · Secondary · GCE': 'Maternelle · Primaire · Secondaire · GCE',
+    'GCE pass rate': 'Taux de réussite GCE', 'Since 2004': 'Depuis 2004', '20+ years of excellence': '20+ ans d’excellence',
+    // Marquee / valeurs
+    'Excellence': 'Excellence', 'Discipline': 'Discipline', 'Integrity': 'Intégrité', 'Bilingual': 'Bilingue',
+    'Innovation': 'Innovation', 'Community': 'Communauté', 'Faith & Values': 'Foi & Valeurs',
+    // Stats
+    'Years of excellence': 'Ans d’excellence', 'Programmes & sections': 'Programmes & sections', 'Bilingual (EN·FR)': 'Bilingue (EN·FR)',
+    // Programmes
+    'Our programmes': 'Nos programmes',
+    'One journey, from first steps to graduation': 'Un parcours, des premiers pas au diplôme',
+    'A complete bilingual pathway — playful early years, strong primary foundations and a rigorous GCE-focused secondary school.':
+        'Un parcours bilingue complet — des premières années ludiques, de solides bases au primaire et un secondaire rigoureux orienté GCE.',
+    'Pre-Nursery & Nursery': 'Pré-maternelle & Maternelle',
+    'A caring, playful start (ages 2–5) that builds curiosity, confidence and early bilingual skills.':
+        'Un départ bienveillant et ludique (2–5 ans) qui développe curiosité, confiance et bilinguisme précoce.',
+    'Early years': 'Petite enfance',
+    'Primary School': 'École primaire',
+    'Strong literacy and numeracy foundations in a warm, bilingual and values-driven environment.':
+        'De solides bases en lecture et en calcul, dans un cadre chaleureux, bilingue et porté par les valeurs.',
+    'Class 1 – 6': 'Classe 1 – 6',
+    'Secondary — Grammar': 'Secondaire — Grammar',
+    'Forms 1–5 and Sixth Form, preparing students for the GCE Ordinary & Advanced Level.':
+        'Forms 1 à 5 et Sixth Form, préparant au GCE Ordinary & Advanced Level.',
+    'Form 1 – Upper Sixth': 'Form 1 – Upper Sixth',
+    'Secondary — Commercial': 'Secondaire — Commercial',
+    'A business-oriented track: Accounting, Economics and Commerce for future entrepreneurs.':
+        'Une filière commerciale : comptabilité, économie et commerce pour les futurs entrepreneurs.',
+    'Commercial series': 'Série commerciale',
+    'GCE Examination Centre': 'Centre d’examen GCE',
+    'An accredited Cameroon G.C.E. centre — candidates sit O-Level & A-Level exams on campus.':
+        'Un centre GCE agréé du Cameroun — les candidats passent les O-Level & A-Level sur le campus.',
+    'O & A Level': 'O & A Level',
+    'Yaoundé Int. Business School': 'Yaoundé Int. Business School',
+    'Higher business and professional programmes (YIBS) for post-secondary learners.':
+        'Programmes supérieurs de commerce et professionnels (YIBS) pour l’après-secondaire.',
+    'Higher education': 'Enseignement supérieur',
+    // Why
+    'Why Green Hills': 'Pourquoi Green Hills',
+    'More than a school — a community that raises leaders': 'Plus qu’une école — une communauté qui forme des leaders',
+    'Since 2004, under the vision of founder Mama Julie Kwende, Green Hills Academy Complex has combined academic rigour with moral integrity and holistic growth — helping every learner reach their full potential.':
+        'Depuis 2004, sous la vision de sa fondatrice Mama Julie Kwende, Green Hills Academy Complex allie rigueur académique, intégrité morale et épanouissement global — pour aider chaque élève à révéler tout son potentiel.',
+    'Academic excellence': 'Excellence académique',
+    'A rigorous, exam-focused curriculum with a 95%+ GCE record.': 'Un programme rigoureux, tourné vers les examens, avec 95%+ de réussite au GCE.',
+    'Discipline & integrity': 'Discipline & intégrité',
+    'Strong moral values shape confident, respectful young people.': 'De fortes valeurs morales façonnent des jeunes confiants et respectueux.',
+    'Holistic growth': 'Épanouissement global',
+    'Sports, arts and culture nurture the whole child.': 'Le sport, les arts et la culture nourrissent l’enfant dans sa globalité.',
+    // Galerie
+    'Campus': 'Campus', 'Science labs': 'Laboratoires', 'Library': 'Bibliothèque', 'Sports': 'Sports', 'Arts': 'Arts', 'Culture': 'Culture',
+    // GCE band
+    'Accredited GCE Examination Centre': 'Centre d’examen GCE agréé',
+    'A consistent 95%+ G.C.E. pass rate': 'Un taux de réussite G.C.E. constant de 95%+',
+    'Our Ordinary & Advanced Level candidates sit their exams right here on campus — supported by experienced teachers and a proven bilingual method.':
+        'Nos candidats Ordinary & Advanced Level passent leurs examens sur le campus — encadrés par des enseignants expérimentés et une méthode bilingue éprouvée.',
+    'O & A Level pass': 'Réussite O & A Level', 'Founded': 'Fondée', 'Secondary forms': 'Classes du secondaire', 'Sixth-form levels': 'Niveaux Sixth Form',
+    // Leadership
+    'Leadership': 'Direction', 'Guided by vision and dedication': 'Guidés par la vision et le dévouement',
+    'Founder & Proprietor': 'Fondatrice & Propriétaire', 'Principal': 'Principal',
+    'Every child who walks through our gates deserves a solid foundation, discipline and the chance to succeed.':
+        'Chaque enfant qui franchit nos portes mérite une base solide, de la discipline et une chance de réussir.',
+    'We are committed to excellence, community and innovation — raising leaders of tomorrow, today.':
+        'Nous sommes engagés pour l’excellence, la communauté et l’innovation — former dès aujourd’hui les leaders de demain.',
+    // Actualités
+    'Latest news': 'Actualités', 'What’s happening on campus': 'La vie sur le campus', 'View all news': 'Voir toutes les actualités',
+    'Read more': 'Lire la suite', 'Examinations': 'Examens', 'School life': 'Vie scolaire',
+    'Cameroon G.C.E. registration now open': 'Inscriptions au G.C.E. Cameroun ouvertes',
+    'Registration for the 2025 Ordinary & Advanced Level examinations is ongoing at our accredited centre.':
+        'Les inscriptions aux examens Ordinary & Advanced Level 2025 sont en cours dans notre centre agréé.',
+    'Staff development meeting': 'Réunion de formation du personnel',
+    'A visionary address by founder Mama Julie Kwende and Principal Mr. Tsanka Clinton Ndi set the tone for the year.':
+        'Une allocution visionnaire de la fondatrice Mama Julie Kwende et du principal M. Tsanka Clinton Ndi a donné le ton de l’année.',
+    'Cultural & sports day': 'Journée culturelle & sportive',
+    'Students celebrated talent, teamwork and heritage across a lively day of activities and performances.':
+        'Les élèves ont célébré talent, esprit d’équipe et patrimoine lors d’une journée animée d’activités et de spectacles.',
+    // Contact
+    'Visit us': 'Visitez-nous', 'Come and see Green Hills': 'Venez découvrir Green Hills',
+    'Our doors are open to families seeking a caring, bilingual and academically strong education for their children.':
+        'Nos portes sont ouvertes aux familles en quête d’une éducation bienveillante, bilingue et académiquement solide.',
+    'Address': 'Adresse', 'Phone': 'Téléphone', 'Email': 'E-mail', 'Office hours': 'Horaires',
+    'A green, welcoming campus in the heart of the city.': 'Un campus verdoyant et accueillant au cœur de la ville.',
+    // Footer
+    'Explore': 'Explorer',
+    'A bilingual academy in Yaoundé, Cameroon — nurturing academic excellence, discipline and character since 2004.':
+        'Une académie bilingue à Yaoundé, Cameroun — excellence académique, discipline et caractère depuis 2004.',
+};
 
 export default LandingPage;
