@@ -4,6 +4,7 @@ import { ClipboardList, ChevronDown, ArrowRight, AlertCircle } from 'lucide-reac
 import api from '../../lib/api';
 import { useTeacher } from './TeacherLayout';
 import { useI18n } from '../../i18n/i18n';
+import SectionBanner from '../../components/SectionBanner';
 
 interface Sequence { id: string; nom: string; ordre: number; }
 
@@ -40,15 +41,11 @@ export default function TeacherGrades() {
 
     return (
         <div className="max-w-2xl space-y-6">
-            <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-600/20">
-                    <ClipboardList className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                    <h1 className="text-xl font-black text-slate-900">{t('Saisie des notes')}</h1>
-                    <p className="text-sm text-slate-400">{t('Choisissez la classe, la matière et la séquence.')}</p>
-                </div>
-            </div>
+            <SectionBanner
+                icon={<ClipboardList className="w-6 h-6" />}
+                title={t('Saisie des notes')}
+                subtitle={t('Choisissez la classe, la matière et la séquence.')}
+            />
 
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5">
                 <Field label={t('Classe')}>

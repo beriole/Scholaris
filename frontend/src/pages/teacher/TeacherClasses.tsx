@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ClipboardList, UserCheck, BookOpen, Hash } from 'lucide-react';
 import { useTeacher } from './TeacherLayout';
 import { useI18n } from '../../i18n/i18n';
+import SectionBanner from '../../components/SectionBanner';
 
 export default function TeacherClasses() {
     const { affectations } = useTeacher();
@@ -19,10 +20,11 @@ export default function TeacherClasses() {
 
     return (
         <div className="space-y-6 max-w-6xl">
-            <div>
-                <h1 className="text-xl font-black text-slate-900">{t('Mes classes & matières')}</h1>
-                <p className="text-sm text-slate-400 mt-0.5">{t("Saisissez les notes ou faites l'appel pour chacun de vos cours.")}</p>
-            </div>
+            <SectionBanner
+                icon={<BookOpen className="w-6 h-6" />}
+                title={t('Mes classes & matières')}
+                subtitle={t("Saisissez les notes ou faites l'appel pour chacun de vos cours.")}
+            />
 
             {groups.length === 0 ? (
                 <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-16 text-center">

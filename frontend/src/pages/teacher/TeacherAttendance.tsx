@@ -5,6 +5,7 @@ import { UserCheck, Check, X, Clock, Ban, Loader2, Save, ChevronDown, CheckCircl
 import api from '../../lib/api';
 import { useTeacher } from './TeacherLayout';
 import { useI18n } from '../../i18n/i18n';
+import SectionBanner from '../../components/SectionBanner';
 
 type Statut = 'present' | 'absent' | 'retard' | 'exclu';
 interface Row { inscription_id: string; eleve_id: string; eleve: { nom: string; prenom: string; matricule: string; sexe: string }; }
@@ -88,15 +89,11 @@ export default function TeacherAttendance() {
 
     return (
         <div className="max-w-4xl space-y-6">
-            <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
-                    <UserCheck className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                    <h1 className="text-xl font-black text-slate-900">{t("Faire l'appel")}</h1>
-                    <p className="text-sm text-slate-400">{t('Marquez la présence de vos élèves pour une séance.')}</p>
-                </div>
-            </div>
+            <SectionBanner
+                icon={<UserCheck className="w-6 h-6" />}
+                title={t("Faire l'appel")}
+                subtitle={t('Marquez la présence de vos élèves pour une séance.')}
+            />
 
             {/* Sélecteurs */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
