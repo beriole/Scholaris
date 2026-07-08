@@ -124,6 +124,8 @@ const StudentsPage = () => {
                 displayed.map(s => ({
                     matricule: s.matricule, nom: s.nom, prenom: s.prenom,
                     sexe: s.sexe, date_naissance: s.date_naissance, statut: s.statut,
+                    numero_admission: s.numero_admission, lieu_naissance: s.lieu_naissance,
+                    nationalite: s.nationalite, redoublant: s.redoublant,
                 })),
                 school, classeName, activeYear?.libelle ?? '',
             );

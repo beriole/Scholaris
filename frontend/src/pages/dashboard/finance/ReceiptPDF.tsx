@@ -23,7 +23,9 @@ export interface RecuData {
     encaisse_par:  string;
 }
 
-const fmt = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' XAF';
+// NB : fr-FR insère une espace fine insécable (U+202F/U+00A0) rendue « / » par la
+// police PDF Helvetica → on la normalise en espace simple.
+const fmt = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' XAF';
 
 const METHODE_LABEL: Record<string, string> = {
     especes:      'Espèces',
@@ -63,6 +65,157 @@ function enLettres(n: number): string {
 
 const GREEN = '#065f46', GREEN_DK = '#044231', GOLD = '#b08d3f', GOLD_LT = '#d6bb7a', IVORY = '#faf9f4';
 
+// ── Rendu PDF vectoriel (jsPDF natif — pas de html2canvas, incompatible oklch) ─
+const cGREEN: [number, number, number] = [6, 95, 70];
+const cGREEN_DK: [number, number, number] = [4, 66, 48];
+const cGOLD: [number, number, number] = [176, 141, 63];
+const cGOLD_LT: [number, number, number] = [214, 187, 122];
+const cIVORY: [number, number, number] = [250, 250, 246];
+const cDARK: [number, number, number] = [17, 24, 39];
+const cGREY: [number, number, number] = [100, 110, 122];
+const cRED: [number, number, number] = [200, 40, 40];
+const cLT: [number, number, number] = [224, 242, 235];
+
+const fmtDateFr = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+function vGrad(doc: any, x: number, y: number, w: number, h: number, c1: number[], c2: number[]) {
+    const steps = 22;
+    for (let i = 0; i < steps; i++) {
+        const t = i / (steps - 1);
+        doc.setFillColor(Math.round(c1[0] + (c2[0] - c1[0]) * t), Math.round(c1[1] + (c2[1] - c1[1]) * t), Math.round(c1[2] + (c2[2] - c1[2]) * t));
+        doc.rect(x, y + (h / steps) * i, w, h / steps + 0.3, 'F');
+    }
+}
+function medallionP(doc: any, cx: number, cy: number, r: number, logo: any, initials: string) {
+    doc.setFillColor(...cGOLD); doc.circle(cx, cy, r, 'F');
+    doc.setFillColor(...cIVORY); doc.circle(cx, cy, r - 0.8, 'F');
+    if (logo) {
+        const h = (r - 1.4) * 2, w = Math.min(h, (logo.w / logo.h) * h);
+        try { doc.addImage(logo.data, logo.fmt, cx - w / 2, cy - h / 2, w, h); } catch { /* ignore */ }
+    } else {
+        doc.setFont('times', 'bold'); doc.setFontSize(r * 1.05); doc.setTextColor(...cGREEN);
+        doc.text(initials, cx, cy + r * 0.4, { align: 'center' });
+    }
+}
+
+function renderReceipt(doc: any, recu: RecuData, school: SchoolInfo, logo: any) {
+    const W = 148, H = 210, M = 12, x0 = M, x1 = W - M, innerW = x1 - x0;
+    const initials = recu.ecole.split(/\s+/).filter(Boolean).slice(0, 3).map(s => s[0]?.toUpperCase() ?? '').join('') || 'GH';
+    const motto = school.devise || 'Solid Foundation · Discipline · Success';
+
+    // ── En-tête émeraude ────────────────────────────────────────
+    vGrad(doc, 0, 0, W, 30, cGREEN_DK, [10, 120, 88]);
+    doc.setFillColor(...cGREEN_DK); doc.triangle(W, 0, W, 30, W - 34, 30, 'F');
+    doc.setDrawColor(...cGOLD); doc.setLineWidth(0.7); doc.line(0, 30, W, 30);
+    medallionP(doc, M + 8, 13, 7, logo, initials);
+    // drapeau
+    const fbw = 2.2, fbt = 5, fb = x1 - 3 * fbw;
+    doc.setFillColor(16, 122, 74); doc.rect(fb, fbt, fbw, 3.2, 'F');
+    doc.setFillColor(206, 32, 42); doc.rect(fb + fbw, fbt, fbw, 3.2, 'F');
+    doc.setFillColor(244, 196, 48); doc.rect(fb + 2 * fbw, fbt, fbw, 3.2, 'F');
+    // nom + sous-titres
+    doc.setTextColor(255, 255, 255); doc.setFont('times', 'bold'); doc.setFontSize(11.5);
+    const nm = doc.splitTextToSize(recu.ecole.toUpperCase(), innerW - 20);
+    doc.text(nm.slice(0, 2), M + 18, 9.5);
+    const two = nm.length > 1;
+    doc.setFont('times', 'normal'); doc.setFontSize(6.6); doc.setTextColor(205, 230, 220);
+    doc.text('Republic of Cameroon · Ministry of Secondary Education', M + 18, two ? 16.5 : 13);
+    doc.setFont('times', 'italic'); doc.setFontSize(6.6); doc.setTextColor(...cGOLD_LT);
+    doc.text(motto, M + 18, two ? 19.8 : 16.5);
+
+    // ── Bandeau titre ───────────────────────────────────────────
+    let y = 30;
+    doc.setFillColor(...cLT); doc.rect(0, y, W, 9, 'F');
+    doc.setDrawColor(...cGOLD_LT); doc.setLineWidth(0.3); doc.line(0, y + 9, W, y + 9);
+    doc.setFont('times', 'bold'); doc.setFontSize(12); doc.setTextColor(...cGREEN);
+    doc.text('PAYMENT RECEIPT', M, y + 6);
+    doc.setFont('courier', 'normal'); doc.setFontSize(9); doc.setTextColor(...cGREY);
+    doc.text(`N° ${recu.numero_recu}`, x1, y + 6, { align: 'right' });
+    y += 9 + 7;
+
+    // ── Date + méthode ──────────────────────────────────────────
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...cGREY);
+    doc.text('Date :', M, y);
+    doc.setFont('helvetica', 'bold'); doc.setTextColor(...cDARK); doc.text(fmtDateFr(recu.date_paiement), M + 11, y);
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(...cGREY); doc.text('Mode :', W / 2 + 4, y);
+    doc.setFont('helvetica', 'bold'); doc.setTextColor(...cDARK); doc.text(METHODE_LABEL[recu.methode] ?? recu.methode, W / 2 + 18, y);
+    y += 7;
+
+    // ── Bloc élève ──────────────────────────────────────────────
+    doc.setFillColor(248, 250, 252); doc.setDrawColor(226, 232, 240); doc.setLineWidth(0.3);
+    doc.roundedRect(x0, y, innerW, 16, 2, 2, 'FD');
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(150, 160, 172);
+    doc.text('REÇU DE L\'ÉLÈVE', x0 + 4, y + 4.5);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(...cDARK);
+    doc.text(`${recu.eleve.nom} ${recu.eleve.prenom}`, x0 + 4, y + 9.5);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...cGREY);
+    doc.text(`Matricule : ${recu.eleve.matricule}     Classe : ${recu.classe}`, x0 + 4, y + 13.6);
+    y += 16 + 6;
+
+    // ── Montant versé ───────────────────────────────────────────
+    doc.setFillColor(236, 253, 245); doc.setDrawColor(167, 243, 208); doc.setLineWidth(0.3);
+    doc.roundedRect(x0, y, innerW, 22, 2.5, 2.5, 'FD');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(...cGREEN);
+    doc.text('MONTANT VERSÉ', W / 2, y + 5.5, { align: 'center' });
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(4, 120, 87);
+    doc.text(fmt(recu.montant_xaf), W / 2, y + 13.5, { align: 'center' });
+    doc.setFont('times', 'italic'); doc.setFontSize(7); doc.setTextColor(...cGREY);
+    const words = `${enLettres(recu.montant_xaf)} francs CFA`;
+    doc.text(words.charAt(0).toUpperCase() + words.slice(1), W / 2, y + 19, { align: 'center' });
+    y += 22 + 6;
+
+    // ── Soldes ──────────────────────────────────────────────────
+    const line = (label: string, val: string, bold = false, color: [number, number, number] = cDARK) => {
+        doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(8.5);
+        doc.setTextColor(...(bold ? cDARK : cGREY)); doc.text(label, x0 + 2, y + 4);
+        doc.setTextColor(...color); doc.setFont('helvetica', 'bold'); doc.text(val, x1 - 2, y + 4, { align: 'right' });
+        doc.setDrawColor(230, 234, 238); doc.setLineWidth(0.2); doc.line(x0, y + 6, x1, y + 6);
+        y += 6.5;
+    };
+    line('Scolarité totale due', fmt(recu.montant_total));
+    line('Total déjà réglé', fmt(recu.deja_paye));
+    const paid = recu.solde_restant <= 0;
+    doc.setFillColor(...(paid ? [236, 253, 245] : [254, 242, 242]) as [number, number, number]); doc.rect(x0, y - 1, innerW, 8, 'F');
+    line('Solde restant', fmt(recu.solde_restant), true, paid ? cGREEN : cRED);
+    y += 3;
+
+    if (recu.reference) {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...cGREY);
+        doc.text(`Référence : ${recu.reference}`, x0, y + 3); y += 7;
+    }
+    if (paid) {
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...cGREEN);
+        doc.text('✓  SCOLARITÉ INTÉGRALEMENT SOLDÉE', W / 2, y + 4, { align: 'center' }); y += 8;
+    }
+
+    // ── Signature + cachet ──────────────────────────────────────
+    const sigY = Math.max(y + 6, H - 44);
+    // cachet
+    const scx = M + 12, scy = sigY + 6, sr = 11;
+    doc.setDrawColor(...cGOLD); doc.setLineWidth(0.5); doc.circle(scx, scy, sr, 'S'); doc.setLineWidth(0.25); doc.circle(scx, scy, sr - 1.5, 'S');
+    doc.setTextColor(...cGOLD);
+    doc.setFont('times', 'bold'); doc.setFontSize(6); doc.text('OFFICIAL', scx, scy - 3.5, { align: 'center' });
+    doc.setFontSize(9); doc.text(initials, scx, scy + 1, { align: 'center' });
+    doc.setFontSize(5.5); doc.text('PAID', scx, scy + 5, { align: 'center' });
+    // signature
+    doc.setDrawColor(...cGOLD); doc.setLineWidth(0.3); doc.line(x1 - 46, sigY + 8, x1, sigY + 8);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...cGREY);
+    doc.text('Le Caissier / L\'Intendant', x1 - 23, sigY + 3, { align: 'center' });
+    doc.setFontSize(7); doc.text(recu.encaisse_par, x1 - 23, sigY + 12, { align: 'center' });
+
+    // ── Pied ────────────────────────────────────────────────────
+    const contact = [
+        school.boite_postale ? `P.O. Box ${school.boite_postale}` : null,
+        school.telephone ? `Tel ${school.telephone}` : null,
+        school.email || null,
+    ].filter(Boolean).join('   ·   ');
+    doc.setFillColor(...cGREEN); doc.rect(0, H - 16, W, 16, 'F');
+    doc.setDrawColor(...cGOLD); doc.setLineWidth(0.5); doc.line(0, H - 16, W, H - 16);
+    if (contact) { doc.setFont('helvetica', 'normal'); doc.setFontSize(6.6); doc.setTextColor(215, 233, 225); doc.text(contact, W / 2, H - 9, { align: 'center' }); }
+    doc.setFont('times', 'italic'); doc.setFontSize(6); doc.setTextColor(167, 205, 191);
+    doc.text(`${recu.ecole} · Keep this document as proof of payment.`, W / 2, H - 4.5, { align: 'center' });
+}
+
 export default function ReceiptPDF({ recu }: { recu: RecuData }) {
     const ref = useRef<HTMLDivElement>(null);
     const [exporting, setExporting] = useState(false);
@@ -81,18 +234,16 @@ export default function ReceiptPDF({ recu }: { recu: RecuData }) {
     ].filter(Boolean).join('  ·  ');
 
     const handleDownload = async () => {
-        if (!ref.current) return;
         setExporting(true);
         try {
-            const { default: html2canvas } = await import('html2canvas');
-            const { default: jsPDF }       = await import('jspdf');
-            const canvas  = await html2canvas(ref.current, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-            const imgData = canvas.toDataURL('image/png');
-            const pdf     = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a5' });
-            const pageW   = pdf.internal.pageSize.getWidth();
-            const imgH    = pageW * (canvas.height / canvas.width);
-            pdf.addImage(imgData, 'PNG', 0, 0, pageW, imgH);
-            pdf.save(`recu_${recu.numero_recu}_${recu.eleve.nom}.pdf`);
+            const { default: jsPDF } = await import('jspdf');
+            const { loadImg } = await import('../../../lib/bulletinPdf');
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a5' });
+            const logo = await loadImg(school.logo_url);
+            renderReceipt(doc, recu, school, logo);
+            doc.save(`recu_${recu.numero_recu}_${recu.eleve.nom}.pdf`.replace(/\s+/g, '_'));
+        } catch (e) {
+            console.error(e);
         } finally { setExporting(false); }
     };
 

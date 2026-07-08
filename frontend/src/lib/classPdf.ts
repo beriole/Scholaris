@@ -7,6 +7,8 @@ export interface SchoolInfo { nom: string; logo_url?: string | null; ville?: str
 export interface RosterStudent {
     matricule: string; nom: string; prenom: string;
     sexe?: string | null; date_naissance?: string | null; statut?: string | null;
+    numero_admission?: string | null; lieu_naissance?: string | null;
+    nationalite?: string | null; redoublant?: boolean;
 }
 
 export interface SheetBulletin {
@@ -96,20 +98,25 @@ export async function downloadClassRoster(students: RosterStudent[], school: Sch
     const W = 210, H = 297, M = 12;
     const logo = await loadImg(school.logo_url);
 
-    const cols = [
-        { t: 'No',             x: M,        w: 12, a: 'center' as const },
-        { t: 'Reg. No',        x: M + 12,   w: 34, a: 'left'   as const },
-        { t: 'Name',           x: M + 46,   w: 78, a: 'left'   as const },
-        { t: 'Sex',            x: M + 124,  w: 16, a: 'center' as const },
-        { t: 'Date of Birth',  x: M + 140,  w: 46, a: 'center' as const },
+    const tblX = M, tblW = W - 2 * M, rowH = 7.4;
+    const defs = [
+        { t: 'No',             w: 9,  a: 'center' as const },
+        { t: 'Reg. No',        w: 26, a: 'left'   as const },
+        { t: 'Adm No',         w: 24, a: 'left'   as const },
+        { t: 'Name',           w: 44, a: 'left'   as const },
+        { t: 'Sex',            w: 10, a: 'center' as const },
+        { t: 'Date of Birth',  w: 25, a: 'center' as const },
+        { t: 'Place of Birth', w: 26, a: 'left'   as const },
+        { t: 'Repeater',       w: 22, a: 'center' as const },
     ];
-    const tblX = M, tblW = W - 2 * M, rowH = 7;
+    let cxAcc = M;
+    const cols = defs.map(d => { const c = { ...d, x: cxAcc }; cxAcc += d.w; return c; });
 
     const drawTableHeader = (y: number): number => {
         doc.setFillColor(GREEN[0], GREEN[1], GREEN[2]); doc.rect(tblX, y, tblW, rowH, 'F');
         doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2]); doc.setLineWidth(0.3); doc.line(tblX, y + rowH, tblX + tblW, y + rowH);
-        doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
-        cols.forEach(c => doc.text(c.t, c.a === 'center' ? c.x + c.w / 2 : c.x + 2, y + 4.7, { align: c.a === 'center' ? 'center' : 'left' }));
+        doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(7.4);
+        cols.forEach(c => doc.text(c.t, c.a === 'center' ? c.x + c.w / 2 : c.x + 2, y + 4.9, { align: c.a === 'center' ? 'center' : 'left' }));
         return y + rowH;
     };
 
@@ -123,24 +130,27 @@ export async function downloadClassRoster(students: RosterStudent[], school: Sch
     y += 10;
 
     y = drawTableHeader(y);
-    doc.setFont('helvetica', 'normal');
-    const sorted = [...students].sort((a, b) => (a.nom + a.prenom).localeCompare(b.nom + b.prenom));
+    const sorted = [...students].sort((a, b) =>
+        `${a.nom} ${a.prenom}`.localeCompare(`${b.nom} ${b.prenom}`, 'fr', { sensitivity: 'base' }));
     sorted.forEach((s, i) => {
         if (y + rowH > H - M - 6) { footer(doc, W, H, M, school.nom); doc.addPage(); y = M; y = drawTableHeader(y); }
         if (i % 2 === 1) { doc.setFillColor(248, 250, 252); doc.rect(tblX, y, tblW, rowH, 'F'); }
-        doc.setTextColor(30, 41, 59); doc.setFontSize(8.5);
-        doc.text(String(i + 1), cols[0].x + cols[0].w / 2, y + 4.7, { align: 'center' });
-        doc.setFont('helvetica', 'normal');
-        doc.text(s.matricule ?? '—', cols[1].x + 2, y + 4.7);
+        doc.setTextColor(30, 41, 59); doc.setFont('helvetica', 'normal'); doc.setFontSize(7.6);
+        doc.text(String(i + 1), cols[0].x + cols[0].w / 2, y + 4.9, { align: 'center' });
+        doc.text((s.matricule ?? '—').slice(0, 14), cols[1].x + 2, y + 4.9);
+        doc.text((s.numero_admission ?? '—').slice(0, 13), cols[2].x + 2, y + 4.9);
         doc.setFont('helvetica', 'bold');
-        doc.text(`${s.nom} ${s.prenom}`.slice(0, 46), cols[2].x + 2, y + 4.7);
+        doc.text(`${s.nom} ${s.prenom}`.slice(0, 26), cols[3].x + 2, y + 4.9);
         doc.setFont('helvetica', 'normal');
-        doc.text(sexeLbl(s.sexe), cols[3].x + cols[3].w / 2, y + 4.7, { align: 'center' });
-        doc.text(fmtDate(s.date_naissance), cols[4].x + cols[4].w / 2, y + 4.7, { align: 'center' });
+        doc.text(sexeLbl(s.sexe), cols[4].x + cols[4].w / 2, y + 4.9, { align: 'center' });
+        doc.text(fmtDate(s.date_naissance), cols[5].x + cols[5].w / 2, y + 4.9, { align: 'center' });
+        doc.text((s.lieu_naissance ?? '—').slice(0, 15), cols[6].x + 2, y + 4.9);
+        if (s.redoublant) { doc.setTextColor(200, 40, 40); doc.setFont('helvetica', 'bold'); }
+        doc.text(s.redoublant ? 'Yes' : 'No', cols[7].x + cols[7].w / 2, y + 4.9, { align: 'center' });
         y += rowH;
     });
-    // Cadre + lignes verticales
-    doc.setDrawColor(150, 160, 175); doc.setLineWidth(0.2);
+    // filet doré de clôture du tableau
+    doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2]); doc.setLineWidth(0.3); doc.line(tblX, y, tblX + tblW, y);
 
     footer(doc, W, H, M, school.nom);
     doc.save(`liste_eleves_${classeName.replace(/\s+/g, '_')}.pdf`);
