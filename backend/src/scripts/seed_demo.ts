@@ -209,24 +209,29 @@ export async function main() {
     }
     console.log('✓ Enseignants:', profIds.length);
 
-    // 9. Élèves + inscriptions (5 par classe) ----------------------------------
-    const prenoms = ['John', 'Mary', 'Emmanuel', 'Sandra', 'Kevin', 'Blessing', 'Derick', 'Nadege'];
-    const noms = ['Tabi', 'Fon', 'Achu', 'Ngwa', 'Bisong', 'Ako', 'Manga', 'Enow'];
-    let count = 0;
+    // 9. Élèves + inscriptions ------------------------------------------------
+    // Form 1 (ci=0) reçoit un effectif élevé (32) pour tester la pagination
+    // des listes / bordereaux / cartes ; les autres classes gardent 5 élèves.
+    const prenoms = ['Emmanuel', 'Mary', 'Kevin', 'Sandra', 'Blessing', 'Derick', 'Nadege', 'Precious', 'Clinton', 'Vanessa', 'Brian', 'Sylvie', 'Frankline', 'Miranda', 'Godlove', 'Bih', 'Ashley', 'Divine', 'Gladys', 'Ernest', 'Lucrece', 'Wilfred', 'Carine', 'Terence', 'Berthe', 'Rodrigue', 'Estelle', 'Yannick', 'Laura', 'Cedric', 'Manka', 'Ndzana'];
+    const noms = ['Achu', 'Ako', 'Ambe', 'Ashu', 'Atabong', 'Bime', 'Bisong', 'Chia', 'Ebong', 'Enow', 'Eyong', 'Fon', 'Foncha', 'Fru', 'Kum', 'Manga', 'Mbah', 'Mbeng', 'Ncham', 'Ndip', 'Neba', 'Ngwa', 'Njie', 'Nkeng', 'Nsom', 'Ntui', 'Tabi', 'Tanyi', 'Tchoua', 'Wanki', 'Wirba', 'Yong'];
+    let seq = 0, count = 0;
     for (let ci = 0; ci < classeIds.length; ci++) {
         const classe_id = classeIds[ci];
-        for (let k = 0; k < 5; k++) {
-            const matricule = `GHA26${(ci * 10 + k + 1).toString().padStart(4, '0')}`;
+        const nStudents = ci === 0 ? 40 : 5;
+        for (let k = 0; k < nStudents; k++) {
+            seq++;
+            const matricule = `GHA26${seq.toString().padStart(4, '0')}`;
+            const idx = ci === 0 ? k : (ci * 5 + k);
             const el = await prisma.profils_eleves.create({
                 data: {
                     ecole_id, matricule,
-                    nom: noms[(ci * 5 + k) % noms.length],
-                    prenom: prenoms[(ci * 5 + k) % prenoms.length],
-                    date_naissance: new Date(2010 - ci, k, 8 + k),
+                    nom: noms[idx % noms.length],
+                    prenom: prenoms[idx % prenoms.length],
+                    date_naissance: new Date(2010 - ci, k % 12, (k % 27) + 1),
                     lieu_naissance: 'Bamenda',
                     nationalite: 'Cameroonian',
                     sexe: k % 2 === 0 ? 'M' : 'F',
-                    numero_admission: `ADM/${25 - ci}/${(ci * 10 + k + 1).toString().padStart(3, '0')}`,
+                    numero_admission: `ADM/${25 - ci}/${seq.toString().padStart(3, '0')}`,
                     redoublant: k === 0, // 1er élève de chaque classe = redoublant (démo)
                     statut: 'actif',
                 },

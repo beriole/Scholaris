@@ -202,7 +202,13 @@ export async function downloadGradeSheet(bulletins: SheetBulletin[], school: Sch
 
     y = drawTableHeader(y);
 
-    const ranked = [...bulletins].sort((a, b) => N(b.moyenne_generale) - N(a.moyenne_generale));
+    // Rang calculé sur la moyenne décroissante…
+    const byScore = [...bulletins].sort((a, b) => N(b.moyenne_generale) - N(a.moyenne_generale));
+    const rankOf = new Map<SheetBulletin, number>();
+    byScore.forEach((b, i) => rankOf.set(b, b.rang ?? i + 1));
+    // …mais affichage par ordre ALPHABÉTIQUE (nom puis prénom).
+    const ranked = [...bulletins].sort((a, b) =>
+        `${a.eleve.nom} ${a.eleve.prenom}`.localeCompare(`${b.eleve.nom} ${b.eleve.prenom}`, 'fr', { sensitivity: 'base' }));
     const subjSum: Record<string, { s: number; n: number }> = {};
     let sumCoef = 0, sumPts = 0;
 
@@ -240,7 +246,7 @@ export async function downloadGradeSheet(bulletins: SheetBulletin[], school: Sch
         doc.setTextColor(mr, mg, mb);
         doc.text(f2(b.moyenne_generale), xMoy + wMoy / 2, y + 4.4, { align: 'center' });
         doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42);
-        doc.text(b.rang ? String(b.rang) : String(i + 1), xRang + wRang / 2, y + 4.4, { align: 'center' });
+        doc.text(String(rankOf.get(b) ?? i + 1), xRang + wRang / 2, y + 4.4, { align: 'center' });
         y += rowH;
     });
 

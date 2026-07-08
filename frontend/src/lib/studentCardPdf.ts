@@ -212,27 +212,30 @@ export async function downloadStudentCard(st: CardStudent, ctx: CardContext) {
     doc.save(`student_card_${st.nom}_${st.prenom}.pdf`.replace(/\s+/g, '_'));
 }
 
-// Toutes les cartes d'une classe en grille sur A4.
+// Toutes les cartes d'une classe en grille compacte sur A4 (10 cartes/page).
 export async function downloadClassCards(students: CardStudent[], ctx: CardContext, classeName = 'class') {
     const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const W = 210, mX = 12, mY = 14, w = 85.6, h = 54, gapX = 14.8, gapY = 6;
-    const cols = 2, rowsPerPage = 4, perPage = cols * rowsPerPage;
+    const W = 210, mX = 14, mY = 11, w = 85.6, h = 54, gapX = 10, gapY = 1.8;
+    const cols = 2, rowsPerPage = 5, perPage = cols * rowsPerPage; // 2×5 = 10 cartes / page
     const logo = await loadImg(ctx.school.logo_url);
 
-    for (let i = 0; i < students.length; i++) {
+    // Tri alphabétique (nom puis prénom).
+    const sorted = [...students].sort((a, b) =>
+        `${a.nom} ${a.prenom}`.localeCompare(`${b.nom} ${b.prenom}`, 'fr', { sensitivity: 'base' }));
+
+    for (let i = 0; i < sorted.length; i++) {
         const inPage = i % perPage;
         if (i > 0 && inPage === 0) doc.addPage();
         if (inPage === 0) {
-            // titre de page discret
-            doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(GREEN[0], GREEN[1], GREEN[2]);
-            doc.text(`${ctx.school.nom} — Student Cards · ${classeName} · ${ctx.anneeLabel}`, W / 2, 8, { align: 'center' });
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(GREEN[0], GREEN[1], GREEN[2]);
+            doc.text(`${ctx.school.nom} — Student Cards · ${classeName} · ${ctx.anneeLabel}`, W / 2, 7, { align: 'center' });
         }
         const col = inPage % cols, row = Math.floor(inPage / cols);
         const X = mX + col * (w + gapX);
         const Y = mY + row * (h + gapY);
-        const photo = await loadImg(students[i].photo_url);
-        drawCard(doc, X, Y, w, h, students[i], ctx, logo, photo);
+        const photo = await loadImg(sorted[i].photo_url);
+        drawCard(doc, X, Y, w, h, sorted[i], ctx, logo, photo);
     }
     doc.save(`student_cards_${classeName}_${ctx.anneeLabel}.pdf`.replace(/\s+/g, '_'));
 }

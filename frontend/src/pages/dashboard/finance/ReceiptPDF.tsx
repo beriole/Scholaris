@@ -1,5 +1,12 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Printer, Download, Loader2, CheckCircle2 } from 'lucide-react';
+import api from '../../../lib/api';
+
+interface SchoolInfo {
+    logo_url?: string | null; ville?: string | null; telephone?: string | null;
+    email?: string | null; boite_postale?: string | null; devise?: string | null;
+    numero_contribuable?: string | null;
+}
 
 export interface RecuData {
     numero_recu:   string;
@@ -54,9 +61,24 @@ function enLettres(n: number): string {
     return res.trim();
 }
 
+const GREEN = '#065f46', GREEN_DK = '#044231', GOLD = '#b08d3f', GOLD_LT = '#d6bb7a', IVORY = '#faf9f4';
+
 export default function ReceiptPDF({ recu }: { recu: RecuData }) {
     const ref = useRef<HTMLDivElement>(null);
     const [exporting, setExporting] = useState(false);
+    const [school, setSchool] = useState<SchoolInfo>({});
+
+    useEffect(() => {
+        api.get('/api/settings/school').then(r => setSchool(r.data.ecole ?? {})).catch(() => {});
+    }, []);
+
+    const initials = recu.ecole.split(/\s+/).filter(Boolean).slice(0, 3).map(s => s[0]?.toUpperCase() ?? '').join('') || 'GH';
+    const motto = school.devise || 'Solid Foundation · Discipline · Success';
+    const contactLine = [
+        school.boite_postale ? `P.O. Box ${school.boite_postale}` : null,
+        school.telephone ? `Tel ${school.telephone}` : null,
+        school.email || null,
+    ].filter(Boolean).join('  ·  ');
 
     const handleDownload = async () => {
         if (!ref.current) return;
@@ -89,19 +111,40 @@ export default function ReceiptPDF({ recu }: { recu: RecuData }) {
             </div>
 
             {/* ── Reçu A5 ──────────────────────────────────────────────────── */}
-            <div ref={ref} style={{ fontFamily: 'Arial, sans-serif', color: '#1e293b', background: '#fff', width: '148mm', minHeight: '210mm', padding: '12mm', boxSizing: 'border-box' }}>
+            <div ref={ref} style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: '#1e293b', background: '#fff', width: '148mm', minHeight: '210mm', boxSizing: 'border-box', position: 'relative', overflow: 'hidden' }}>
 
-                {/* En-tête */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #059669', paddingBottom: '6mm', marginBottom: '6mm' }}>
-                    <div>
-                        <div style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>{recu.ecole}</div>
-                        <div style={{ fontSize: '10px', color: '#64748b', marginTop: 2 }}>République du Cameroun · Paix – Travail – Patrie</div>
+                {/* En-tête premium émeraude */}
+                <div style={{ position: 'relative', background: `linear-gradient(135deg, ${GREEN_DK}, ${GREEN} 55%, #0a7856)`, padding: '7mm 12mm 6mm', color: '#fff' }}>
+                    {/* drapeau camerounais */}
+                    <div style={{ position: 'absolute', top: '5mm', right: '12mm', display: 'flex', width: 22, height: 14, boxShadow: '0 0 0 1px rgba(255,255,255,.3)' }}>
+                        <div style={{ flex: 1, background: '#0f7a4a' }} /><div style={{ flex: 1, background: '#ce2029' }} /><div style={{ flex: 1, background: '#f4c430' }} />
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '13px', fontWeight: 800, color: '#059669', letterSpacing: '0.5px' }}>PAYMENT RECEIPT</div>
-                        <div style={{ fontSize: '11px', color: '#475569', marginTop: 2, fontFamily: 'monospace' }}>N° {recu.numero_recu}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5mm' }}>
+                        {/* médaillon */}
+                        <div style={{ width: 46, height: 46, borderRadius: '50%', background: GOLD, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <div style={{ width: 40, height: 40, borderRadius: '50%', background: IVORY, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                                {school.logo_url
+                                    ? <img src={school.logo_url} crossOrigin="anonymous" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                    : <span style={{ fontSize: 15, fontWeight: 800, color: GREEN }}>{initials}</span>}
+                            </div>
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: '17px', fontWeight: 800, letterSpacing: '0.3px', lineHeight: 1.1 }}>{recu.ecole}</div>
+                            <div style={{ fontSize: '9px', color: '#cde8dd', marginTop: 3 }}>Republic of Cameroon · Ministry of Secondary Education</div>
+                            <div style={{ fontSize: '9px', color: GOLD_LT, fontStyle: 'italic', marginTop: 1 }}>{motto}</div>
+                        </div>
                     </div>
+                    <div style={{ height: 2, background: `linear-gradient(90deg, ${GOLD_LT}, ${GOLD})`, margin: '5mm -12mm 0', width: 'calc(100% + 24mm)' }} />
                 </div>
+
+                {/* Bandeau titre reçu */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4mm 12mm', borderBottom: '1px solid #e2e8f0' }}>
+                    <div style={{ fontSize: '15px', fontWeight: 800, color: GREEN, letterSpacing: '1px' }}>PAYMENT RECEIPT</div>
+                    <div style={{ fontSize: '11px', color: '#475569', fontFamily: 'monospace' }}>N° {recu.numero_recu}</div>
+                </div>
+
+                {/* corps avec padding */}
+                <div style={{ padding: '6mm 12mm 12mm' }}>
 
                 {/* Date + méthode */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#475569', marginBottom: '6mm' }}>
@@ -159,18 +202,29 @@ export default function ReceiptPDF({ recu }: { recu: RecuData }) {
                     </div>
                 )}
 
-                {/* Signature */}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12mm' }}>
-                    <div style={{ textAlign: 'center', width: '55%' }}>
-                        <div style={{ fontSize: '10px', color: '#475569', marginBottom: 14 }}>Le Caissier / L'Intendant</div>
-                        <div style={{ borderBottom: '1px solid #94a3b8', width: '90%', margin: '0 auto' }} />
-                        <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: 4 }}>{recu.encaisse_par}</div>
+                {/* Signature + cachet */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '12mm' }}>
+                    {/* cachet officiel */}
+                    <div style={{ width: 62, height: 62, borderRadius: '50%', border: `1.5px solid ${GOLD}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: GOLD, transform: 'rotate(-8deg)', opacity: 0.85 }}>
+                        <div style={{ fontSize: 7, fontWeight: 700, letterSpacing: 1 }}>OFFICIAL</div>
+                        <div style={{ fontSize: 12, fontWeight: 800 }}>{initials}</div>
+                        <div style={{ fontSize: 6 }}>PAID</div>
+                    </div>
+                    <div style={{ textAlign: 'center', width: '50%' }}>
+                        <div style={{ fontSize: '10px', color: '#475569', marginBottom: 14 }}>Cashier / Bursar</div>
+                        <div style={{ borderBottom: `1px solid ${GOLD}`, width: '90%', margin: '0 auto' }} />
+                        <div style={{ fontSize: '9px', color: '#64748b', marginTop: 4 }}>{recu.encaisse_par}</div>
                     </div>
                 </div>
+                </div>{/* fin corps */}
 
-                {/* Footer */}
-                <div style={{ marginTop: '10mm', borderTop: '1px solid #e2e8f0', paddingTop: '3mm', textAlign: 'center', fontSize: '8px', color: '#94a3b8' }}>
-                    Generated by {recu.ecole} · Keep this document as proof of payment.
+                {/* Footer premium */}
+                <div style={{ background: GREEN, color: '#fff', padding: '4mm 12mm', marginTop: '6mm' }}>
+                    <div style={{ height: 2, background: `linear-gradient(90deg, ${GOLD}, ${GOLD_LT})`, margin: '0 -12mm 3mm', width: 'calc(100% + 24mm)' }} />
+                    {contactLine && <div style={{ fontSize: '9px', color: '#d7e9e1', textAlign: 'center', marginBottom: 2 }}>{contactLine}</div>}
+                    <div style={{ fontSize: '8px', color: '#a7cdbf', textAlign: 'center', fontStyle: 'italic' }}>
+                        {recu.ecole} · Keep this document as proof of payment.
+                    </div>
                 </div>
             </div>
         </div>
