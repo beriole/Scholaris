@@ -28,38 +28,34 @@ export interface RecuData {
 const fmt = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' XAF';
 
 const METHODE_LABEL: Record<string, string> = {
-    especes:      'Espèces',
-    virement:     'Virement bancaire',
-    cheque:       'Chèque',
+    especes:      'Cash',
+    virement:     'Bank Transfer',
+    cheque:       'Cheque',
     mobile_money: 'Mobile Money',
     mtn_money:    'MTN Mobile Money',
     orange_money: 'Orange Money',
 };
 
-// Conversion simple d'un montant en lettres (français, jusqu'aux millions).
-function enLettres(n: number): string {
+// Montant en toutes lettres (anglais, jusqu'aux millions) — ASCII uniquement.
+function inWords(n: number): string {
     n = Math.round(n);
-    if (n === 0) return 'zéro';
-    const u = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix',
-        'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf'];
-    const d = ['', '', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante', 'soixante', 'quatre-vingt', 'quatre-vingt'];
-    const tranche = (x: number): string => {
+    if (n === 0) return 'zero';
+    const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+        'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+    const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+    const three = (x: number): string => {
         let s = '';
-        const c = Math.floor(x / 100), r = x % 100;
-        if (c > 0) s += (c > 1 ? u[c] + ' ' : '') + 'cent' + (c > 1 && r === 0 ? 's' : '') + ' ';
-        if (r < 20) s += u[r];
-        else {
-            const di = Math.floor(r / 10), ui = r % 10;
-            if (di === 7 || di === 9) s += d[di] + '-' + u[10 + ui];
-            else { s += d[di]; if (ui === 1 && di !== 8) s += ' et un'; else if (ui > 0) s += '-' + u[ui]; else if (di === 8) s += 's'; }
-        }
+        const h = Math.floor(x / 100), r = x % 100;
+        if (h > 0) s += ones[h] + ' hundred' + (r ? ' ' : '');
+        if (r < 20) s += ones[r];
+        else { s += tens[Math.floor(r / 10)]; if (r % 10) s += '-' + ones[r % 10]; }
         return s.trim();
     };
     let res = '';
     const M = Math.floor(n / 1_000_000), K = Math.floor((n % 1_000_000) / 1000), R = n % 1000;
-    if (M > 0) res += (M > 1 ? tranche(M) + ' ' : 'un ') + 'million' + (M > 1 ? 's' : '') + ' ';
-    if (K > 0) res += (K > 1 ? tranche(K) + ' ' : '') + 'mille ';
-    if (R > 0) res += tranche(R);
+    if (M > 0) res += three(M) + ' million' + (K || R ? ' ' : '');
+    if (K > 0) res += three(K) + ' thousand' + (R ? ' ' : '');
+    if (R > 0) res += three(R);
     return res.trim();
 }
 
@@ -76,7 +72,7 @@ const cGREY: [number, number, number] = [100, 110, 122];
 const cRED: [number, number, number] = [200, 40, 40];
 const cLT: [number, number, number] = [224, 242, 235];
 
-const fmtDateFr = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+const fmtDateEn = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
 
 function vGrad(doc: any, x: number, y: number, w: number, h: number, c1: number[], c2: number[]) {
     const steps = 22;
@@ -135,32 +131,32 @@ function renderReceipt(doc: any, recu: RecuData, school: SchoolInfo, logo: any) 
 
     // ── Date + méthode ──────────────────────────────────────────
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...cGREY);
-    doc.text('Date :', M, y);
-    doc.setFont('helvetica', 'bold'); doc.setTextColor(...cDARK); doc.text(fmtDateFr(recu.date_paiement), M + 11, y);
-    doc.setFont('helvetica', 'normal'); doc.setTextColor(...cGREY); doc.text('Mode :', W / 2 + 4, y);
-    doc.setFont('helvetica', 'bold'); doc.setTextColor(...cDARK); doc.text(METHODE_LABEL[recu.methode] ?? recu.methode, W / 2 + 18, y);
+    doc.text('Date:', M, y);
+    doc.setFont('helvetica', 'bold'); doc.setTextColor(...cDARK); doc.text(fmtDateEn(recu.date_paiement), M + 11, y);
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(...cGREY); doc.text('Method:', W / 2 + 4, y);
+    doc.setFont('helvetica', 'bold'); doc.setTextColor(...cDARK); doc.text(METHODE_LABEL[recu.methode] ?? recu.methode, W / 2 + 20, y);
     y += 7;
 
     // ── Bloc élève ──────────────────────────────────────────────
     doc.setFillColor(248, 250, 252); doc.setDrawColor(226, 232, 240); doc.setLineWidth(0.3);
     doc.roundedRect(x0, y, innerW, 16, 2, 2, 'FD');
     doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(150, 160, 172);
-    doc.text('REÇU DE L\'ÉLÈVE', x0 + 4, y + 4.5);
+    doc.text('RECEIVED FROM', x0 + 4, y + 4.5);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(...cDARK);
     doc.text(`${recu.eleve.nom} ${recu.eleve.prenom}`, x0 + 4, y + 9.5);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...cGREY);
-    doc.text(`Matricule : ${recu.eleve.matricule}     Classe : ${recu.classe}`, x0 + 4, y + 13.6);
+    doc.text(`Reg. No: ${recu.eleve.matricule}     Class: ${recu.classe}`, x0 + 4, y + 13.6);
     y += 16 + 6;
 
     // ── Montant versé ───────────────────────────────────────────
     doc.setFillColor(236, 253, 245); doc.setDrawColor(167, 243, 208); doc.setLineWidth(0.3);
     doc.roundedRect(x0, y, innerW, 22, 2.5, 2.5, 'FD');
     doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(...cGREEN);
-    doc.text('MONTANT VERSÉ', W / 2, y + 5.5, { align: 'center' });
+    doc.text('AMOUNT PAID', W / 2, y + 5.5, { align: 'center' });
     doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(4, 120, 87);
     doc.text(fmt(recu.montant_xaf), W / 2, y + 13.5, { align: 'center' });
     doc.setFont('times', 'italic'); doc.setFontSize(7); doc.setTextColor(...cGREY);
-    const words = `${enLettres(recu.montant_xaf)} francs CFA`;
+    const words = `${inWords(recu.montant_xaf)} CFA francs`;
     doc.text(words.charAt(0).toUpperCase() + words.slice(1), W / 2, y + 19, { align: 'center' });
     y += 22 + 6;
 
@@ -172,20 +168,24 @@ function renderReceipt(doc: any, recu: RecuData, school: SchoolInfo, logo: any) 
         doc.setDrawColor(230, 234, 238); doc.setLineWidth(0.2); doc.line(x0, y + 6, x1, y + 6);
         y += 6.5;
     };
-    line('Scolarité totale due', fmt(recu.montant_total));
-    line('Total déjà réglé', fmt(recu.deja_paye));
+    line('Total fees due', fmt(recu.montant_total));
+    line('Total paid to date', fmt(recu.deja_paye));
     const paid = recu.solde_restant <= 0;
     doc.setFillColor(...(paid ? [236, 253, 245] : [254, 242, 242]) as [number, number, number]); doc.rect(x0, y - 1, innerW, 8, 'F');
-    line('Solde restant', fmt(recu.solde_restant), true, paid ? cGREEN : cRED);
+    line('Outstanding balance', fmt(recu.solde_restant), true, paid ? cGREEN : cRED);
     y += 3;
 
     if (recu.reference) {
         doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...cGREY);
-        doc.text(`Référence : ${recu.reference}`, x0, y + 3); y += 7;
+        doc.text(`Reference: ${recu.reference}`, x0, y + 3); y += 7;
     }
     if (paid) {
+        // coche dessinée (le glyphe ✓ n'existe pas dans la police PDF)
+        const ckx = W / 2 - 30, cky = y + 2.4;
+        doc.setDrawColor(...cGREEN); doc.setLineWidth(0.7);
+        doc.line(ckx, cky, ckx + 1.4, cky + 1.6); doc.line(ckx + 1.4, cky + 1.6, ckx + 4, cky - 2);
         doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...cGREEN);
-        doc.text('✓  SCOLARITÉ INTÉGRALEMENT SOLDÉE', W / 2, y + 4, { align: 'center' }); y += 8;
+        doc.text('FEES FULLY PAID', W / 2, y + 4, { align: 'center' }); y += 8;
     }
 
     // ── Signature + cachet ──────────────────────────────────────
@@ -200,7 +200,7 @@ function renderReceipt(doc: any, recu: RecuData, school: SchoolInfo, logo: any) 
     // signature
     doc.setDrawColor(...cGOLD); doc.setLineWidth(0.3); doc.line(x1 - 46, sigY + 8, x1, sigY + 8);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...cGREY);
-    doc.text('Le Caissier / L\'Intendant', x1 - 23, sigY + 3, { align: 'center' });
+    doc.text('Cashier / Bursar', x1 - 23, sigY + 3, { align: 'center' });
     doc.setFontSize(7); doc.text(recu.encaisse_par, x1 - 23, sigY + 12, { align: 'center' });
 
     // ── Pied ────────────────────────────────────────────────────
@@ -266,12 +266,12 @@ export default function ReceiptPDF({ recu }: { recu: RecuData }) {
             <div className="flex gap-2 mb-3 print:hidden">
                 <button onClick={() => window.print()}
                     className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-xl transition-all">
-                    <Printer size={13} /> Imprimer
+                    <Printer size={13} /> Print
                 </button>
                 <button onClick={handleDownload} disabled={exporting}
                     className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 disabled:opacity-60 transition-all">
                     {exporting ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
-                    {exporting ? 'Export…' : 'Télécharger le reçu'}
+                    {exporting ? 'Exporting…' : 'Download receipt'}
                 </button>
             </div>
 
@@ -313,25 +313,25 @@ export default function ReceiptPDF({ recu }: { recu: RecuData }) {
 
                 {/* Date + méthode */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#475569', marginBottom: '6mm' }}>
-                    <div><span style={{ color: '#94a3b8' }}>Date : </span><strong style={{ color: '#1e293b' }}>{new Date(recu.date_paiement).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</strong></div>
-                    <div><span style={{ color: '#94a3b8' }}>Mode : </span><strong style={{ color: '#1e293b' }}>{METHODE_LABEL[recu.methode] ?? recu.methode}</strong></div>
+                    <div><span style={{ color: '#94a3b8' }}>Date: </span><strong style={{ color: '#1e293b' }}>{new Date(recu.date_paiement).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</strong></div>
+                    <div><span style={{ color: '#94a3b8' }}>Method: </span><strong style={{ color: '#1e293b' }}>{METHODE_LABEL[recu.methode] ?? recu.methode}</strong></div>
                 </div>
 
                 {/* Élève */}
                 <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, padding: '5mm 6mm', marginBottom: '6mm' }}>
-                    <div style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: 3 }}>Reçu de l'élève</div>
+                    <div style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: 3 }}>Received from</div>
                     <div style={{ fontSize: '14px', fontWeight: 700 }}>{recu.eleve.nom} {recu.eleve.prenom}</div>
                     <div style={{ fontSize: '10px', color: '#64748b', marginTop: 2 }}>
-                        Matricule : <strong>{recu.eleve.matricule}</strong> &nbsp;·&nbsp; Classe : <strong>{recu.classe}</strong>
+                        Reg. No: <strong>{recu.eleve.matricule}</strong> &nbsp;·&nbsp; Class: <strong>{recu.classe}</strong>
                     </div>
                 </div>
 
                 {/* Montant principal */}
                 <div style={{ textAlign: 'center', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 8, padding: '6mm', marginBottom: '6mm' }}>
-                    <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', color: '#059669', marginBottom: 2 }}>Montant versé</div>
+                    <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', color: '#059669', marginBottom: 2 }}>Amount paid</div>
                     <div style={{ fontSize: '30px', fontWeight: 800, color: '#047857' }}>{fmt(recu.montant_xaf)}</div>
                     <div style={{ fontSize: '10px', fontStyle: 'italic', color: '#475569', marginTop: 4, textTransform: 'capitalize' }}>
-                        {enLettres(recu.montant_xaf)} francs CFA
+                        {inWords(recu.montant_xaf)} CFA francs
                     </div>
                 </div>
 
@@ -339,8 +339,8 @@ export default function ReceiptPDF({ recu }: { recu: RecuData }) {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', marginBottom: '8mm' }}>
                     <tbody>
                         {[
-                            ['Scolarité totale due', fmt(recu.montant_total)],
-                            ['Total déjà réglé', fmt(recu.deja_paye)],
+                            ['Total fees due', fmt(recu.montant_total)],
+                            ['Total paid to date', fmt(recu.deja_paye)],
                         ].map(([k, v]) => (
                             <tr key={k as string} style={{ borderBottom: '1px solid #e2e8f0' }}>
                                 <td style={{ padding: '5px 4px', color: '#64748b' }}>{k}</td>
@@ -348,7 +348,7 @@ export default function ReceiptPDF({ recu }: { recu: RecuData }) {
                             </tr>
                         ))}
                         <tr style={{ background: recu.solde_restant > 0 ? '#fef2f2' : '#ecfdf5' }}>
-                            <td style={{ padding: '7px 4px', fontWeight: 700, color: '#0f172a' }}>Solde restant</td>
+                            <td style={{ padding: '7px 4px', fontWeight: 700, color: '#0f172a' }}>Outstanding balance</td>
                             <td style={{ padding: '7px 4px', textAlign: 'right', fontWeight: 800, color: recu.solde_restant > 0 ? '#dc2626' : '#059669' }}>
                                 {fmt(recu.solde_restant)}
                             </td>
@@ -357,13 +357,13 @@ export default function ReceiptPDF({ recu }: { recu: RecuData }) {
                 </table>
 
                 {recu.reference && (
-                    <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '6mm' }}>Référence : <strong>{recu.reference}</strong></div>
+                    <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '6mm' }}>Reference: <strong>{recu.reference}</strong></div>
                 )}
 
                 {/* Statut soldé */}
                 {recu.solde_restant <= 0 && (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: '#059669', fontWeight: 700, fontSize: '12px', marginBottom: '6mm' }}>
-                        <span>✓ SCOLARITÉ INTÉGRALEMENT SOLDÉE</span>
+                        <span>✓ FEES FULLY PAID</span>
                     </div>
                 )}
 
