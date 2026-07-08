@@ -409,7 +409,6 @@ export function renderGHAHS(doc: any, st: DetailStudent, ctx: BulletinContext, l
     y += titleH;
 
     // ----- Gauche : DISCIPLINE | HEALTH -----
-    const discLabelX = x0, discW = (midX - x0);
     const colDiscL = x0, colDiscV = x0 + 30, colHealth = x0 + 44; // sous-colonnes
     const gcRowH = 4.6;
     doc.setFont('times', 'bold'); doc.setFontSize(7); doc.setTextColor(DARK[0], DARK[1], DARK[2]);
@@ -516,13 +515,17 @@ export function renderGHAHS(doc: any, st: DetailStudent, ctx: BulletinContext, l
         doc.setFontSize(5.6); doc.text('OFFICIAL DOCUMENT', wcx, wcy + wr + 3, { align: 'center' });
     }
 
-    // ── Bandeau disclaimer (ancré au-dessus du pied) ─────────────
-    const discY = H - 20.5;
-    band(discY, 5.5);
+    // ── Pied unifié : bande disclaimer pleine largeur soudée à la vague ─
+    const discY = H - 22;
+    // bande pleine largeur (même largeur que la vague → harmonisé)
+    doc.setFillColor(GREEN[0], GREEN[1], GREEN[2]); doc.rect(0, discY, W, 8, 'F');
+    // filet doré en haut de la bande (rappel de l'en-tête)
+    doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2]); doc.setLineWidth(0.6); doc.line(0, discY, W, discY);
+    doc.setDrawColor(GOLD_LT[0], GOLD_LT[1], GOLD_LT[2]); doc.setLineWidth(0.2); doc.line(0, discY + 0.9, W, discY + 0.9);
     doc.setTextColor(255, 255, 255); doc.setFont('times', 'italic'); doc.setFontSize(6.8);
-    doc.text('DISCLAIMER: Any cancellation on the report card is not the hand work of the school.', W / 2, discY + 3.7, { align: 'center' });
+    doc.text('DISCLAIMER: Any cancellation on the report card is not the hand work of the school.', W / 2, discY + 4.6, { align: 'center' });
 
-    // ── Pied : vague + globe ─────────────────────────────────────
+    // vague décorative + globe (part de la bande, sans rupture)
     waveFooter(doc, W, H);
     doc.setFont('times', 'normal'); doc.setFontSize(6); doc.setTextColor(255, 255, 255);
     doc.text(`${school.nom} — ${new Date().toLocaleDateString('en-GB')}`, W / 2, H - 3, { align: 'center' });

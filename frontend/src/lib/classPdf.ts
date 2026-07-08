@@ -162,12 +162,11 @@ export async function downloadGradeSheet(bulletins: SheetBulletin[], school: Sch
 
     // Largeurs
     const tblX = M, tblW = W - 2 * M;
-    const wNum = 9, wMat = 26, wMoy = 15, wRang = 12;
-    const wName = 42;
-    const subjW = Math.max(11, (tblW - wNum - wMat - wName - wMoy - wRang) / Math.max(1, subjects.length));
+    const wNum = 9, wMat = 24, wName = 40, wCoef = 12, wPts = 16, wMoy = 14, wRang = 11;
+    const subjW = Math.max(10, (tblW - wNum - wMat - wName - wCoef - wPts - wMoy - wRang) / Math.max(1, subjects.length));
     // positions
     const xNum = tblX, xMat = xNum + wNum, xName = xMat + wMat, xSubj0 = xName + wName;
-    const xMoy = xSubj0 + subjW * subjects.length, xRang = xMoy + wMoy;
+    const xCoef = xSubj0 + subjW * subjects.length, xPts = xCoef + wCoef, xMoy = xPts + wPts, xRang = xMoy + wMoy;
     const rowH = 6.5;
 
     const drawTableHeader = (y: number): number => {
@@ -186,6 +185,8 @@ export async function downloadGradeSheet(bulletins: SheetBulletin[], school: Sch
             doc.setTextColor(255, 255, 255);
         });
         doc.setFontSize(7);
+        doc.text('Coef', xCoef + wCoef / 2, y + 5, { align: 'center' });
+        doc.text('T. Pts', xPts + wPts / 2, y + 5, { align: 'center' });
         doc.text('Avg.', xMoy + wMoy / 2, y + 5, { align: 'center' });
         doc.text('Rank', xRang + wRang / 2, y + 5, { align: 'center' });
         return y + rowH + 2;
@@ -203,18 +204,24 @@ export async function downloadGradeSheet(bulletins: SheetBulletin[], school: Sch
 
     const ranked = [...bulletins].sort((a, b) => N(b.moyenne_generale) - N(a.moyenne_generale));
     const subjSum: Record<string, { s: number; n: number }> = {};
+    let sumCoef = 0, sumPts = 0;
 
     ranked.forEach((b, i) => {
         if (y + rowH > H - M - 12) { footer(doc, W, H, M, school.nom); doc.addPage(); y = M; y = drawTableHeader(y); }
         if (i % 2 === 1) { doc.setFillColor(248, 250, 252); doc.rect(tblX, y, tblW, rowH, 'F'); }
         doc.setTextColor(30, 41, 59); doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
         doc.text(String(i + 1), xNum + wNum / 2, y + 4.4, { align: 'center' });
-        doc.setFontSize(6.5); doc.text((b.eleve.matricule ?? '—').slice(0, 14), xMat + 2, y + 4.4);
+        doc.setFontSize(6.5); doc.text((b.eleve.matricule ?? '—').slice(0, 13), xMat + 2, y + 4.4);
         doc.setFont('helvetica', 'bold'); doc.setFontSize(7);
-        doc.text(`${b.eleve.nom} ${b.eleve.prenom}`.slice(0, 26), xName + 2, y + 4.4);
+        doc.text(`${b.eleve.nom} ${b.eleve.prenom}`.slice(0, 24), xName + 2, y + 4.4);
         doc.setFont('helvetica', 'normal');
         const byCode: Record<string, number> = {};
-        for (const d of b.details) byCode[d.matiere.code] = N(d.moyenne_matiere);
+        let tCoef = 0, tPts = 0;
+        for (const d of b.details) {
+            byCode[d.matiere.code] = N(d.moyenne_matiere);
+            const cf = N(d.matiere.coefficient);
+            tCoef += cf; tPts += N(d.moyenne_matiere) * cf;
+        }
         subjects.forEach(([code], si) => {
             const cx = xSubj0 + subjW * si + subjW / 2;
             const v = byCode[code];
@@ -223,15 +230,22 @@ export async function downloadGradeSheet(bulletins: SheetBulletin[], school: Sch
             const [r, g, bl] = rgbFor(v); doc.setTextColor(r, g, bl);
             doc.text(f2(v), cx, y + 4.4, { align: 'center' });
         });
+        sumCoef += tCoef; sumPts += tPts;
+        // Total Coef + Total Points
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(30, 41, 59);
+        doc.text(String(tCoef), xCoef + wCoef / 2, y + 4.4, { align: 'center' });
+        doc.setFont('helvetica', 'bold');
+        doc.text(f2(tPts), xPts + wPts / 2, y + 4.4, { align: 'center' });
         const [mr, mg, mb] = rgbFor(N(b.moyenne_generale));
-        doc.setFont('helvetica', 'bold'); doc.setTextColor(mr, mg, mb);
+        doc.setTextColor(mr, mg, mb);
         doc.text(f2(b.moyenne_generale), xMoy + wMoy / 2, y + 4.4, { align: 'center' });
-        doc.setTextColor(15, 23, 42);
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42);
         doc.text(b.rang ? String(b.rang) : String(i + 1), xRang + wRang / 2, y + 4.4, { align: 'center' });
         y += rowH;
     });
 
     // Ligne moyenne de classe par matière
+    const nR = ranked.length || 1;
     doc.setFillColor(224, 242, 235); doc.rect(tblX, y, tblW, rowH, 'F');
     doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(4, 120, 87);
     doc.text('CLASS AVERAGE', xMat + 2, y + 4.4);
@@ -240,6 +254,8 @@ export async function downloadGradeSheet(bulletins: SheetBulletin[], school: Sch
         const agg = subjSum[code];
         doc.text(agg && agg.n ? f2(agg.s / agg.n) : '—', cx, y + 4.4, { align: 'center' });
     });
+    doc.text(f2(sumCoef / nR), xCoef + wCoef / 2, y + 4.4, { align: 'center' });
+    doc.text(f2(sumPts / nR), xPts + wPts / 2, y + 4.4, { align: 'center' });
     const clsMoy = ranked.length ? ranked.reduce((a, b) => a + N(b.moyenne_generale), 0) / ranked.length : 0;
     doc.text(f2(clsMoy), xMoy + wMoy / 2, y + 4.4, { align: 'center' });
     y += rowH + 4;
